@@ -134,6 +134,32 @@ input,select{font-family:inherit;font-size:1rem}
   box-shadow:0 8px 18px -8px var(--glow);transition:all .15s;
 }
 .btn:disabled{opacity:.6;cursor:default}
+.btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--ink);box-shadow:var(--shadow);padding:8px 13px;font-size:.84rem;border-radius:10px;display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.btn-sm{padding:8px 13px;font-size:.84rem;border-radius:10px}
+.btn-danger{background:var(--red-soft);color:var(--red);box-shadow:none}
+.icon-btn{width:32px;height:32px;border-radius:9px;display:inline-grid;place-items:center;color:var(--muted);font-size:.95rem}
+.icon-btn:active{background:var(--accent-soft)}
+.item .acts{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.modal-backdrop{position:fixed;inset:0;background:rgba(20,22,40,.5);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:50;padding:0;overflow-y:auto}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);width:100%;max-width:560px;padding:22px 18px 28px;animation:pop .18s ease;max-height:92vh;overflow-y:auto}
+@media(min-width:600px){.modal-backdrop{align-items:center;padding:20px}.modal{border-radius:18px}}
+@keyframes pop{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-size:1.05rem;margin-bottom:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid .full{grid-column:1/-1}
+.field label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field-bg);color:var(--ink);font-size:16px;outline:none;color-scheme:light dark}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:70px;font-family:inherit}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.seg{display:flex;gap:4px;background:var(--field-bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{flex:1;padding:8px;border-radius:8px;font-size:.84rem;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--accent);box-shadow:var(--shadow)}
+.study-form{padding:14px 14px 12px;margin-bottom:14px}
+.study-form h3{font-size:.95rem;margin-bottom:10px}
+.week-chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.week-chips .chip{background:var(--field-bg);border:1px solid var(--line)}
 .foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
 .foot button{color:var(--accent);font-weight:600}
 </style>
@@ -142,6 +168,7 @@ input,select{font-family:inherit;font-size:1rem}
 </head>
 <body>
 <div class="wrap" id="app"></div>
+<div class="modal-backdrop" id="modalBackdrop" onclick="if(event.target===this) closeModal()"><div class="modal" id="modalBox"></div></div>
 <script>
 /* ================= YARDIMCILAR ================= */
 const SUBJECTS = {
@@ -194,7 +221,19 @@ const FB_CONFIG = {
 const sid = new URLSearchParams(location.search).get('o') || '';
 const CODE_KEY = 'ogrenciKod_' + sid;
 let data = null, tab = 'program', dersFilter = '';
-let myCode = '', tid = '', ticks = {}, db = null, unsubPage = null, unsubTicks = null;
+let myCode = '', tid = '', inputs = {}, ticks = {}, db = null, unsubPage = null, unsubTicks = null;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const SUBJECT_LIST = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe','Diğer'];
+const GENEL_NETS = {
+  TYT: [['Türkçe',40],['Sosyal',20],['Matematik',40],['Fizik',7],['Kimya',7],['Biyoloji',6]],
+  AYT: [['Matematik',40],['Fizik',14],['Kimya',13],['Biyoloji',13]],
+};
+const fv = id => (document.getElementById(id)||{value:''}).value.trim();
+function openModal(html){ document.getElementById('modalBox').innerHTML = html; document.getElementById('modalBackdrop').classList.add('open'); }
+function closeModal(){ document.getElementById('modalBackdrop').classList.remove('open'); }
+/* Öğrencinin kendi belgesine yazma (tik, deneme, çalışma) */
+async function writeInput(patch){ await getDb().collection('ticks').doc(tid).set({...patch, updatedAt:Date.now()}, {merge:true}); }
+async function deleteInput(field, id){ await getDb().collection('ticks').doc(tid).update({[`${field}.${id}`]: firebase.firestore.FieldValue.delete(), updatedAt:Date.now()}); }
 const app = document.getElementById('app');
 
 function getDb(){
@@ -231,7 +270,8 @@ async function startLive(){
     try{ data = await decryptPayload(snap.data(), myCode, sid); if(document.querySelector('.hero')) render(); }catch(e){}
   }, ()=>{});
   unsubTicks = getDb().collection('ticks').doc(tid).onSnapshot(snap => {
-    ticks = (snap.exists && snap.data().hw) || {};
+    inputs = (snap.exists && snap.data()) || {};
+    ticks = inputs.hw || {};
     if(document.querySelector('.hero')) render();
   }, ()=>{});
 }
@@ -273,7 +313,7 @@ async function submitCode(){
   try{ await unlock(code); render(); }
   catch(e){ renderGate(e.message); }
 }
-function logout(){ try{ localStorage.removeItem(CODE_KEY); }catch(e){} if(unsubPage) unsubPage(); if(unsubTicks) unsubTicks(); data = null; ticks = {}; renderGate(); }
+function logout(){ try{ localStorage.removeItem(CODE_KEY); }catch(e){} if(unsubPage) unsubPage(); if(unsubTicks) unsubTicks(); data = null; ticks = {}; inputs = {}; renderGate(); }
 async function refresh(){
   const code = localStorage.getItem(CODE_KEY); if(!code) return logout();
   try{ await unlock(code, false); render(); toastMsg('Güncellendi'); }
@@ -291,8 +331,8 @@ function render(){
   const s = data.student, td = today();
   const pendingHw = data.homeworks.filter(h=>hwStatus(h)!=='yapildi').length;
   const upcoming = data.lessons.filter(l=>l.date >= td && l.status!=='ertelendi').length;
-  const lastExam = [...data.exams].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
-  const tabs = [['program','📅 Ders Programı'],['odevler','📝 Ödevler'],['denemeler','📈 Denemeler']];
+  const lastExam = allExams().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const tabs = [['program','📅 Program'],['odevler','📝 Ödevler'],['denemeler','📈 Denemeler'],['calisma','📖 Çalışmalarım']];
   app.innerHTML = `
   <div class="hero">
     <div class="avatar" style="background:${avatarColor(sid)}">${esc(initials(s.name))}</div>
@@ -306,7 +346,7 @@ function render(){
     <div class="card stat"><div class="label">Son Deneme</div><div class="value">${lastExam ? (+lastExam.net).toLocaleString('tr-TR') : '—'}</div><div class="hint">${lastExam ? (lastExam.kind==='brans' ? lastExam.bransSubject+' branş' : lastExam.type||'genel') : 'kayıt yok'}</div></div>
   </div>
   <div class="tabs">${tabs.map(([id,l])=>`<button class="${tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</div>
-  ${tab==='program' ? viewProgram() : tab==='odevler' ? viewHomework() : viewExams()}
+  ${tab==='program' ? viewProgram() : tab==='odevler' ? viewHomework() : tab==='calisma' ? viewStudies() : viewExams()}
   <div class="foot">Bu sayfa yalnızca senin erişim kodunla açılır.<br><button onclick="logout()">Kodu unut / çıkış</button></div>`;
   window.scrollTo({top:0});
 }
@@ -393,23 +433,150 @@ function netBreakdown(e){
   const short = {'Türkçe':'Tür','Sosyal':'Sos','Matematik':'Mat','Fizik':'Fiz','Kimya':'Kim','Biyoloji':'Biy'};
   return Object.entries(e.nets).map(([k,v])=>`${short[k]||k} ${(+v).toLocaleString('tr-TR')}`).join(' · ');
 }
+/* Öğretmenin gönderdiği denemeler + henüz panele işlenmemiş kendi girdiklerim */
+function allExams(){
+  const mine = inputs.exams || {};
+  const known = new Set(data.exams.map(e=>e.srcId).filter(Boolean));
+  const pending = Object.entries(mine).filter(([id])=>!known.has(id)).map(([id,e])=>({...e, srcId:id, byStudent:true, net: e.kind==='brans' ? +e.net : Object.values(e.nets||{}).reduce((t,v)=>t+(+v||0),0)}));
+  return [...data.exams, ...pending];
+}
 function viewExams(){
-  if(!data.exams.length) return emptyState('📈','Deneme sonucu yok','Deneme sonuçların girildiğinde gelişim grafiğin burada oluşur.');
-  let list = [...data.exams].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const addBtn = `<button class="btn btn-sm" onclick="openExamForm()">＋ Deneme Ekle</button>`;
+  if(!allExams().length) return `<div class="toolbar">${addBtn}</div>` + emptyState('📈','Deneme sonucu yok','Deneme sonuçlarını sen de girebilirsin; gelişim grafiğin burada oluşur.');
+  let list = allExams().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(dersFilter) list = list.filter(e=>examNetFor(e, dersFilter)!=null);
   const sel = `<select onchange="setDers(this.value)"><option value="">Toplam net</option>${EXAM_DERS_FILTERS.map(d=>`<option ${dersFilter===d?'selected':''}>${d}</option>`).join('')}</select>`;
+  const mineChip = e => e.byStudent ? `<span class="chip badge-zero">sen girdin</span>` : '';
+  const acts = e => e.srcId ? `<div class="acts"><button class="icon-btn" onclick="openExamForm('${e.srcId}')" title="Düzenle">✎</button><button class="icon-btn" onclick="deleteExam('${e.srcId}')" title="Sil">🗑</button></div>` : '';
   const items = list.map(e=>`<div class="item">
     ${dateBox(e.date)}
     <div class="body">
       <div class="t">${esc(e.name || (e.kind==='brans' ? e.bransSubject+' Branş Denemesi' : (e.type||'Genel')+' Denemesi'))}</div>
-      <div class="chips">${e.kind==='brans' ? subjectChip(e.bransSubject)+'<span class="chip badge-zero">Branş</span>' : subjectChip(e.type||'Genel')}</div>
+      <div class="chips">${e.kind==='brans' ? subjectChip(e.bransSubject)+'<span class="chip badge-zero">Branş</span>' : subjectChip(e.type||'Genel')}${mineChip(e)}</div>
       ${e.nets?`<div class="d">${netBreakdown(e)}</div>`:''}
       ${e.kind==='brans'&&e.sure?`<div class="d">⏱ ${e.sure} dk</div>`:''}
       ${e.note?`<div class="d">${esc(e.note)}</div>`:''}
     </div>
     <div class="right"><b>${(examNetFor(e, dersFilter)??0).toLocaleString('tr-TR')}</b><span>${e.kind==='brans'?'/ 40 net':'net'}</span></div>
+    ${acts(e)}
   </div>`).join('');
-  return `<div class="toolbar">${sel}</div>${examChart(list, dersFilter)}${items || emptyState('📈','Bu derste sonuç yok','Başka bir ders seç.')}`;
+  return `<div class="toolbar">${addBtn}${sel}</div>${examChart(list, dersFilter)}${items || emptyState('📈','Bu derste sonuç yok','Başka bir ders seç.')}`;
+}
+/* --- Deneme girişi --- */
+let _examKind = 'genel';
+function openExamForm(srcId){
+  const e = srcId ? (allExams().find(x=>x.srcId===srcId) || {}) : {};
+  _examKind = e.kind || 'genel';
+  openModal(`
+  <h3>${srcId ? 'Denemeyi Düzenle' : 'Deneme Sonucu Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><div class="seg">
+      <button class="${_examKind==='genel'?'on':''}" onclick="setExamKind('genel')">Genel (TYT / AYT)</button>
+      <button class="${_examKind==='brans'?'on':''}" onclick="setExamKind('brans')">Branş</button>
+    </div></div>
+    <div class="field"><label>Tarih</label><input id="x_date" type="date" value="${e.date||today()}"></div>
+    <div class="field"><label>Deneme Adı</label><input id="x_name" value="${esc(e.name||'')}" placeholder="Örn. 3D TYT 4"></div>
+    <div class="field full" id="examFields"></div>
+    <div class="field full"><label>Not</label><input id="x_note" value="${esc(e.note||'')}" placeholder="isteğe bağlı"></div>
+  </div>
+  <div class="modal-actions">
+    ${srcId ? `<button class="btn-ghost btn-danger" onclick="deleteExam('${srcId}')">Sil</button>` : ''}
+    <button class="btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-sm" onclick="saveExamForm('${srcId||''}')">Kaydet</button>
+  </div>`);
+  window._editExam = e;
+  renderExamFields();
+}
+function setExamKind(k){ _examKind = k; document.querySelectorAll('.seg button').forEach((b,i)=>b.classList.toggle('on', (i===0)===(k==='genel'))); renderExamFields(); }
+function renderExamFields(){
+  const e = window._editExam || {}; const box = document.getElementById('examFields'); if(!box) return;
+  if(_examKind==='brans'){
+    box.innerHTML = `<div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="field"><label>Ders</label><select id="x_bsub">${EXAM_DERS_FILTERS.map(d=>`<option ${(e.bransSubject||'Matematik')===d?'selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="field"><label>Net (/40)</label><input id="x_bnet" type="text" inputmode="decimal" placeholder="0-40" value="${e.kind==='brans'?(e.net??''):''}"></div>
+      <div class="field"><label>Süre (dk)</label><input id="x_bsure" type="text" inputmode="numeric" placeholder="dk" value="${e.sure??''}"></div>
+    </div>`;
+  } else {
+    const type = document.getElementById('x_gtype') ? fv('x_gtype') : (GENEL_NETS[e.type] ? e.type : 'TYT');
+    box.innerHTML = `<div class="field"><label>Tür</label><select id="x_gtype" onchange="renderExamFields()">${Object.keys(GENEL_NETS).map(t=>`<option ${type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
+      ${GENEL_NETS[type].map(([n,max])=>`<div class="field"><label>${n} <span style="font-weight:400">/${max}</span></label><input class="gnet" data-sub="${n}" data-max="${max}" type="text" inputmode="decimal" placeholder="–" value="${e.nets&&e.nets[n]!=null?e.nets[n]:''}"></div>`).join('')}
+      </div>`;
+  }
+}
+async function saveExamForm(srcId){
+  const base = {date:fv('x_date')||today(), name:fv('x_name'), note:fv('x_note'), at:Date.now()};
+  let rec;
+  if(_examKind==='brans'){
+    const net = parseFloat(fv('x_bnet').replace(',','.')), sure = parseFloat(fv('x_bsure').replace(',','.'));
+    if(isNaN(net) || net<0 || net>40){ toastMsg('Net 0 ile 40 arasında olmalı'); return; }
+    rec = {...base, kind:'brans', bransSubject:fv('x_bsub'), net, sure:isNaN(sure)?null:sure, nets:null};
+  } else {
+    const type = fv('x_gtype'); const nets = {}; let any = false, err = '';
+    document.querySelectorAll('.gnet').forEach(inp=>{
+      const v = inp.value.trim(); if(v==='') return;
+      const n = parseFloat(v.replace(',','.')), max = +inp.dataset.max;
+      if(isNaN(n) || n<0 || n>max){ err = `${inp.dataset.sub} neti en çok ${max} olabilir`; return; }
+      nets[inp.dataset.sub] = n; any = true;
+    });
+    if(err){ toastMsg(err); return; }
+    if(!any){ toastMsg('En az bir ders için net gir'); return; }
+    rec = {...base, kind:'genel', type, nets, net:null, bransSubject:null, sure:null};
+  }
+  const id = srcId || uid();
+  try{ await writeInput({exams:{[id]:rec}}); closeModal(); toastMsg('Deneme kaydedildi ✓'); }
+  catch(e){ toastMsg('Kaydedilemedi, tekrar dene'); }
+}
+async function deleteExam(srcId){
+  if(!confirm('Bu deneme silinsin mi?')) return;
+  try{ await deleteInput('exams', srcId); closeModal(); toastMsg('Silindi'); }
+  catch(e){ toastMsg('Silinemedi, tekrar dene'); }
+}
+
+/* --- Çalışmalarım --- */
+function viewStudies(){
+  const td = today();
+  const list = Object.entries(inputs.studies || {}).map(([id,x])=>({id, ...x})).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.at||0)-(a.at||0));
+  const mon = new Date(); mon.setDate(mon.getDate() - dayIdx(td)); const from = localDate(mon);
+  const wk = list.filter(x=>x.date >= from);
+  const bySub = {}; let tot = 0; wk.forEach(x=>{ const h=+x.hours||0; tot+=h; bySub[x.subject]=(bySub[x.subject]||0)+h; });
+  const form = `<div class="card study-form">
+    <h3>Bugün ne çalıştın?</h3>
+    <div class="form-grid">
+      <div class="field"><label>Tarih</label><input id="s_date" type="date" value="${td}"></div>
+      <div class="field"><label>Ders</label><select id="s_subject">${SUBJECT_LIST.map(d=>`<option>${d}</option>`).join('')}</select></div>
+      <div class="field"><label>Süre (saat)</label><input id="s_hours" type="text" inputmode="decimal" placeholder="örn. 1,5"></div>
+      <div class="field full"><label>Konu / detay</label><textarea id="s_topic" placeholder="Örn. Türev alma kuralları, 60 soru çözdüm; zincir kuralında zorlandım"></textarea></div>
+    </div>
+    <div class="modal-actions" style="margin-top:10px"><button class="btn btn-sm" onclick="saveStudy()">Kaydet</button></div>
+  </div>`;
+  const summary = wk.length ? `<div class="section-title">Bu hafta · ${tot.toLocaleString('tr-TR')} saat</div>
+    <div class="week-chips">${Object.entries(bySub).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v.toLocaleString('tr-TR')} sa</span>`).join('')}</div>` : '';
+  let items = ''; let lastDate = null;
+  list.forEach(x=>{
+    if(x.date !== lastDate){ items += `<div class="section-title">${x.date===td?'Bugün':fmtDate(x.date)} · ${WD_LONG[dayIdx(x.date)]}</div>`; lastDate = x.date; }
+    items += `<div class="item">
+      <div class="body">
+        <div class="chips" style="margin:0 0 4px">${subjectChip(x.subject)}${x.hours?`<span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${(+x.hours).toLocaleString('tr-TR')} sa</span>`:''}</div>
+        ${x.topic?`<div class="d" style="color:var(--ink);white-space:pre-line">${esc(x.topic)}</div>`:''}
+      </div>
+      <button class="icon-btn" onclick="deleteStudy('${x.id}')" title="Sil">🗑</button>
+    </div>`;
+  });
+  return form + summary + (items || emptyState('📖','Henüz çalışma kaydı yok','Her çalışmandan sonra buraya bir satır ekle; öğretmenin de görür.'));
+}
+async function saveStudy(){
+  const date = fv('s_date') || today(), subject = fv('s_subject'), topic = fv('s_topic');
+  const hours = parseFloat(fv('s_hours').replace(',','.'));
+  if(!topic && isNaN(hours)){ toastMsg('Süre ya da konu gir'); return; }
+  const rec = {date, subject, hours:isNaN(hours)?0:hours, topic, at:Date.now()};
+  try{ await writeInput({studies:{[uid()]:rec}}); toastMsg('Çalışma kaydedildi ✓'); }
+  catch(e){ toastMsg('Kaydedilemedi, tekrar dene'); }
+}
+async function deleteStudy(id){
+  if(!confirm('Bu kayıt silinsin mi?')) return;
+  try{ await deleteInput('studies', id); toastMsg('Silindi'); }
+  catch(e){ toastMsg('Silinemedi, tekrar dene'); }
 }
 function examChart(list, ders){
   ders = ders || '';
