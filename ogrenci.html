@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Öğrenci Sayfam</title>
+<style>
+:root{
+  --bg:#f4f3ef; --bg2:#edeff9; --card:#ffffff; --ink:#20222e; --muted:#6d7089; --line:#e8e7f0; --line-strong:#c9cdea;
+  --accent:#4f46e5; --accent2:#9333ea; --accent-soft:#edebfd;
+  --green:#0f9d6e; --green-soft:#e3f6ee; --red:#e5484d; --red-soft:#fdebec;
+  --amber:#b45309; --amber-soft:#fdf1e0; --blue:#2563eb; --blue-soft:#e7eefe;
+  --cyan:#0e7490; --cyan-soft:#e0f4f8; --violet:#7c3aed; --violet-soft:#f1eafd;
+  --rose:#be185d; --rose-soft:#fce7f1; --field-bg:#fafbfe;
+  --hero1:#232447; --hero2:#3b3b8f; --hero3:#6d4bc4;
+  --glow:rgba(79,70,229,.5);
+  --shadow:0 1px 2px rgba(30,33,56,.05),0 8px 24px -12px rgba(30,33,56,.12);
+  --shadow-lg:0 24px 60px -24px rgba(30,33,56,.28);
+  --radius:18px;
+  font-size:15px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#16151b; --bg2:#0f0e13; --card:#1e1d25; --ink:#eceaf2; --muted:#9c9dae; --line:#2c2b37; --line-strong:#403e4f;
+    --accent:#818cf8; --accent2:#c084fc; --accent-soft:#25243a;
+    --green:#34d399; --green-soft:#142b21; --red:#f87171; --red-soft:#33191c;
+    --amber:#fbbf24; --amber-soft:#2f2712; --blue:#60a5fa; --blue-soft:#182437;
+    --cyan:#22d3ee; --cyan-soft:#11303a; --violet:#a78bfa; --violet-soft:#261e3b;
+    --rose:#fb7185; --rose-soft:#341a24; --field-bg:#17161d;
+    --hero1:#1b1c3a; --hero2:#31317a; --hero3:#5b3fae;
+    --glow:rgba(129,140,248,.4);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px -12px rgba(0,0,0,.55);
+    --shadow-lg:0 24px 60px -24px rgba(0,0,0,.75);
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  background:linear-gradient(155deg,var(--bg) 0%,var(--bg2) 100%) fixed;
+  color:var(--ink); min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;font-size:1rem}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 60px}
+
+.hero{
+  border-radius:var(--radius);padding:22px 22px;color:#fff;margin-bottom:16px;
+  background:linear-gradient(120deg,var(--hero1) 0%,var(--hero2) 55%,var(--hero3) 100%);
+  box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:16px;
+}
+.avatar{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:1.2rem;flex-shrink:0;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.hero h1{font-size:1.3rem;letter-spacing:-.02em}
+.hero .sub{color:#c9cdf2;font-size:.84rem;margin-top:3px}
+.hero .spacer{flex:1}
+.hero .mini{background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:6px 10px;font-size:.78rem;font-weight:600}
+.hero .mini:hover{background:rgba(255,255,255,.24)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{padding:14px 14px}
+.stat .label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat .value{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;margin-top:5px}
+.stat .hint{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+.tabs{display:flex;gap:6px;margin:6px 0 14px;overflow-x:auto;padding-bottom:2px}
+.tabs button{padding:8px 12px;border-radius:10px;font-size:.84rem;font-weight:600;color:var(--muted);white-space:nowrap;transition:all .15s}
+.tabs button.active{background:var(--card);color:var(--accent);box-shadow:var(--shadow);border:1px solid var(--line)}
+
+.section-title{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px;display:flex;align-items:center;gap:8px}
+.item{
+  display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);
+  border-radius:13px;margin-bottom:8px;background:var(--card);box-shadow:var(--shadow);
+}
+.item.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset,var(--shadow)}
+.item.muted{opacity:.6}
+.item .date{
+  width:52px;flex-shrink:0;text-align:center;border-radius:10px;padding:6px 0;background:var(--field-bg);border:1px solid var(--line);
+}
+.item .date b{display:block;font-size:1.15rem;line-height:1.1}
+.item .date span{display:block;font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;line-height:1.3}
+.item .body{flex:1;min-width:0}
+.item .t{font-weight:700;font-size:.95rem}
+.item .d{font-size:.8rem;color:var(--muted);margin-top:3px;line-height:1.45;word-break:break-word}
+.item .right{text-align:right;flex-shrink:0}
+.item .right b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.item .right span{font-size:.72rem;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:600;white-space:nowrap}
+.badge-pos{background:var(--green-soft);color:var(--green)}
+.badge-neg{background:var(--red-soft);color:var(--red)}
+.badge-zero{background:var(--accent-soft);color:var(--accent)}
+.hw-bekliyor{background:var(--amber-soft);color:var(--amber)}
+.hw-yapildi{background:var(--green-soft);color:var(--green)}
+.hw-eksik{background:var(--red-soft);color:var(--red)}
+.hw-gecikti{background:var(--red-soft);color:var(--red)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty .emoji{font-size:2rem;margin-bottom:8px}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+.empty p{font-size:.86rem}
+
+.chart-box{padding:16px 16px;margin-bottom:14px}
+.chart-box h3{font-size:.95rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chart-box svg{width:100%;height:auto;display:block}
+.chart-legend{display:flex;gap:14px;font-size:.76rem;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.toolbar select{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:.9rem;outline:none}
+.link-btn{font-size:.82rem;color:var(--accent);font-weight:600;padding:6px 8px}
+
+/* Giriş ekranı */
+.gate{max-width:400px;margin:10vh auto 0;padding:28px 24px;text-align:center}
+.gate .mark{width:56px;height:56px;border-radius:16px;margin:0 auto 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.3rem;box-shadow:0 8px 20px -8px var(--glow)}
+.gate h2{font-size:1.2rem;margin-bottom:6px}
+.gate p{font-size:.86rem;color:var(--muted);line-height:1.5;margin-bottom:18px}
+.gate input{
+  width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--field-bg);color:var(--ink);
+  text-align:center;font-size:1.4rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;outline:none;
+}
+.gate input:focus{border-color:var(--accent)}
+.gate .btn{margin-top:12px;width:100%}
+.gate .err{color:var(--red);font-size:.84rem;margin-top:10px;min-height:1.2em}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:12px;
+  font-size:.95rem;font-weight:600;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 8px 18px -8px var(--glow);transition:all .15s;
+}
+.btn:disabled{opacity:.6;cursor:default}
+.foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
+.foot button{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* ================= YARDIMCILAR ================= */
+const SUBJECTS = {
+  'Matematik':['var(--blue-soft)','var(--blue)'], 'Geometri':['var(--cyan-soft)','var(--cyan)'],
+  'Fizik':['var(--violet-soft)','var(--violet)'], 'Kimya':['var(--accent-soft)','var(--accent)'],
+  'Biyoloji':['var(--green-soft)','var(--green)'], 'Türkçe':['var(--amber-soft)','var(--amber)'],
+  'Deneme':['var(--rose-soft)','var(--rose)'],
+};
+const AVATAR_COLORS = ['#5b5bd6','#0e7490','#0f9d6e','#b45309','#be185d','#7c3aed','#2563eb','#dc6803','#15803d','#9f1239'];
+const WD_SHORT = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+const WD_LONG = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => d ? new Date(d+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'}) : '—';
+const fmtClock = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+const localDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const today = () => localDate(new Date());
+const dayIdx = ds => (new Date(ds+'T12:00').getDay()+6)%7;
+const subjectChip = n => { const c = SUBJECTS[n] || ['var(--accent-soft)','var(--accent)']; return `<span class="chip" style="background:${c[0]};color:${c[1]}">${esc(n)}</span>`; };
+function avatarColor(id){ let h=0; for(const ch of id) h=(h*31+ch.charCodeAt(0))>>>0; return AVATAR_COLORS[h%AVATAR_COLORS.length]; }
+const initials = name => name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+function dateBox(ds, extra=''){
+  const d = new Date(ds+'T12:00');
+  return `<div class="date"><b>${d.getDate()}</b><span>${d.toLocaleDateString('tr-TR',{month:'short'})}</span><span>${WD_SHORT[dayIdx(ds)]}</span>${extra}</div>`;
+}
+const emptyState = (emoji,title,text) => `<div class="card empty"><div class="emoji">${emoji}</div><b>${title}</b><p>${text}</p></div>`;
+
+/* ================= ŞİFRE ÇÖZME ================= */
+const _te = new TextEncoder(), _td = new TextDecoder();
+const b64ToBuf = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(code, salt){
+  const base = await crypto.subtle.importKey('raw', _te.encode(code.trim().toUpperCase()), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:_te.encode(salt), iterations:120000, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+async function decryptPayload(pkg, code, salt){
+  const key = await deriveKey(code, salt);
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:b64ToBuf(pkg.iv)}, key, b64ToBuf(pkg.data));
+  return JSON.parse(_td.decode(pt));
+}
+
+/* ================= DURUM ================= */
+const sid = new URLSearchParams(location.search).get('o') || '';
+const CODE_KEY = 'ogrenciKod_' + sid;
+let data = null, tab = 'program', dersFilter = '';
+const app = document.getElementById('app');
+
+async function fetchPackage(){
+  const r = await fetch(`data/${encodeURIComponent(sid)}.json?t=${Date.now()}`, {cache:'no-store'});
+  if(r.status===404) throw new Error('Sayfan henüz yayınlanmamış. Öğretmenine haber ver.');
+  if(!r.ok) throw new Error('Veri alınamadı (HTTP ' + r.status + '). Biraz sonra tekrar dene.');
+  return r.json();
+}
+async function unlock(code, remember=true){
+  const pkg = await fetchPackage();
+  try{ data = await decryptPayload(pkg, code, sid); }
+  catch(e){ throw new Error('Erişim kodu hatalı.'); }
+  if(remember){ try{ localStorage.setItem(CODE_KEY, code.trim().toUpperCase()); }catch(e){} }
+}
+
+/* ================= EKRANLAR ================= */
+function renderGate(msg='', busy=false){
+  app.innerHTML = `
+  <div class="card gate">
+    <div class="mark">ÖT</div>
+    <h2>Öğrenci Sayfam</h2>
+    <p>Öğretmeninin sana verdiği 6 haneli erişim kodunu gir. Kod bu cihazda hatırlanır.</p>
+    <input id="codeInp" maxlength="6" autocomplete="one-time-code" autocapitalize="characters" placeholder="ABC123" ${busy?'disabled':''}>
+    <button class="btn" id="goBtn" ${busy?'disabled':''} onclick="submitCode()">${busy?'Açılıyor…':'Sayfamı Aç'}</button>
+    <div class="err" id="gateErr">${esc(msg)}</div>
+  </div>`;
+  const inp = document.getElementById('codeInp');
+  if(inp && !busy){ inp.focus(); inp.addEventListener('keydown', e=>{ if(e.key==='Enter') submitCode(); }); }
+}
+async function submitCode(){
+  const code = (document.getElementById('codeInp')||{}).value || '';
+  if(code.trim().length < 4){ document.getElementById('gateErr').textContent = 'Kodu eksiksiz gir.'; return; }
+  renderGate('', true);
+  try{ await unlock(code); render(); }
+  catch(e){ renderGate(e.message); }
+}
+function logout(){ try{ localStorage.removeItem(CODE_KEY); }catch(e){} data = null; renderGate(); }
+async function refresh(){
+  const code = localStorage.getItem(CODE_KEY); if(!code) return logout();
+  try{ await unlock(code, false); render(); toastMsg('Güncellendi'); }
+  catch(e){ toastMsg(e.message); }
+}
+function toastMsg(m){
+  let t = document.getElementById('toast');
+  if(!t){ t = document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:.86rem;z-index:99;box-shadow:var(--shadow-lg);transition:opacity .25s'; document.body.appendChild(t); }
+  t.textContent = m; t.style.opacity = 1; clearTimeout(t._h); t._h = setTimeout(()=>t.style.opacity=0, 2200);
+}
+function setTab(t){ tab = t; render(); }
+function setDers(v){ dersFilter = v; render(); }
+
+function render(){
+  const s = data.student, td = today();
+  const pendingHw = data.homeworks.filter(h=>h.status!=='yapildi').length;
+  const upcoming = data.lessons.filter(l=>l.date >= td && l.status!=='ertelendi').length;
+  const lastExam = [...data.exams].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const tabs = [['program','📅 Ders Programı'],['odevler','📝 Ödevler'],['denemeler','📈 Denemeler']];
+  app.innerHTML = `
+  <div class="hero">
+    <div class="avatar" style="background:${avatarColor(sid)}">${esc(initials(s.name))}</div>
+    <div><h1>${esc(s.name)}</h1><div class="sub">${esc(s.grade||'')}${s.grade?' · ':''}Güncelleme: ${new Date(data.publishedAt).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</div></div>
+    <div class="spacer"></div>
+    <button class="mini" onclick="refresh()" title="Yenile">⟳</button>
+  </div>
+  <div class="stat-grid">
+    <div class="card stat"><div class="label">Bekleyen Ödev</div><div class="value" style="color:${pendingHw?'var(--amber)':'var(--green)'}">${pendingHw}</div><div class="hint">${pendingHw?'teslim bekliyor':'hepsi tamam 🎉'}</div></div>
+    <div class="card stat"><div class="label">Yaklaşan Ders</div><div class="value">${upcoming}</div><div class="hint">planlanan</div></div>
+    <div class="card stat"><div class="label">Son Deneme</div><div class="value">${lastExam ? (+lastExam.net).toLocaleString('tr-TR') : '—'}</div><div class="hint">${lastExam ? (lastExam.kind==='brans' ? lastExam.bransSubject+' branş' : lastExam.type||'genel') : 'kayıt yok'}</div></div>
+  </div>
+  <div class="tabs">${tabs.map(([id,l])=>`<button class="${tab===id?'active':''}" onclick="setTab('${id}')">${l}</button>`).join('')}</div>
+  ${tab==='program' ? viewProgram() : tab==='odevler' ? viewHomework() : viewExams()}
+  <div class="foot">Bu sayfa yalnızca senin erişim kodunla açılır.<br><button onclick="logout()">Kodu unut / çıkış</button></div>`;
+  window.scrollTo({top:0});
+}
+
+/* --- Ders programı --- */
+function lessonItem(l, td){
+  const cls = l.date===td ? 'today' : (l.date < td ? 'muted' : '');
+  return `<div class="item ${cls}">
+    ${dateBox(l.date)}
+    <div class="body">
+      <div class="t">${l.start!=null ? fmtClock(l.start) + ' – ' + fmtClock(l.start + Math.round((+l.hours||1)*60)) : ''} <span style="color:var(--muted);font-weight:500;font-size:.85rem">· ${(+l.hours).toLocaleString('tr-TR')} saat</span></div>
+      <div class="chips">${subjectChip(l.subject)}${l.status==='ertelendi'?'<span class="chip hw-bekliyor">⏳ Ertelendi</span>':''}${l.date===td?'<span class="chip badge-zero">Bugün</span>':''}</div>
+      ${l.topic?`<div class="d">${esc(l.topic)}</div>`:''}
+    </div>
+  </div>`;
+}
+let showPast = false;
+function togglePast(){ showPast = !showPast; render(); }
+function viewProgram(){
+  const td = today();
+  const all = [...data.lessons].sort((a,b)=>(a.date||'').localeCompare(b.date||'') || (a.start||0)-(b.start||0));
+  const future = all.filter(l=>l.date >= td);
+  const past = all.filter(l=>l.date < td).reverse();
+  if(!all.length) return emptyState('📚','Henüz ders planı yok','Öğretmenin ders eklediğinde burada görünür.');
+  // Haftaya göre grupla
+  let html = '';
+  if(!future.length) html += emptyState('📅','Planlanmış ders yok','Yeni dersler eklendiğinde burada görünür.');
+  let lastWeek = null;
+  future.forEach(l=>{
+    const d = new Date(l.date+'T12:00'); const mon = new Date(d); mon.setDate(d.getDate() - dayIdx(l.date));
+    const wk = localDate(mon);
+    if(wk !== lastWeek){
+      const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+      const thisMon = new Date(); thisMon.setDate(thisMon.getDate() - dayIdx(td));
+      const label = wk === localDate(thisMon) ? 'Bu hafta' : `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
+      html += `<div class="section-title">${label}</div>`; lastWeek = wk;
+    }
+    html += lessonItem(l, td);
+  });
+  if(past.length){
+    html += `<div class="section-title">Geçmiş dersler <button class="link-btn" onclick="togglePast()">${showPast?'Gizle':past.length+' ders · Göster'}</button></div>`;
+    if(showPast) html += past.map(l=>lessonItem(l, td)).join('');
+  }
+  return html;
+}
+
+/* --- Ödevler --- */
+function viewHomework(){
+  if(!data.homeworks.length) return emptyState('📝','Ödev yok','Öğretmenin ödev verdiğinde burada görünür.');
+  const td = today();
+  const order = {bekliyor:0, eksik:1, yapildi:2};
+  const list = [...data.homeworks].sort((a,b)=>(order[a.status]-order[b.status]) || (a.due||'').localeCompare(b.due||''));
+  const open = list.filter(h=>h.status!=='yapildi'), done = list.filter(h=>h.status==='yapildi');
+  const item = h => {
+    const late = h.status==='bekliyor' && h.due && h.due < td;
+    const label = {bekliyor:'Bekliyor', yapildi:'Yapıldı ✓', eksik:'Eksik'}[h.status] || h.status;
+    return `<div class="item ${h.status==='yapildi'?'muted':''} ${h.due===td && h.status!=='yapildi'?'today':''}">
+      ${h.due ? dateBox(h.due) : '<div class="date"><b>—</b><span>tarih</span></div>'}
+      <div class="body">
+        <div class="t">${esc(h.desc||'')}</div>
+        <div class="chips">${subjectChip(h.subject)}<span class="chip ${late?'hw-gecikti':'hw-'+h.status}">${late?'Gecikti':label}</span>${h.due===td && h.status!=='yapildi'?'<span class="chip badge-zero">Bugün teslim</span>':''}</div>
+      </div>
+    </div>`;
+  };
+  let html = '';
+  if(open.length){ html += `<div class="section-title">Yapılacaklar</div>` + open.map(item).join(''); }
+  else html += emptyState('🎉','Bekleyen ödevin yok','Harika, hepsini tamamlamışsın!');
+  if(done.length){ html += `<div class="section-title">Tamamlananlar</div>` + done.map(item).join(''); }
+  return html;
+}
+
+/* --- Denemeler --- */
+const EXAM_DERS_FILTERS = ['Türkçe','Sosyal','Matematik','Fizik','Kimya','Biyoloji'];
+function examNetFor(e, ders){
+  if(!ders) return +e.net || 0;
+  if(e.kind==='brans') return e.bransSubject===ders ? (+e.net||0) : null;
+  if(e.nets && e.nets[ders]!=null) return +e.nets[ders];
+  return null;
+}
+function netBreakdown(e){
+  if(!e.nets) return '';
+  const short = {'Türkçe':'Tür','Sosyal':'Sos','Matematik':'Mat','Fizik':'Fiz','Kimya':'Kim','Biyoloji':'Biy'};
+  return Object.entries(e.nets).map(([k,v])=>`${short[k]||k} ${(+v).toLocaleString('tr-TR')}`).join(' · ');
+}
+function viewExams(){
+  if(!data.exams.length) return emptyState('📈','Deneme sonucu yok','Deneme sonuçların girildiğinde gelişim grafiğin burada oluşur.');
+  let list = [...data.exams].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(dersFilter) list = list.filter(e=>examNetFor(e, dersFilter)!=null);
+  const sel = `<select onchange="setDers(this.value)"><option value="">Toplam net</option>${EXAM_DERS_FILTERS.map(d=>`<option ${dersFilter===d?'selected':''}>${d}</option>`).join('')}</select>`;
+  const items = list.map(e=>`<div class="item">
+    ${dateBox(e.date)}
+    <div class="body">
+      <div class="t">${esc(e.name || (e.kind==='brans' ? e.bransSubject+' Branş Denemesi' : (e.type||'Genel')+' Denemesi'))}</div>
+      <div class="chips">${e.kind==='brans' ? subjectChip(e.bransSubject)+'<span class="chip badge-zero">Branş</span>' : subjectChip(e.type||'Genel')}</div>
+      ${e.nets?`<div class="d">${netBreakdown(e)}</div>`:''}
+      ${e.kind==='brans'&&e.sure?`<div class="d">⏱ ${e.sure} dk</div>`:''}
+      ${e.note?`<div class="d">${esc(e.note)}</div>`:''}
+    </div>
+    <div class="right"><b>${(examNetFor(e, dersFilter)??0).toLocaleString('tr-TR')}</b><span>${e.kind==='brans'?'/ 40 net':'net'}</span></div>
+  </div>`).join('');
+  return `<div class="toolbar">${sel}</div>${examChart(list, dersFilter)}${items || emptyState('📈','Bu derste sonuç yok','Başka bir ders seç.')}`;
+}
+function examChart(list, ders){
+  ders = ders || '';
+  const title = `Net Gelişimi · ${ders||'Toplam'}`;
+  const pts = [...list].filter(e=>ders || e.kind!=='brans')
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''))
+    .map(e=>({...e, _val:examNetFor(e, ders)})).filter(e=>e._val!=null);
+  if(pts.length < 2) return `<div class="card chart-box"><h3>${title}</h3><p style="color:var(--muted);font-size:.84rem">Grafik için en az 2 deneme sonucu gerekli.</p></div>`;
+  const W=720, H=240, PL=44, PR=16, PT=18, PB=34;
+  const nets = pts.map(p=>+p._val);
+  let min = Math.min(...nets), max = Math.max(...nets);
+  if(min===max){ min-=5; max+=5; }
+  const pad = (max-min)*0.15; min=Math.max(0,min-pad); max+=pad;
+  const X = i => PL + (W-PL-PR) * (i/(pts.length-1));
+  const Y = v => PT + (H-PT-PB) * (1-(v-min)/(max-min));
+  let grid='', labels='';
+  for(let g=0; g<=4; g++){
+    const v = min + (max-min)*g/4, y = Y(v);
+    grid += `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    labels += `<text x="${PL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(0)}</text>`;
+  }
+  const coords = pts.map((p,i)=>[X(i), Y(+p._val)]);
+  const line = coords.map((c,i)=>(i?'L':'M')+c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' ');
+  const area = line + ` L ${coords[coords.length-1][0].toFixed(1)} ${H-PB} L ${coords[0][0].toFixed(1)} ${H-PB} Z`;
+  const hasBrans = pts.some(p=>p.kind==='brans');
+  const dots = pts.map((p,i)=>{
+    const [x,y]=coords[i]; const col = p.kind==='brans' ? 'var(--rose)' : 'var(--accent)';
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5" fill="var(--card)" stroke="${col}" stroke-width="2.5"><title>${esc(p.name||'')} · ${fmtDate(p.date)} · ${(+p._val).toLocaleString('tr-TR')} net</title></circle>
+      <text x="${x.toFixed(1)}" y="${(y-11).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${col}">${(+p._val).toLocaleString('tr-TR')}</text>`;
+  }).join('');
+  const xLabels = pts.map((p,i)=> (pts.length>8 && i%2===1) ? '' :
+    `<text x="${X(i).toFixed(1)}" y="${H-12}" text-anchor="middle" font-size="10" fill="var(--muted)">${new Date(p.date+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>`).join('');
+  const diff = nets[nets.length-1]-nets[0];
+  const trend = diff>=0 ? `<span class="chip badge-pos">↑ ${diff.toLocaleString('tr-TR')} net artış</span>` : `<span class="chip badge-neg">↓ ${(-diff).toLocaleString('tr-TR')} net düşüş</span>`;
+  const legend = hasBrans ? `<div class="chart-legend"><span><i style="background:var(--accent)"></i>Genel deneme</span><span><i style="background:var(--rose)"></i>Branş denemesi</span></div>` : '';
+  return `<div class="card chart-box"><h3>${title} ${trend}</h3>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      <defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      ${grid}${labels}<path d="${area}" fill="url(#gArea)"/>
+      <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}${xLabels}
+    </svg>${legend}</div>`;
+}
+
+/* ================= BAŞLAT ================= */
+(async function init(){
+  if(!sid){ app.innerHTML = emptyState('🔗','Geçersiz bağlantı','Öğretmeninin sana gönderdiği bağlantıyı kullan.'); return; }
+  if(!window.isSecureContext || !crypto.subtle){ app.innerHTML = emptyState('🔒','Güvenli bağlantı gerekli','Bu sayfa yalnızca https adresinden açılabilir.'); return; }
+  let saved = null; try{ saved = localStorage.getItem(CODE_KEY); }catch(e){}
+  if(saved){
+    renderGate('', true);
+    try{ await unlock(saved, false); render(); return; }
+    catch(e){ renderGate(e.message.includes('hatalı') ? 'Kodun değişmiş; yeni kodunu gir.' : e.message); return; }
+  }
+  renderGate();
+})();
+</script>
+</body>
+</html>

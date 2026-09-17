@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Öğrenci Takip Sistemi</title>
+<style>
+:root{
+  --bg:#f4f3ef; --bg2:#edeff9; --card:#ffffff; --ink:#20222e; --muted:#6d7089; --line:#e8e7f0; --line-strong:#c9cdea;
+  --accent:#4f46e5; --accent2:#9333ea; --accent-soft:#edebfd;
+  --green:#0f9d6e; --green-soft:#e3f6ee; --red:#e5484d; --red-soft:#fdebec;
+  --amber:#b45309; --amber-soft:#fdf1e0; --blue:#2563eb; --blue-soft:#e7eefe;
+  --cyan:#0e7490; --cyan-soft:#e0f4f8; --violet:#7c3aed; --violet-soft:#f1eafd;
+  --rose:#be185d; --rose-soft:#fce7f1;
+  --row-hover:#f7f8fd; --field-bg:#fafbfe;
+  --sb-bg:#171830; --sb-text:#c6c9e8; --sb-strong:#ffffff; --sb-muted:#9498c4;
+  --sb-hover:rgba(255,255,255,.07); --sb-line:rgba(255,255,255,.09);
+  --hero1:#232447; --hero2:#3b3b8f; --hero3:#6d4bc4;
+  --toast-bg:#191b2e; --toast-ink:#ffffff;
+  --glow:rgba(79,70,229,.5);
+  --shadow:0 1px 2px rgba(30,33,56,.05),0 8px 24px -12px rgba(30,33,56,.12);
+  --shadow-lg:0 24px 60px -24px rgba(30,33,56,.28);
+  --radius:18px;
+  font-size:15px;
+}
+body.dark{
+  --bg:#16151b; --bg2:#0f0e13; --card:#1e1d25; --ink:#eceaf2; --muted:#9c9dae; --line:#2c2b37; --line-strong:#403e4f;
+  --accent:#f97316; --accent2:#fb923c; --accent-soft:#2f2119;
+  --green:#34d399; --green-soft:#142b21; --red:#f87171; --red-soft:#33191c;
+  --amber:#fbbf24; --amber-soft:#2f2712; --blue:#60a5fa; --blue-soft:#182437;
+  --cyan:#22d3ee; --cyan-soft:#11303a; --violet:#a78bfa; --violet-soft:#261e3b;
+  --rose:#fb7185; --rose-soft:#341a24;
+  --row-hover:#24232d; --field-bg:#17161d;
+  --sb-bg:#1b140c; --sb-text:#d8cfc3; --sb-strong:#ffffff; --sb-muted:#a3947f;
+  --sb-hover:rgba(255,255,255,.06); --sb-line:rgba(255,255,255,.09);
+  --hero1:#211405; --hero2:#7c2d12; --hero3:#cc5803;
+  --toast-bg:#f5f1ea; --toast-ink:#1d1409;
+  --glow:rgba(249,115,22,.45);
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px -12px rgba(0,0,0,.55);
+  --shadow-lg:0 24px 60px -24px rgba(0,0,0,.75);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  background:linear-gradient(155deg,var(--bg) 0%,var(--bg2) 100%) fixed;
+  color:var(--ink); min-height:100vh;
+  transition:color .25s;
+}
+body,.card,.sidebar,.modal{transition:background-color .25s,border-color .25s}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:.95rem}
+
+/* ---------- Layout ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:234px;flex-shrink:0;background:var(--sb-bg);color:var(--sb-text);
+  display:flex;flex-direction:column;position:sticky;top:14px;height:calc(100vh - 28px);
+  margin:14px 0 14px 14px;border-radius:24px;padding:22px 14px;box-shadow:var(--shadow-lg);
+}
+.logo{display:flex;align-items:center;gap:10px;padding:2px 10px 22px}
+.logo-mark{
+  width:38px;height:38px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;color:#fff;font-weight:700;font-size:1.05rem;
+  box-shadow:0 6px 16px -6px var(--glow);
+}
+.logo-text{line-height:1.15}
+.logo-text b{color:var(--sb-strong);font-size:1rem;display:block}
+.logo-text span{font-size:.72rem;color:var(--sb-muted);letter-spacing:.04em}
+.nav{display:flex;flex-direction:column;gap:3px;flex:1}
+.nav button{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;
+  color:var(--sb-text);font-size:.93rem;font-weight:500;text-align:left;transition:all .15s;width:100%;
+}
+.nav button svg{width:19px;height:19px;flex-shrink:0;opacity:.85}
+.nav button:hover{background:var(--sb-hover);color:var(--sb-strong)}
+.nav button.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;box-shadow:0 8px 18px -8px var(--glow);
+}
+.sidebar-foot{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--sb-line);padding-top:12px}
+.sidebar-foot button{
+  display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:11px;
+  color:var(--sb-muted);font-size:.86rem;transition:all .15s;width:100%;
+}
+.sidebar-foot button:hover{background:var(--sb-hover);color:var(--sb-strong)}
+.sidebar-foot svg{width:17px;height:17px}
+
+.main{flex:1;min-width:0;padding:28px 34px 60px;max-width:1180px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+.topbar h1{font-size:1.45rem;font-weight:700;letter-spacing:-.02em}
+.topbar .sub{color:var(--muted);font-size:.86rem;margin-top:3px}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:11px;
+  font-size:.9rem;font-weight:600;transition:all .15s;white-space:nowrap;
+}
+.btn svg{width:16px;height:16px}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 8px 18px -8px var(--glow);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 22px -8px var(--glow)}
+.btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--ink);box-shadow:var(--shadow)}
+.btn-ghost:hover{border-color:var(--line-strong)}
+.btn-danger{background:var(--red-soft);color:var(--red)}
+.btn-danger:hover{background:#fbdadc}
+.btn-sm{padding:6px 11px;font-size:.82rem;border-radius:9px}
+.icon-btn{
+  width:30px;height:30px;border-radius:9px;display:inline-grid;place-items:center;
+  color:var(--muted);transition:all .15s;
+}
+.icon-btn:hover{background:var(--accent-soft);color:var(--accent)}
+.icon-btn.danger:hover{background:var(--red-soft);color:var(--red)}
+.icon-btn svg{width:15px;height:15px}
+
+/* ---------- Cards & stats ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat{padding:18px 20px;position:relative;overflow:hidden}
+.stat .label{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat .value{font-size:1.55rem;font-weight:700;letter-spacing:-.02em;margin-top:7px}
+.stat .hint{font-size:.78rem;color:var(--muted);margin-top:4px}
+.stat .stat-ico{
+  position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:12px;
+  display:grid;place-items:center;
+}
+.stat .stat-ico svg{width:19px;height:19px}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+.panel{padding:20px 22px}
+.panel h3{font-size:.98rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.panel h3 .more{font-size:.8rem;color:var(--accent);font-weight:600}
+
+/* ---------- Tables ---------- */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{
+  text-align:left;font-size:.73rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.06em;padding:12px 14px;border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:var(--row-hover)}
+td.num{font-variant-numeric:tabular-nums;font-weight:600}
+td .row-note{display:block;font-size:.78rem;color:var(--muted);margin-top:2px}
+
+/* ---------- Chips, badges, avatars ---------- */
+.chip{
+  display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;
+  font-size:.76rem;font-weight:600;white-space:nowrap;
+}
+.badge-pos{background:var(--green-soft);color:var(--green)}
+.badge-neg{background:var(--red-soft);color:var(--red)}
+.badge-zero{background:var(--accent-soft);color:var(--accent)}
+.avatar{
+  width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+  color:#fff;font-weight:700;font-size:.95rem;flex-shrink:0;
+}
+.avatar.sm{width:30px;height:30px;border-radius:9px;font-size:.72rem}
+.student-cell{display:flex;align-items:center;gap:10px;font-weight:600}
+
+/* ---------- Student cards ---------- */
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px}
+.student-card{padding:20px;cursor:pointer;transition:all .18s;position:relative}
+.student-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--line-strong)}
+.student-card .head{display:flex;align-items:center;gap:13px;margin-bottom:15px}
+.student-card .name{font-weight:700;font-size:1.02rem}
+.student-card .grade{font-size:.8rem;color:var(--muted);margin-top:2px}
+.student-card .meta{
+  display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:.8rem;color:var(--muted);
+  border-top:1px dashed var(--line);padding-top:13px;
+}
+.student-card .meta b{display:block;color:var(--ink);font-size:.92rem;margin-top:2px;font-variant-numeric:tabular-nums}
+
+/* ---------- Detail header ---------- */
+.detail-hero{
+  border-radius:var(--radius);padding:26px 28px;color:#fff;margin-bottom:20px;
+  background:linear-gradient(120deg,var(--hero1) 0%,var(--hero2) 55%,var(--hero3) 100%);
+  box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.detail-hero .avatar{width:56px;height:56px;font-size:1.25rem;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.detail-hero h2{font-size:1.35rem;letter-spacing:-.02em}
+.detail-hero .sub{color:#c9cdf2;font-size:.86rem;margin-top:3px}
+.detail-hero .spacer{flex:1}
+.detail-hero .btn-ghost{background:rgba(255,255,255,.14);border-color:transparent;color:#fff;box-shadow:none}
+.detail-hero .btn-ghost:hover{background:rgba(255,255,255,.24)}
+
+.subtabs{display:flex;gap:6px;margin:22px 0 16px;flex-wrap:wrap}
+.subtabs button{
+  padding:8px 15px;border-radius:10px;font-size:.86rem;font-weight:600;color:var(--muted);transition:all .15s;
+}
+.subtabs button:hover{color:var(--ink)}
+.subtabs button.active{background:var(--card);color:var(--accent);box-shadow:var(--shadow);border:1px solid var(--line)}
+
+/* ---------- Filters / toolbar ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.toolbar select,.toolbar input{
+  padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+  color:var(--ink);box-shadow:var(--shadow);outline:none;
+}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
+
+/* ---------- Homework status ---------- */
+.hw-status{border:none;border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center}
+.hw-bekliyor{background:var(--amber-soft);color:var(--amber)}
+.hw-yapildi{background:var(--green-soft);color:var(--green)}
+.hw-eksik{background:var(--red-soft);color:var(--red)}
+
+/* ---------- Ders ödeme butonu ---------- */
+.pay-btn{border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;transition:all .15s;white-space:nowrap}
+.pay-no{background:var(--amber-soft);color:var(--amber)}
+.pay-no:hover{filter:brightness(.94);transform:translateY(-1px)}
+.pay-yes{background:var(--green-soft);color:var(--green)}
+.pay-yes:hover{filter:brightness(.94)}
+
+/* ---------- Haftalık takvim ---------- */
+.cal-layout{display:grid;grid-template-columns:1fr 225px;gap:18px;align-items:start}
+@media(max-width:1000px){.cal-layout{grid-template-columns:1fr}}
+.cal-card{padding:14px;overflow-x:auto}
+.cal-grid{display:grid;grid-template-columns:46px repeat(7,minmax(92px,1fr));min-width:740px}
+.cal-dayhead{
+  text-align:center;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.05em;padding:6px 2px 10px;border-bottom:1px solid var(--line);
+}
+.cal-timecol{position:relative;border-bottom:1px solid transparent}
+.cal-time{
+  position:absolute;right:8px;transform:translateY(-6px);
+  font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums;
+}
+.cal-col{position:relative;border-left:1px solid var(--line)}
+.cal-line{position:absolute;left:0;right:0;border-top:1px solid var(--line);pointer-events:none}
+.cal-line.half{border-top-style:dashed;opacity:.45}
+.cal-block{
+  position:absolute;left:3px;right:3px;border-radius:8px;color:#fff;overflow:hidden;
+  padding:4px 7px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;
+  box-shadow:0 4px 10px -4px rgba(30,33,56,.4);z-index:2;font-size:.7rem;line-height:1.25;
+}
+.cal-block:active{cursor:grabbing;z-index:5}
+.cal-block b{display:block;font-size:.73rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-block .cal-hours{opacity:.85;font-variant-numeric:tabular-nums}
+.cal-block .cal-x{
+  position:absolute;top:2px;right:3px;width:16px;height:16px;border-radius:5px;color:#fff;
+  font-size:.75rem;line-height:1;display:grid;place-items:center;opacity:0;transition:opacity .15s;background:rgba(0,0,0,.25);
+}
+.cal-block:hover .cal-x{opacity:1}
+.cal-resize{
+  position:absolute;bottom:0;left:0;right:0;height:9px;cursor:ns-resize;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.cal-resize::after{content:'';width:26px;height:3px;border-radius:2px;background:rgba(255,255,255,.55);margin-bottom:2px}
+.cal-side{padding:16px}
+.cal-side h3{font-size:.92rem;font-weight:700;margin-bottom:4px}
+.cal-side .hint{font-size:.76rem;color:var(--muted);margin-bottom:12px;line-height:1.45}
+.cal-chip{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 11px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;
+  font-size:.85rem;font-weight:600;cursor:grab;background:var(--field-bg);transition:all .15s;
+}
+.cal-chip:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.cal-chip:active{cursor:grabbing}
+.cal-chip span{font-size:.72rem;color:var(--muted);font-weight:500;white-space:nowrap}
+
+/* ---------- Empty state ---------- */
+.empty{
+  text-align:center;padding:52px 24px;color:var(--muted);
+}
+.empty .emoji{font-size:2rem;margin-bottom:10px}
+.empty b{display:block;color:var(--ink);font-size:1.02rem;margin-bottom:5px}
+.empty p{font-size:.87rem;max-width:380px;margin:0 auto}
+
+/* ---------- Modal ---------- */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(20,22,40,.45);backdrop-filter:blur(3px);
+  display:none;align-items:flex-start;justify-content:center;z-index:50;padding:6vh 16px;overflow-y:auto;
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  background:var(--card);border-radius:18px;box-shadow:var(--shadow-lg);
+  width:100%;max-width:480px;padding:26px 26px 24px;animation:pop .18s ease;
+}
+@keyframes pop{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-size:1.1rem;margin-bottom:18px;letter-spacing:-.01em}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.form-grid .full{grid-column:1/-1}
+.field label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field-bg);
+  outline:none;transition:border .15s;color:var(--ink);color-scheme:light dark;
+}
+.field textarea{resize:vertical;min-height:64px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:var(--card)}
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+
+/* ---------- Chart ---------- */
+.chart-box{padding:20px 22px}
+.chart-box svg{width:100%;height:auto;display:block}
+.chart-legend{display:flex;gap:14px;font-size:.78rem;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+
+/* ---------- Telafi / erteleme ---------- */
+.telafi-panel{border-left:4px solid var(--amber);margin-bottom:18px}
+.bills-panel{border-left:4px solid var(--blue);margin-bottom:18px}
+.cal-block.postponed{opacity:.55;outline:2px dashed rgba(255,255,255,.75);outline-offset:-2px}
+
+/* ---------- Öğrenci modu ---------- */
+body.sm .main::before{
+  content:'👁 Öğrenci Modu';
+  position:fixed;top:14px;right:16px;z-index:40;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  padding:6px 14px;border-radius:999px;font-size:.75rem;font-weight:700;
+  box-shadow:0 6px 16px -6px var(--glow);
+}
+.sidebar-foot button.sm-on{color:#fff;background:var(--sb-hover)}
+.sidebar-foot button.sm-on svg{color:var(--accent2)}
+
+/* ---------- Kişisel bölümler ---------- */
+.nav-label{
+  font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--sb-muted);padding:13px 12px 5px;
+}
+.personal-panel{border-left:4px solid var(--violet);margin-bottom:18px}
+.progress{height:6px;border-radius:4px;background:var(--line);overflow:hidden;width:110px;flex-shrink:0}
+.progress i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.bk-okunuyor{background:var(--blue-soft);color:var(--blue)}
+.wk-day{margin-bottom:16px}
+.wk-day:last-child{margin-bottom:0}
+.wk-day h4{
+  font-size:.76rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:8px;
+}
+.wk-item{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:12px;margin-bottom:8px;background:var(--field-bg);flex-wrap:wrap;
+}
+.wk-item.done .t{opacity:.55;text-decoration:line-through}
+.wk-item .t{font-weight:700}
+.wk-item .d{flex-basis:100%;font-size:.8rem;color:var(--muted);line-height:1.45}
+.wk-item.wk-today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.cal-allday-label{
+  font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
+  display:flex;align-items:center;justify-content:flex-end;padding:5px 8px 5px 0;border-bottom:1px solid var(--line);
+}
+.cal-allday{
+  border-bottom:1px solid var(--line);border-left:1px solid var(--line);
+  padding:4px 3px;display:flex;flex-direction:column;gap:3px;min-width:0;
+}
+.bill-chip{
+  display:block;width:100%;text-align:left;font-size:.66rem;font-weight:700;padding:3px 6px;border-radius:6px;
+  background:var(--blue-soft);color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:filter .15s,transform .15s;
+}
+.bill-chip:hover{filter:brightness(.93);transform:translateY(-1px)}
+.bill-chip.paid{background:var(--green-soft);color:var(--green);opacity:.72;text-decoration:line-through}
+.bill-chip.late{background:var(--red-soft);color:var(--red)}
+.bill-chip.sub{background:var(--violet-soft);color:var(--violet)}
+.bill-chip.wo{background:var(--green-soft);color:var(--green)}
+.bill-chip.hw{background:var(--amber-soft);color:var(--amber)}
+.bill-chip.exam{background:var(--rose-soft);color:var(--rose)}
+.cal-block.personal{cursor:pointer;box-shadow:none;opacity:.94;border:1.5px dashed rgba(255,255,255,.55)}
+.cal-block.personal:hover{opacity:1}
+.cal-block.personal:hover .cal-x{opacity:1}
+.cal-block.personal.wodone{opacity:.55}
+
+/* ---------- Yayın / paylaşım ---------- */
+body.sm #pubBtn{display:none}
+.share-box{background:var(--field-bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.share-box .lbl{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.share-box .val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;word-break:break-all;line-height:1.45}
+.share-box .code{font-size:1.5rem;font-weight:800;letter-spacing:.18em;color:var(--accent)}
+.share-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.share-row a.btn{text-decoration:none}
+.pub-status{font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:10px}
+.pub-log{font-size:.8rem;line-height:1.6;max-height:160px;overflow-y:auto;margin-top:10px;padding:8px 12px;background:var(--field-bg);border-radius:10px;border:1px solid var(--line)}
+.hint-text{font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:5px}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--toast-bg);color:var(--toast-ink);padding:11px 20px;border-radius:12px;font-size:.88rem;
+  opacity:0;pointer-events:none;transition:all .25s;z-index:99;box-shadow:var(--shadow-lg);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Responsive ---------- */
+@media(max-width:820px){
+  .app{flex-direction:column}
+  .sidebar{width:auto;height:auto;position:static;flex-direction:row;align-items:center;padding:12px 14px;gap:8px;overflow-x:auto;margin:10px;border-radius:18px}
+  .logo{padding:0 8px 0 0}
+  .logo-text{display:none}
+  .nav{flex-direction:row;flex:initial;align-items:center}
+  .nav button span{display:none}
+  .nav-label{display:none}
+  .nav button{padding:9px}
+  .sidebar-foot{flex-direction:row;border-top:none;padding-top:0;margin-left:auto}
+  .sidebar-foot button span{display:none}
+  .main{padding:20px 16px 50px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">ÖT</div>
+      <div class="logo-text"><b>Öğrenci Takip</b><span>Özel Ders Paneli</span></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <button id="smBtn" onclick="toggleStudentMode()" title="Öğrenci yanında açarken ücret bilgilerini gizle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span id="smLabel">Öğrenci Modu</span>
+      </button>
+      <button id="themeBtn" onclick="toggleTheme()" title="Koyu / açık tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span id="themeLabel">Koyu Tema</span>
+      </button>
+      <button id="pubBtn" onclick="openPublishForm()" title="Öğrenci sayfalarını GitHub Pages'e yayınla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>Yayınla</span>
+      </button>
+      <button onclick="exportData()" title="Verileri yedekle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Yedekle</span>
+      </button>
+      <button onclick="document.getElementById('importFile').click()" title="Yedekten geri yükle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Geri Yükle</span>
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalBox"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ================= VERİ ================= */
+const KEY = 'ogrenciTakipV1';
+const SUBJECTS = [
+  {n:'Matematik', bg:'var(--blue-soft)',  fg:'var(--blue)'},
+  {n:'Geometri',  bg:'var(--cyan-soft)',  fg:'var(--cyan)'},
+  {n:'Fizik',     bg:'var(--violet-soft)',fg:'var(--violet)'},
+  {n:'Kimya',     bg:'var(--accent-soft)',fg:'var(--accent)'},
+  {n:'Biyoloji',  bg:'var(--green-soft)', fg:'var(--green)'},
+  {n:'Türkçe',    bg:'var(--amber-soft)', fg:'var(--amber)'},
+  {n:'Deneme',    bg:'var(--rose-soft)',  fg:'var(--rose)'},
+];
+const AVATAR_COLORS = ['#5b5bd6','#0e7490','#0f9d6e','#b45309','#be185d','#7c3aed','#2563eb','#dc6803','#15803d','#9f1239'];
+
+let state = load();
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && Array.isArray(d.students)){
+      d.notes = d.notes || []; d.schedule = d.schedule || []; d.bills = d.bills || [];
+      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || [];
+      // Eski haftalık şablon bloklarını gerçek ders kayıtlarına dönüştür (tek seferlik)
+      if(d.schedule.length){
+        const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay()+6)%7));
+        d.schedule.forEach(b=>{
+          const dt = new Date(mon); dt.setDate(dt.getDate() + (b.day||0));
+          const s = d.students.find(x=>x.id===b.sid);
+          const hours = (b.dur||90)/60;
+          d.lessons.push({
+            id: b.id, sid: b.sid, subject: 'Matematik', hours,
+            date: `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`,
+            fee: Math.round(hours * (s ? (+s.rate||0) : 0)), topic: '', start: b.start
+          });
+        });
+        d.schedule = [];
+      }
+      // Saati olmayan eski derslere varsayılan saat ata
+      d.lessons.forEach(l=>{ if(l.start==null) l.start = 18*60; });
+      return d;
+    }
+  }catch(e){}
+  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], notes:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[]};
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ================= YARDIMCILAR ================= */
+const fmtTL = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n||0);
+const fmtTLd = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(n||0);
+const fmtDate = d => d ? new Date(d+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'}) : '—';
+const today = () => new Date().toISOString().slice(0,10);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byDateDesc = (a,b) => (b.date||'').localeCompare(a.date||'');
+
+function student(id){ return state.students.find(s=>s.id===id); }
+function studentName(id){ const s=student(id); return s ? s.name : 'Silinmiş öğrenci'; }
+function avatarColor(id){
+  const i = state.students.findIndex(s=>s.id===id);
+  return AVATAR_COLORS[(i<0?0:i) % AVATAR_COLORS.length];
+}
+function initials(name){ return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function avatarHtml(id, cls=''){
+  const s = student(id); if(!s) return '';
+  return `<div class="avatar ${cls}" style="background:${avatarColor(id)}">${esc(initials(s.name))}</div>`;
+}
+function subjectChip(name){
+  const s = SUBJECTS.find(x=>x.n===name) || {bg:'var(--accent-soft)',fg:'var(--accent)'};
+  return `<span class="chip" style="background:${s.bg};color:${s.fg}">${esc(name)}</span>`;
+}
+const isBillable = l => l.status !== 'ertelendi'; // ertelenen ders tahakkuk etmez
+function totalFees(sid){ return state.lessons.filter(l=>l.sid===sid && isBillable(l)).reduce((t,l)=>t+(+l.fee||0),0); }
+function totalPaid(sid){ return state.payments.filter(p=>p.sid===sid).reduce((t,p)=>t+(+p.amount||0),0); }
+function totalHours(sid){ return state.lessons.filter(l=>l.sid===sid && isBillable(l)).reduce((t,l)=>t+(+l.hours||0),0); }
+function debt(sid){ return totalFees(sid) - totalPaid(sid); } // >0 ise öğrenci borçlu
+function debtBadge(v){
+  if(v > 0)  return `<span class="chip badge-neg">${fmtTL(v)} borç</span>`;
+  if(v < 0)  return `<span class="chip badge-pos">${fmtTL(-v)} avans</span>`;
+  return `<span class="chip badge-zero">Ödendi</span>`;
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function studentOptions(sel){
+  return state.students.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('');
+}
+function subjectOptions(sel){
+  return SUBJECTS.map(s=>`<option ${s.n===sel?'selected':''}>${s.n}</option>`).join('');
+}
+function emptyState(emoji, title, text){
+  return `<div class="empty"><div class="emoji">${emoji}</div><b>${title}</b><p>${text}</p></div>`;
+}
+
+/* ================= GEZİNME ================= */
+const ICONS = {
+  dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  students:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  lessons:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  payments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+  homework:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  exams:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  schedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  bills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>',
+  myschedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12.5V17c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.5"/></svg>',
+  workout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><line x1="6.5" y1="12" x2="17.5" y2="12"/></svg>',
+  reading:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+};
+const VIEWS = [
+  {id:'dashboard', label:'Genel Bakış'},
+  {id:'students',  label:'Öğrenciler'},
+  {id:'schedule',  label:'Takvim'},
+  {id:'lessons',   label:'Dersler'},
+  {id:'payments',  label:'Ödemeler'},
+  {id:'homework',  label:'Ödevler'},
+  {id:'exams',     label:'Denemeler'},
+  {id:'notes',     label:'Notlar'},
+  {id:'myschedule',label:'Ders Programım', personal:true},
+  {id:'workout',   label:'Spor Programım', personal:true},
+  {id:'reading',   label:'Okuma Listem',   personal:true},
+  {id:'bills',     label:'Ödeme Planım',   personal:true},
+];
+/* Kişisel bölümler: Öğrenci Modu açıkken menüde ve içerikte hiç oluşturulmaz */
+const PERSONAL_VIEWS = VIEWS.filter(v=>v.personal).map(v=>v.id);
+let route = {view:'dashboard', sid:null, subtab:'dersler', filter:{}};
+
+function go(view, sid=null){
+  route = {view, sid, subtab:'dersler', filter:{}};
+  render();
+  window.scrollTo({top:0});
+}
+/* Öğrenci modu: ücret/ödeme bilgileri arayüzde hiç oluşturulmaz */
+const SM_KEY = 'ogrenciTakipOgrenciModu';
+let studentMode = false;
+function applyStudentMode(){
+  document.body.classList.toggle('sm', studentMode);
+  const b = document.getElementById('smBtn'), l = document.getElementById('smLabel');
+  if(b) b.classList.toggle('sm-on', studentMode);
+  if(l) l.textContent = studentMode ? 'Öğrenci Modu: Açık' : 'Öğrenci Modu';
+}
+function toggleStudentMode(){
+  studentMode = !studentMode;
+  localStorage.setItem(SM_KEY, studentMode ? '1' : '0');
+  applyStudentMode();
+  render();
+  toast(studentMode ? 'Öğrenci modu açık — ücretler ve kişisel bölümler gizlendi' : 'Öğrenci modu kapatıldı');
+}
+function renderNav(){
+  const visible = VIEWS.filter(v=>!(studentMode && (v.id==='payments' || v.personal)));
+  let html = '', sepDone = false;
+  visible.forEach(v=>{
+    if(v.personal && !sepDone){ html += `<div class="nav-label">Kişisel</div>`; sepDone = true; }
+    html += `
+    <button class="${route.view===v.id||(route.view==='studentDetail'&&v.id==='students')?'active':''}" onclick="go('${v.id}')">
+      ${ICONS[v.id]}<span>${v.label}</span>
+    </button>`;
+  });
+  document.getElementById('nav').innerHTML = html;
+}
+function render(){
+  if(studentMode){
+    if(route.view==='payments' || PERSONAL_VIEWS.includes(route.view)) route.view = 'dashboard';
+    if(route.subtab==='odemeler') route.subtab = 'dersler';
+  }
+  renderNav();
+  const main = document.getElementById('main');
+  if(route.view==='dashboard')      main.innerHTML = viewDashboard();
+  else if(route.view==='students')  main.innerHTML = viewStudents();
+  else if(route.view==='studentDetail') main.innerHTML = viewStudentDetail();
+  else if(route.view==='lessons')   main.innerHTML = viewLessons();
+  else if(route.view==='payments')  main.innerHTML = viewPayments();
+  else if(route.view==='homework')  main.innerHTML = viewHomework();
+  else if(route.view==='exams')     main.innerHTML = viewExams();
+  else if(route.view==='notes')     main.innerHTML = viewNotes();
+  else if(route.view==='schedule')  main.innerHTML = viewSchedule();
+  else if(route.view==='bills')     main.innerHTML = viewBills();
+  else if(route.view==='myschedule')main.innerHTML = viewMySchedule();
+  else if(route.view==='workout')   main.innerHTML = viewWorkout();
+  else if(route.view==='reading')   main.innerHTML = viewReading();
+}
+
+/* ================= GENEL BAKIŞ ================= */
+function viewDashboard(){
+  const now = new Date(), ym = now.toISOString().slice(0,7);
+  const monthLessons = state.lessons.filter(l=>(l.date||'').startsWith(ym) && isBillable(l));
+  const monthHours = monthLessons.reduce((t,l)=>t+(+l.hours||0),0);
+  const monthIncome = state.payments.filter(p=>(p.date||'').startsWith(ym)).reduce((t,p)=>t+(+p.amount||0),0);
+  const totalDebt = state.students.reduce((t,s)=>t+Math.max(0,debt(s.id)),0);
+  const pendingHw = state.homeworks.filter(h=>h.status==='bekliyor');
+  const monthName = now.toLocaleDateString('tr-TR',{month:'long'});
+
+  const stats = `
+  <div class="stat-grid">
+    <div class="card stat">
+      <div class="label">Öğrenci</div><div class="value">${state.students.length}</div>
+      <div class="hint">aktif kayıt</div>
+      <div class="stat-ico" style="background:var(--accent-soft);color:var(--accent)">${ICONS.students}</div>
+    </div>
+    <div class="card stat">
+      <div class="label">${monthName} Ders Saati</div><div class="value">${monthHours}</div>
+      <div class="hint">${monthLessons.length} ders işlendi</div>
+      <div class="stat-ico" style="background:var(--blue-soft);color:var(--blue)">${ICONS.lessons}</div>
+    </div>
+    ${studentMode ? `
+    <div class="card stat">
+      <div class="label">Bekleyen Ödev</div><div class="value">${pendingHw.length}</div>
+      <div class="hint">tamamlanmayı bekliyor</div>
+      <div class="stat-ico" style="background:var(--amber-soft);color:var(--amber)">${ICONS.homework}</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Deneme</div><div class="value">${state.exams.length}</div>
+      <div class="hint">toplam deneme kaydı</div>
+      <div class="stat-ico" style="background:var(--rose-soft);color:var(--rose)">${ICONS.exams}</div>
+    </div>` : `
+    <div class="card stat">
+      <div class="label">${monthName} Tahsilat</div><div class="value">${fmtTL(monthIncome)}</div>
+      <div class="hint">bu ay alınan ödeme</div>
+      <div class="stat-ico" style="background:var(--green-soft);color:var(--green)">${ICONS.payments}</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Toplam Alacak</div><div class="value" style="color:${totalDebt>0?'var(--red)':'var(--green)'}">${fmtTL(totalDebt)}</div>
+      <div class="hint">bekleyen bakiye</div>
+      <div class="stat-ico" style="background:var(--red-soft);color:var(--red)">${ICONS.exams}</div>
+    </div>`}
+  </div>`;
+
+  const postponed = state.lessons.filter(l=>l.status==='ertelendi').sort(byDateDesc);
+  const telafiPanel = postponed.length ? `
+  <div class="card panel telafi-panel">
+    <h3>⏳ Telafi Bekleyen Dersler <span class="chip hw-bekliyor">${postponed.length} ders</span></h3>
+    <div class="table-wrap"><table><tbody>
+    ${postponed.map(l=>`<tr>
+      <td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>
+      <td>${subjectChip(l.subject)}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${fmtDate(l.date)} · ${l.hours} sa</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="openLessonForm('${l.id}')">Yeniden Planla</button>
+        <button class="btn btn-primary btn-sm" onclick="toggleLessonPostponed('${l.id}')">Telafi Edildi ✓</button>
+      </td>
+    </tr>`).join('')}
+    </tbody></table></div>
+    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">Dersi yeni tarihine taşı (takvimde sürükle ya da "Yeniden Planla"), ders yapılınca "Telafi Edildi" ile işaretle${studentMode?'':' — ücret o zaman tahakkuk eder'}.</p>
+  </div>` : '';
+  const recentLessons = [...state.lessons].sort(byDateDesc).slice(0,6);
+  const lessonsPanel = `
+  <div class="card panel">
+    <h3>Son Dersler <button class="more" onclick="go('lessons')">Tümü →</button></h3>
+    ${recentLessons.length ? `<div class="table-wrap"><table><tbody>
+      ${recentLessons.map(l=>`<tr onclick="go('studentDetail','${l.sid}')" style="cursor:pointer">
+        <td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>
+        <td>${subjectChip(l.subject)}</td>
+        <td class="num">${l.hours} sa</td>
+        <td style="color:var(--muted);font-size:.82rem">${fmtDate(l.date)}</td>
+      </tr>`).join('')}
+    </tbody></table></div>` : emptyState('📚','Henüz ders yok','İlk dersi Dersler sekmesinden ekleyebilirsin.')}
+  </div>`;
+
+  const hwPanel = `
+  <div class="card panel">
+    <h3>Bekleyen Ödevler <button class="more" onclick="go('homework')">Tümü →</button></h3>
+    ${pendingHw.length ? `<div class="table-wrap"><table><tbody>
+      ${pendingHw.sort((a,b)=>(a.due||'').localeCompare(b.due||'')).slice(0,6).map(h=>`<tr>
+        <td class="student-cell">${avatarHtml(h.sid,'sm')}${esc(studentName(h.sid))}</td>
+        <td>${subjectChip(h.subject)}</td>
+        <td style="color:var(--muted);font-size:.82rem">${h.due ? 'Teslim: '+fmtDate(h.due) : ''}</td>
+      </tr>`).join('')}
+    </tbody></table></div>` : emptyState('✅','Bekleyen ödev yok','Tüm ödevler tamamlanmış görünüyor.')}
+  </div>`;
+
+  const balances = state.students.map(s=>({s, d:debt(s.id)})).sort((a,b)=>b.d-a.d);
+  const balancePanel = studentMode ? '' : `
+  <div class="card panel">
+    <h3>Bakiye Durumu</h3>
+    ${balances.length ? `<div class="table-wrap"><table><tbody>
+      ${balances.map(({s,d})=>`<tr onclick="go('studentDetail','${s.id}')" style="cursor:pointer">
+        <td class="student-cell">${avatarHtml(s.id,'sm')}${esc(s.name)}</td>
+        <td class="num" style="color:var(--muted)">${totalHours(s.id)} sa</td>
+        <td style="text-align:right">${debtBadge(d)}</td>
+      </tr>`).join('')}
+    </tbody></table></div>` : emptyState('👥','Öğrenci yok','Öğrenciler sekmesinden ilk öğrencini ekle.')}
+  </div>`;
+
+  const recentExams = [...state.exams].sort(byDateDesc).slice(0,6);
+  const examsPanel = `
+  <div class="card panel">
+    <h3>Son Denemeler <button class="more" onclick="go('exams')">Tümü →</button></h3>
+    ${recentExams.length ? `<div class="table-wrap"><table><tbody>
+      ${recentExams.map(e=>`<tr>
+        <td class="student-cell">${avatarHtml(e.sid,'sm')}${esc(studentName(e.sid))}</td>
+        <td style="color:var(--muted);font-size:.85rem">${esc(e.name||e.type)}</td>
+        <td class="num">${(+e.net).toLocaleString('tr-TR')} net</td>
+      </tr>`).join('')}
+    </tbody></table></div>` : emptyState('📈','Henüz deneme yok','Deneme sonuçlarını Denemeler sekmesinden gir.')}
+  </div>`;
+
+  return `
+  <div class="topbar">
+    <div><h1>Genel Bakış</h1><div class="sub">${now.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'})}</div></div>
+    <button class="btn btn-primary" onclick="openLessonForm()">＋ Ders Ekle</button>
+  </div>
+  ${stats}
+  ${dashboardPersonalPanel()}
+  ${dashboardBillsPanel(ym, now.getDate())}
+  ${telafiPanel}
+  <div class="grid-2">${lessonsPanel}${hwPanel}</div>
+  <div style="height:18px"></div>
+  <div class="grid-2">${balancePanel}${examsPanel}</div>`;
+}
+
+/* ================= ÖĞRENCİLER ================= */
+function viewStudents(){
+  const cards = state.students.map(s=>{
+    const d = debt(s.id);
+    return `
+    <div class="card student-card" onclick="go('studentDetail','${s.id}')">
+      <div class="head">
+        ${avatarHtml(s.id)}
+        <div style="flex:1">
+          <div class="name">${esc(s.name)}</div>
+          <div class="grade">${esc(s.grade||'')}</div>
+        </div>
+        ${studentMode ? '' : debtBadge(d)}
+      </div>
+      <div class="meta">
+        <div>Ders saati<b>${totalHours(s.id)} sa</b></div>
+        ${studentMode ? `<div>Bekleyen ödev<b>${state.homeworks.filter(h=>h.sid===s.id&&h.status==='bekliyor').length}</b></div>`
+          : `<div>Saat ücreti<b>${fmtTL(s.rate)}</b></div>
+        <div>Toplam ödenen<b>${fmtTL(totalPaid(s.id))}</b></div>`}
+        <div>Son deneme<b>${lastExamNet(s.id)}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="topbar">
+    <div><h1>Öğrenciler</h1><div class="sub">${state.students.length} kayıtlı öğrenci</div></div>
+    <button class="btn btn-primary" onclick="openStudentForm()">＋ Yeni Öğrenci</button>
+  </div>
+  ${state.students.length ? `<div class="students-grid">${cards}</div>`
+    : `<div class="card">${emptyState('🎓','Henüz öğrenci eklenmedi','"Yeni Öğrenci" butonuyla ilk öğrencini ekle; ardından ders, ödeme, ödev ve deneme kayıtlarını tutabilirsin.')}</div>`}`;
+}
+function lastExamNet(sid){
+  const ex = state.exams.filter(e=>e.sid===sid).sort(byDateDesc)[0];
+  return ex ? (+ex.net).toLocaleString('tr-TR')+' net' : '—';
+}
+
+/* ================= ÖĞRENCİ DETAY ================= */
+function setSubtab(t){ route.subtab = t; render(); }
+function viewStudentDetail(){
+  const s = student(route.sid);
+  if(!s){ route.view='students'; return viewStudents(); }
+  const d = debt(s.id);
+  const tabs = [
+    {id:'dersler',  label:'Dersler'},
+    {id:'odemeler', label:'Ödemeler'},
+    {id:'odevler',  label:'Ödevler'},
+    {id:'denemeler',label:'Denemeler'},
+  ].filter(t=>!(studentMode && t.id==='odemeler'));
+  let body = '';
+  if(route.subtab==='dersler'){
+    const list = state.lessons.filter(l=>l.sid===s.id).sort(byDateDesc);
+    body = `<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openLessonForm(null,'${s.id}')">＋ Ders Ekle</button></div>
+      <div class="card">${lessonsTable(list,false)}</div>`;
+  } else if(route.subtab==='odemeler'){
+    const list = state.payments.filter(p=>p.sid===s.id).sort(byDateDesc);
+    body = `<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openPaymentForm(null,'${s.id}')">＋ Ödeme Ekle</button></div>
+      <div class="card">${paymentsTable(list,false)}</div>`;
+  } else if(route.subtab==='odevler'){
+    const list = state.homeworks.filter(h=>h.sid===s.id).sort(byHwOrder);
+    body = `<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openHomeworkForm(null,'${s.id}')">＋ Ödev Ekle</button></div>
+      <div class="card">${homeworkTable(list,false)}</div>`;
+  } else {
+    const ders = route.filter.ders || '';
+    let list = state.exams.filter(e=>e.sid===s.id).sort(byDateDesc);
+    if(ders) list = list.filter(e=>examNetFor(e,ders)!=null);
+    body = `<div class="toolbar">
+        <button class="btn btn-primary btn-sm" onclick="openExamForm(null,'${s.id}')">＋ Deneme Ekle</button>
+        ${dersFilterSelect()}
+      </div>
+      ${examChart(list, ders)}
+      <div class="card" style="margin-top:16px">${examsTable(list,false)}</div>`;
+  }
+  return `
+  <div class="topbar">
+    <button class="btn btn-ghost btn-sm" onclick="go('students')">← Öğrenciler</button>
+  </div>
+  <div class="detail-hero">
+    <div class="avatar" style="background:${avatarColor(s.id)}">${esc(initials(s.name))}</div>
+    <div>
+      <h2>${esc(s.name)}</h2>
+      <div class="sub">${esc(s.grade||'')}${s.phone?' · '+esc(s.phone):''}${studentMode?'':' · Saat ücreti '+fmtTL(s.rate)}</div>
+    </div>
+    <div class="spacer"></div>
+    ${studentMode?'':`<button class="btn btn-ghost btn-sm" onclick="openShareForm('${s.id}')">🔗 Öğrenci Sayfası</button>`}
+    <button class="btn btn-ghost btn-sm" onclick="openStudentForm('${s.id}')">Düzenle</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">Sil</button>
+  </div>
+  <div class="stat-grid">
+    <div class="card stat"><div class="label">Toplam Ders</div><div class="value">${totalHours(s.id)} sa</div><div class="hint">${state.lessons.filter(l=>l.sid===s.id).length} ders</div></div>
+    ${studentMode ? `
+    <div class="card stat"><div class="label">Deneme</div><div class="value">${state.exams.filter(e=>e.sid===s.id).length}</div><div class="hint">kayıtlı deneme</div></div>
+    <div class="card stat"><div class="label">Bekleyen Ödev</div><div class="value">${state.homeworks.filter(h=>h.sid===s.id&&h.status==='bekliyor').length}</div><div class="hint">teslim bekliyor</div></div>
+    <div class="card stat"><div class="label">Son Deneme</div><div class="value">${lastExamNet(s.id)}</div><div class="hint">en güncel sonuç</div></div>` : `
+    <div class="card stat"><div class="label">Tahakkuk</div><div class="value">${fmtTL(totalFees(s.id))}</div><div class="hint">toplam ders ücreti</div></div>
+    <div class="card stat"><div class="label">Ödenen</div><div class="value">${fmtTL(totalPaid(s.id))}</div><div class="hint">alınan ödemeler</div></div>
+    <div class="card stat"><div class="label">Bakiye</div><div class="value" style="color:${d>0?'var(--red)':'var(--green)'}">${fmtTL(Math.abs(d))}</div><div class="hint">${d>0?'öğrenci borçlu':d<0?'avans mevcut':'hesap kapalı'}</div></div>`}
+  </div>
+  ${s.note?`<div class="card panel" style="margin-bottom:4px"><h3>Not</h3><p style="font-size:.9rem;color:var(--muted)">${esc(s.note)}</p></div>`:''}
+  <div class="subtabs">${tabs.map(t=>`<button class="${route.subtab===t.id?'active':''}" onclick="setSubtab('${t.id}')">${t.label}</button>`).join('')}</div>
+  ${body}`;
+}
+
+/* ================= TABLOLAR ================= */
+function lessonsTable(list, showStudent=true){
+  if(!list.length) return emptyState('📚','Ders kaydı yok','"Ders Ekle" ile işlenen dersleri kaydet; ücret, saat ücretinden otomatik hesaplanır.');
+  return `<div class="table-wrap"><table>
+  <thead><tr><th>Tarih</th>${showStudent?'<th>Öğrenci</th>':''}<th>Ders</th><th>Süre</th>${studentMode?'':'<th>Ücret</th><th>Ödeme</th>'}<th>Konu / Not</th><th></th></tr></thead>
+  <tbody>${list.map(l=>`<tr>
+    <td style="white-space:nowrap">${fmtDate(l.date)}${l.start!=null?`<span class="row-note">${fmtClock(l.start)}</span>`:''}</td>
+    ${showStudent?`<td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>`:''}
+    <td style="white-space:nowrap">${subjectChip(l.subject)}${l.status==='ertelendi'?' <span class="chip hw-bekliyor">⏳ Ertelendi</span>':''}</td>
+    <td class="num">${l.hours} sa</td>
+    ${studentMode?'':`<td class="num"${l.status==='ertelendi'?' style="text-decoration:line-through;opacity:.55"':''}>${fmtTL(l.fee)}</td>
+    <td>${l.status==='ertelendi'
+      ? '<span style="color:var(--muted);font-size:.8rem">tahakkuk yok</span>'
+      : l.paid
+      ? `<button class="pay-btn pay-yes" onclick="toggleLessonPaid('${l.id}')" title="Ödemeyi geri almak için tıkla">Ödendi ✓</button>`
+      : `<button class="pay-btn pay-no" onclick="toggleLessonPaid('${l.id}')" title="Ders ücretini ödeme olarak kaydet">₺ Ödeme Al</button>`}</td>`}
+    <td style="color:var(--muted);font-size:.85rem">${esc(l.topic||'')}</td>
+    <td style="text-align:right;white-space:nowrap">
+      <button class="icon-btn" ${l.status==='ertelendi'?'style="color:var(--amber)"':''} onclick="toggleLessonPostponed('${l.id}')" title="${l.status==='ertelendi'?'Telafi edildi olarak işaretle':'Dersi ertele'}">${SVG_CLOCK}</button>
+      <button class="icon-btn" onclick="openLessonForm('${l.id}')" title="Düzenle">${SVG_EDIT}</button>
+      <button class="icon-btn danger" onclick="delItem('lessons','${l.id}')" title="Sil">${SVG_DEL}</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+function paymentsTable(list, showStudent=true){
+  if(!list.length) return emptyState('💳','Ödeme kaydı yok','Alınan ödemeleri buraya işle; bakiye otomatik güncellenir.');
+  return `<div class="table-wrap"><table>
+  <thead><tr><th>Tarih</th>${showStudent?'<th>Öğrenci</th>':''}<th>Tutar</th><th>Yöntem</th><th>Not</th><th></th></tr></thead>
+  <tbody>${list.map(p=>`<tr>
+    <td style="white-space:nowrap">${fmtDate(p.date)}</td>
+    ${showStudent?`<td class="student-cell">${avatarHtml(p.sid,'sm')}${esc(studentName(p.sid))}</td>`:''}
+    <td class="num" style="color:var(--green)">${fmtTL(p.amount)}</td>
+    <td style="color:var(--muted);font-size:.85rem">${esc(p.method||'')}</td>
+    <td style="color:var(--muted);font-size:.85rem">${esc(p.note||'')}</td>
+    <td style="text-align:right;white-space:nowrap">
+      <button class="icon-btn" onclick="openPaymentForm('${p.id}')" title="Düzenle">${SVG_EDIT}</button>
+      <button class="icon-btn danger" onclick="delItem('payments','${p.id}')" title="Sil">${SVG_DEL}</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+const HW_ORDER = {bekliyor:0, eksik:1, yapildi:2};
+const byHwOrder = (a,b) => (HW_ORDER[a.status]-HW_ORDER[b.status]) || (a.due||'').localeCompare(b.due||'');
+function homeworkTable(list, showStudent=true){
+  if(!list.length) return emptyState('📝','Ödev kaydı yok','Öğrenciye verdiğin ödevleri ekle, durumunu tek tıkla güncelle.');
+  return `<div class="table-wrap"><table>
+  <thead><tr>${showStudent?'<th>Öğrenci</th>':''}<th>Ders</th><th>Ödev</th><th>Teslim</th><th>Durum</th><th></th></tr></thead>
+  <tbody>${list.map(h=>`<tr>
+    ${showStudent?`<td class="student-cell">${avatarHtml(h.sid,'sm')}${esc(studentName(h.sid))}</td>`:''}
+    <td>${subjectChip(h.subject)}</td>
+    <td style="font-size:.88rem">${esc(h.desc||'')}</td>
+    <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${fmtDate(h.due)}</td>
+    <td>
+      <select class="hw-status hw-${h.status}" onchange="setHwStatus('${h.id}',this.value)">
+        <option value="bekliyor" ${h.status==='bekliyor'?'selected':''}>Bekliyor</option>
+        <option value="yapildi" ${h.status==='yapildi'?'selected':''}>Yapıldı ✓</option>
+        <option value="eksik" ${h.status==='eksik'?'selected':''}>Eksik</option>
+      </select>
+    </td>
+    <td style="text-align:right;white-space:nowrap">
+      <button class="icon-btn" onclick="openHomeworkForm('${h.id}')" title="Düzenle">${SVG_EDIT}</button>
+      <button class="icon-btn danger" onclick="delItem('homeworks','${h.id}')" title="Sil">${SVG_DEL}</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+function examsTable(list, showStudent=true){
+  if(!list.length) return emptyState('📈','Deneme kaydı yok','Deneme sonuçlarını gir; gelişim grafiği otomatik oluşur.');
+  return `<div class="table-wrap"><table>
+  <thead><tr><th>Tarih</th>${showStudent?'<th>Öğrenci</th>':''}<th>Deneme</th><th>Tür</th><th>Net</th><th>Not</th><th></th></tr></thead>
+  <tbody>${list.map(e=>`<tr>
+    <td style="white-space:nowrap">${fmtDate(e.date)}</td>
+    ${showStudent?`<td class="student-cell">${avatarHtml(e.sid,'sm')}${esc(studentName(e.sid))}</td>`:''}
+    <td style="font-size:.88rem">${esc(e.name||'')}</td>
+    <td style="white-space:nowrap">${examKindLabel(e)}</td>
+    <td class="num">${(+e.net).toLocaleString('tr-TR')}${e.kind==='brans'?' <span style="color:var(--muted);font-weight:400">/ 40</span>':''}
+      ${e.nets?`<span class="row-note">${netBreakdown(e)}</span>`:''}
+      ${e.kind==='brans'&&e.sure?`<span class="row-note">⏱ ${e.sure} dk</span>`:''}
+    </td>
+    <td style="color:var(--muted);font-size:.85rem">${esc(e.note||'')}</td>
+    <td style="text-align:right;white-space:nowrap">
+      <button class="icon-btn" onclick="openExamForm('${e.id}')" title="Düzenle">${SVG_EDIT}</button>
+      <button class="icon-btn danger" onclick="delItem('exams','${e.id}')" title="Sil">${SVG_DEL}</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+const SVG_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>';
+const SVG_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+const SVG_DEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+
+/* ================= LİSTE GÖRÜNÜMLERİ ================= */
+function setFilter(k,v){ route.filter[k]=v; render(); }
+function filterBar(extra=''){
+  return `<div class="toolbar">
+    <select onchange="setFilter('sid',this.value)">
+      <option value="">Tüm öğrenciler</option>${studentOptions(route.filter.sid)}
+    </select>${extra}</div>`;
+}
+function viewLessons(){
+  let list = [...state.lessons].sort(byDateDesc);
+  if(route.filter.sid) list = list.filter(l=>l.sid===route.filter.sid);
+  if(route.filter.subject) list = list.filter(l=>l.subject===route.filter.subject);
+  const totH = list.filter(isBillable).reduce((t,l)=>t+(+l.hours||0),0);
+  const totF = list.filter(isBillable).reduce((t,l)=>t+(+l.fee||0),0);
+  return `
+  <div class="topbar">
+    <div><h1>Dersler</h1><div class="sub">${list.length} ders · ${totH} saat${studentMode?'':' · '+fmtTL(totF)}</div></div>
+    <button class="btn btn-primary" onclick="openLessonForm()">＋ Ders Ekle</button>
+  </div>
+  ${filterBar(`<select onchange="setFilter('subject',this.value)">
+    <option value="">Tüm dersler</option>${SUBJECTS.map(s=>`<option ${route.filter.subject===s.n?'selected':''}>${s.n}</option>`).join('')}
+  </select>`)}
+  <div class="card">${lessonsTable(list,true)}</div>`;
+}
+function viewPayments(){
+  let list = [...state.payments].sort(byDateDesc);
+  if(route.filter.sid) list = list.filter(p=>p.sid===route.filter.sid);
+  const tot = list.reduce((t,p)=>t+(+p.amount||0),0);
+  return `
+  <div class="topbar">
+    <div><h1>Ödemeler</h1><div class="sub">${list.length} kayıt · toplam ${fmtTL(tot)}</div></div>
+    <button class="btn btn-primary" onclick="openPaymentForm()">＋ Ödeme Ekle</button>
+  </div>
+  ${filterBar()}
+  <div class="card">${paymentsTable(list,true)}</div>`;
+}
+function viewHomework(){
+  let list = [...state.homeworks].sort(byHwOrder);
+  if(route.filter.sid) list = list.filter(h=>h.sid===route.filter.sid);
+  if(route.filter.status) list = list.filter(h=>h.status===route.filter.status);
+  const bekleyen = list.filter(h=>h.status==='bekliyor').length;
+  return `
+  <div class="topbar">
+    <div><h1>Ödevler</h1><div class="sub">${list.length} ödev · ${bekleyen} bekliyor</div></div>
+    <button class="btn btn-primary" onclick="openHomeworkForm()">＋ Ödev Ekle</button>
+  </div>
+  ${filterBar(`<select onchange="setFilter('status',this.value)">
+    <option value="">Tüm durumlar</option>
+    <option value="bekliyor" ${route.filter.status==='bekliyor'?'selected':''}>Bekliyor</option>
+    <option value="yapildi" ${route.filter.status==='yapildi'?'selected':''}>Yapıldı</option>
+    <option value="eksik" ${route.filter.status==='eksik'?'selected':''}>Eksik</option>
+  </select>`)}
+  <div class="card">${homeworkTable(list,true)}</div>`;
+}
+function dersFilterSelect(){
+  return `<select onchange="setFilter('ders',this.value)">
+    <option value="">Toplam net</option>
+    ${EXAM_DERS_FILTERS.map(d=>`<option ${route.filter.ders===d?'selected':''}>${d}</option>`).join('')}
+  </select>`;
+}
+function viewExams(){
+  const ders = route.filter.ders || '';
+  let list = [...state.exams].sort(byDateDesc);
+  if(route.filter.sid) list = list.filter(e=>e.sid===route.filter.sid);
+  if(ders) list = list.filter(e=>examNetFor(e,ders)!=null);
+  const chart = route.filter.sid ? examChart(list, ders) : '';
+  return `
+  <div class="topbar">
+    <div><h1>Denemeler</h1><div class="sub">${list.length} deneme kaydı${ders?' · '+ders+' filtresi':''}</div></div>
+    <button class="btn btn-primary" onclick="openExamForm()">＋ Deneme Ekle</button>
+  </div>
+  ${filterBar(dersFilterSelect())}
+  ${chart ? chart+'<div style="height:16px"></div>' : `<p style="color:var(--muted);font-size:.83rem;margin:-6px 0 14px">Gelişim grafiğini görmek için yukarıdan bir öğrenci seç.</p>`}
+  <div class="card">${examsTable(list,true)}</div>`;
+}
+
+/* ================= MODAL & FORMLAR ================= */
+function openModal(html){
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalBackdrop').classList.remove('open'); }
+document.getElementById('modalBackdrop').addEventListener('click', e=>{
+  if(e.target.id==='modalBackdrop') closeModal();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+function fv(id){ return document.getElementById(id).value.trim(); }
+
+function openStudentForm(id){
+  const s = id ? student(id) : {};
+  openModal(`
+  <h3>${id?'Öğrenciyi Düzenle':'Yeni Öğrenci'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Ad Soyad *</label><input id="f_name" value="${esc(s.name||'')}" placeholder="Örn. Ayşe Yılmaz"></div>
+    <div class="field"><label>Sınıf / Seviye</label><input id="f_grade" value="${esc(s.grade||'')}" placeholder="Örn. 11. Sınıf"></div>
+    <div class="field"><label>Telefon</label><input id="f_phone" value="${esc(s.phone||'')}" placeholder="05xx ..."></div>
+    <div class="field"${studentMode?' style="display:none"':''}><label>Saat Ücreti (₺) *</label><input id="f_rate" type="number" min="0" step="any" value="${s.rate??(studentMode?0:'')}" placeholder="Örn. 800"></div>
+    <div class="field full"><label>Not</label><textarea id="f_note" placeholder="Veli bilgisi, hedef, vb.">${esc(s.note||'')}</textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveStudent('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function saveStudent(id){
+  const name = fv('f_name'), rate = parseFloat(fv('f_rate'));
+  if(!name){ toast('Ad soyad gerekli'); return; }
+  if(isNaN(rate) || rate < 0){ toast('Geçerli bir saat ücreti gir'); return; }
+  const data = {name, grade:fv('f_grade'), phone:fv('f_phone'), rate, note:fv('f_note')};
+  if(id){ Object.assign(student(id), data); toast('Öğrenci güncellendi'); }
+  else { state.students.push({id:uid(), ...data}); toast('Öğrenci eklendi'); }
+  save(); closeModal(); render();
+}
+function deleteStudent(id){
+  const s = student(id); if(!s) return;
+  if(!confirm(`${s.name} ve tüm ders/ödeme/ödev/deneme kayıtları silinsin mi? Bu işlem geri alınamaz.`)) return;
+  state.students = state.students.filter(x=>x.id!==id);
+  state.lessons = state.lessons.filter(x=>x.sid!==id);
+  state.payments = state.payments.filter(x=>x.sid!==id);
+  state.homeworks = state.homeworks.filter(x=>x.sid!==id);
+  state.exams = state.exams.filter(x=>x.sid!==id);
+  save(); toast('Öğrenci silindi'); go('students');
+}
+
+function needStudent(){
+  if(state.students.length) return true;
+  toast('Önce bir öğrenci eklemelisin'); openStudentForm(); return false;
+}
+function openLessonForm(id, sid){
+  if(!needStudent()) return;
+  const l = id ? state.lessons.find(x=>x.id===id) : {};
+  const selSid = l.sid || sid || route.filter.sid || state.students[0].id;
+  openModal(`
+  <h3>${id?'Dersi Düzenle':'Ders Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Öğrenci</label><select id="f_sid" onchange="calcFee()">${studentOptions(selSid)}</select></div>
+    <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${l.date||today()}"></div>
+    <div class="field"><label>Başlangıç Saati</label><input id="f_start" type="time" value="${l.start!=null?fmtClock(l.start):'18:00'}" step="1800"></div>
+    <div class="field"><label>Ders</label><select id="f_subject">${subjectOptions(l.subject)}</select></div>
+    <div class="field"><label>Süre (saat)</label><input id="f_hours" type="number" min="0" step="0.5" value="${l.hours??1.5}" oninput="calcFee()"></div>
+    <div class="field"${studentMode?' style="display:none"':''}><label>Ücret (₺)</label><input id="f_fee" type="number" min="0" step="any" value="${l.fee??''}"></div>
+    <div class="field full"><label>Konu / Not</label><input id="f_topic" value="${esc(l.topic||'')}" placeholder="Örn. Limit ve süreklilik"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveLesson('${id||''}')">Kaydet</button>
+  </div>`);
+  if(!id) calcFee();
+}
+function calcFee(){
+  const s = student(fv('f_sid'));
+  const h = parseFloat(fv('f_hours'));
+  if(s && !isNaN(h)) document.getElementById('f_fee').value = Math.round(h * (+s.rate||0));
+}
+function saveLesson(id){
+  const hours = parseFloat(fv('f_hours')), fee = parseFloat(fv('f_fee'));
+  if(isNaN(hours) || hours<=0){ toast('Geçerli bir süre gir'); return; }
+  const stv = fv('f_start');
+  const start = /^\d{1,2}:\d{2}/.test(stv) ? (+stv.slice(0,stv.indexOf(':')))*60 + +stv.slice(stv.indexOf(':')+1, stv.indexOf(':')+3) : 18*60;
+  const data = {sid:fv('f_sid'), date:fv('f_date')||today(), subject:fv('f_subject'), hours, fee:isNaN(fee)?0:fee, topic:fv('f_topic'), start};
+  if(id){ Object.assign(state.lessons.find(x=>x.id===id), data); toast('Ders güncellendi'); }
+  else { state.lessons.push({id:uid(), ...data}); toast('Ders eklendi'); }
+  save(); closeModal(); render();
+}
+
+function openPaymentForm(id, sid){
+  if(!needStudent()) return;
+  const p = id ? state.payments.find(x=>x.id===id) : {};
+  const selSid = p.sid || sid || route.filter.sid || state.students[0].id;
+  const s = student(selSid);
+  openModal(`
+  <h3>${id?'Ödemeyi Düzenle':'Ödeme Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Öğrenci</label><select id="f_sid">${studentOptions(selSid)}</select></div>
+    <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${p.date||today()}"></div>
+    <div class="field"><label>Tutar (₺)</label><input id="f_amount" type="number" min="0" step="any" value="${p.amount??(s?Math.max(0,debt(s.id)):'')}" placeholder="0"></div>
+    <div class="field"><label>Yöntem</label><select id="f_method">
+      ${['Nakit','Havale / EFT','Kredi Kartı','Diğer'].map(m=>`<option ${p.method===m?'selected':''}>${m}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Not</label><input id="f_pnote" value="${esc(p.note||'')}" placeholder="Örn. Mayıs ayı"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="savePayment('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function savePayment(id){
+  const amount = parseFloat(fv('f_amount'));
+  if(isNaN(amount) || amount<=0){ toast('Geçerli bir tutar gir'); return; }
+  const data = {sid:fv('f_sid'), date:fv('f_date')||today(), amount, method:fv('f_method'), note:fv('f_pnote')};
+  if(id){ Object.assign(state.payments.find(x=>x.id===id), data); toast('Ödeme güncellendi'); }
+  else { state.payments.push({id:uid(), ...data}); toast('Ödeme eklendi'); }
+  save(); closeModal(); render();
+}
+
+function openHomeworkForm(id, sid){
+  if(!needStudent()) return;
+  const h = id ? state.homeworks.find(x=>x.id===id) : {};
+  const selSid = h.sid || sid || route.filter.sid || state.students[0].id;
+  openModal(`
+  <h3>${id?'Ödevi Düzenle':'Ödev Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Öğrenci</label><select id="f_sid">${studentOptions(selSid)}</select></div>
+    <div class="field"><label>Ders</label><select id="f_subject">${subjectOptions(h.subject)}</select></div>
+    <div class="field"><label>Teslim Tarihi</label><input id="f_due" type="date" value="${h.due||''}"></div>
+    <div class="field full"><label>Ödev Açıklaması *</label><textarea id="f_desc" placeholder="Örn. Paragraf sorularından 40 adet">${esc(h.desc||'')}</textarea></div>
+    <div class="field full"><label>Durum</label><select id="f_status">
+      <option value="bekliyor" ${h.status==='bekliyor'||!h.status?'selected':''}>Bekliyor</option>
+      <option value="yapildi" ${h.status==='yapildi'?'selected':''}>Yapıldı</option>
+      <option value="eksik" ${h.status==='eksik'?'selected':''}>Eksik</option>
+    </select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveHomework('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function saveHomework(id){
+  const desc = fv('f_desc');
+  if(!desc){ toast('Ödev açıklaması gerekli'); return; }
+  const data = {sid:fv('f_sid'), subject:fv('f_subject'), due:fv('f_due'), desc, status:fv('f_status')};
+  if(id){ Object.assign(state.homeworks.find(x=>x.id===id), data); toast('Ödev güncellendi'); }
+  else { state.homeworks.push({id:uid(), ...data}); toast('Ödev eklendi'); }
+  save(); closeModal(); render();
+}
+function setHwStatus(id, status){
+  const h = state.homeworks.find(x=>x.id===id);
+  if(h){ h.status = status; save(); render(); toast('Ödev durumu güncellendi'); }
+}
+
+/* Genel deneme ders/soru yapısı */
+const GENEL_NETS = {
+  TYT: [['Türkçe',40],['Sosyal',20],['Matematik',40],['Fizik',7],['Kimya',7],['Biyoloji',6]],
+  AYT: [['Matematik',40],['Fizik',14],['Kimya',13],['Biyoloji',13]],
+};
+const BRANS_MAX = 40;
+const EXAM_DERS_FILTERS = ['Türkçe','Sosyal','Matematik','Fizik','Kimya','Biyoloji'];
+
+function openExamForm(id, sid){
+  if(!needStudent()) return;
+  const e = id ? state.exams.find(x=>x.id===id) : {};
+  window._editExam = e;
+  const selSid = e.sid || sid || route.filter.sid || state.students[0].id;
+  openModal(`
+  <h3>${id?'Denemeyi Düzenle':'Deneme Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Öğrenci</label><select id="f_sid">${studentOptions(selSid)}</select></div>
+    <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${e.date||today()}"></div>
+    <div class="field"><label>Deneme Türü</label><select id="f_kind" onchange="renderExamFields()">
+      <option value="genel" ${e.kind!=='brans'?'selected':''}>Genel Deneme</option>
+      <option value="brans" ${e.kind==='brans'?'selected':''}>Branş Denemesi</option>
+    </select></div>
+    <div class="field full"><label>Deneme Adı</label><input id="f_ename" value="${esc(e.name||'')}" placeholder="Örn. 3D Yayınları TYT-4"></div>
+    <div class="full" id="examFields"></div>
+    <div class="field full"><label>Not</label><input id="f_enote" value="${esc(e.note||'')}" placeholder="Güçlü / zayıf konular"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveExam('${id||''}')">Kaydet</button>
+  </div>`);
+  renderExamFields();
+}
+function renderExamFields(){
+  const e = window._editExam || {};
+  const kind = fv('f_kind');
+  const box = document.getElementById('examFields');
+  if(kind==='brans'){
+    const prev = document.getElementById('f_bsub');
+    const bs = (prev && prev.value) || e.bransSubject || 'Matematik';
+    box.innerHTML = `<div class="form-grid">
+      <div class="field"><label>Ders</label><select id="f_bsub" onchange="renderExamFields()">
+        <option ${bs==='Matematik'?'selected':''}>Matematik</option>
+        <option ${bs==='Türkçe'?'selected':''}>Türkçe</option>
+      </select></div>
+      <div class="field"><label>Net (40 üzerinden) *</label><input id="f_bnet" type="number" min="-10" max="${BRANS_MAX}" step="0.25" value="${e.kind==='brans'?(e.net??''):''}" placeholder="Örn. 32,5"></div>
+      <div class="field full"><label>Süre (dakika)${bs==='Türkçe'?' *':''}</label><input id="f_bsure" type="number" min="1" value="${e.sure??''}" placeholder="Örn. 35"></div>
+    </div>`;
+  } else {
+    const prev = document.getElementById('f_gtype');
+    const type = (prev && prev.value) || (GENEL_NETS[e.type] ? e.type : 'TYT');
+    box.innerHTML = `<div class="form-grid">
+      <div class="field full"><label>Sınav</label><select id="f_gtype" onchange="renderExamFields()">
+        <option ${type==='TYT'?'selected':''}>TYT</option>
+        <option ${type==='AYT'?'selected':''}>AYT</option>
+      </select></div>
+      ${GENEL_NETS[type].map(([n,max])=>`
+      <div class="field"><label>${n} <span style="opacity:.6">(en çok ${max})</span></label>
+        <input class="gnet" data-sub="${n}" data-max="${max}" type="number" step="0.25" min="-10" max="${max}"
+          value="${e.nets && e.nets[n]!=null ? e.nets[n] : ''}" placeholder="net"></div>`).join('')}
+    </div>`;
+  }
+}
+function saveExam(id){
+  const kind = fv('f_kind');
+  const base = {sid:fv('f_sid'), date:fv('f_date')||today(), name:fv('f_ename'), note:fv('f_enote'), kind};
+  let data;
+  if(kind==='brans'){
+    const sub = fv('f_bsub');
+    const net = parseFloat(fv('f_bnet'));
+    const sure = parseFloat(fv('f_bsure'));
+    if(isNaN(net) || net > BRANS_MAX){ toast('Branş neti 40 üzerinden girilmeli'); return; }
+    if(sub==='Türkçe' && (isNaN(sure) || sure<=0)){ toast('Türkçe branş denemesi için süre (dk) girilmeli'); return; }
+    data = {...base, type:'Branş', bransSubject:sub, net, sure:isNaN(sure)?null:sure, nets:null};
+  } else {
+    const type = fv('f_gtype');
+    const nets = {}; let tot = 0, any = false, err = null;
+    document.querySelectorAll('.gnet').forEach(inp=>{
+      const v = inp.value.trim(); if(v==='') return;
+      const num = parseFloat(v.replace(',','.')), max = +inp.dataset.max;
+      if(isNaN(num) || num > max){ err = `${inp.dataset.sub} neti en çok ${max} olabilir`; return; }
+      nets[inp.dataset.sub] = num; tot += num; any = true;
+    });
+    if(err){ toast(err); return; }
+    if(!any){ toast('En az bir ders için net gir'); return; }
+    data = {...base, type, nets, net:Math.round(tot*100)/100, sure:null, bransSubject:null};
+  }
+  if(id){ Object.assign(state.exams.find(x=>x.id===id), data); toast('Deneme güncellendi'); }
+  else { state.exams.push({id:uid(), ...data}); toast('Deneme eklendi'); }
+  save(); closeModal(); render();
+}
+/* Bir denemenin belirli ders için neti (yoksa null) */
+function examNetFor(e, ders){
+  if(!ders) return +e.net || 0;
+  if(e.kind==='brans') return e.bransSubject===ders ? (+e.net||0) : null;
+  if(e.nets && e.nets[ders]!=null) return +e.nets[ders];
+  return null;
+}
+function examKindLabel(e){
+  if(e.kind==='brans') return `${subjectChip(e.bransSubject)} <span class="chip badge-zero">Branş</span>`;
+  return subjectChip(e.type||'Genel');
+}
+function netBreakdown(e){
+  if(!e.nets) return '';
+  const short = {'Türkçe':'Tür','Sosyal':'Sos','Matematik':'Mat','Fizik':'Fiz','Kimya':'Kim','Biyoloji':'Biy'};
+  return Object.entries(e.nets).map(([k,v])=>`${short[k]||k} ${(+v).toLocaleString('tr-TR')}`).join(' · ');
+}
+
+function delItem(coll, id){
+  if(!confirm('Bu kayıt silinsin mi?')) return;
+  if(coll==='payments'){
+    // dersten oluşturulan bir ödeme silinirse dersin "ödendi" işaretini kaldır
+    const p = state.payments.find(x=>x.id===id);
+    if(p && p.lessonId){
+      const l = state.lessons.find(x=>x.id===p.lessonId);
+      if(l) l.paid = false;
+    }
+  }
+  state[coll] = state[coll].filter(x=>x.id!==id);
+  save(); render(); toast('Kayıt silindi');
+}
+
+/* Ders erteleme / telafi */
+function toggleLessonPostponed(id){
+  const l = state.lessons.find(x=>x.id===id);
+  if(!l) return;
+  if(l.status==='ertelendi'){
+    delete l.status;
+    toast('Telafi edildi olarak işaretlendi' + (studentMode ? '' : ' — ücret tahakkuk etti'));
+  } else {
+    if(l.paid){ toast('Ödemesi alınmış ders ertelenemez — önce ödemeyi geri al'); return; }
+    l.status = 'ertelendi';
+    toast('Ders ertelendi — telafi hatırlatması Genel Bakış\'a eklendi');
+  }
+  save(); render();
+}
+function shiftDate(ds, days){
+  const d = new Date(ds + 'T12:00'); d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+/* Geçen haftanın derslerini görüntülenen haftaya kopyala */
+function copyPrevWeek(){
+  const cur = calWeekDates();
+  const prevLessons = state.lessons.filter(l=>l.date && cur.includes(shiftDate(l.date, 7)));
+  if(!prevLessons.length){ toast('Geçen haftada kopyalanacak ders yok'); return; }
+  let added = 0;
+  prevLessons.forEach(l=>{
+    const nd = shiftDate(l.date, 7);
+    if(state.lessons.some(x=>x.sid===l.sid && x.date===nd && x.start===l.start)) return; // zaten var
+    const s = student(l.sid); if(!s) return;
+    state.lessons.push({
+      id: uid(), sid: l.sid, date: nd, subject: l.subject, hours: l.hours,
+      fee: Math.round((+l.hours||0) * (+s.rate||0)), topic: '', start: l.start
+    });
+    added++;
+  });
+  save(); render();
+  toast(added ? added + ' ders bu haftaya kopyalandı' : 'Bu haftadaki dersler zaten mevcut');
+}
+/* Ders satırından tek tıkla ödeme al / geri al */
+function toggleLessonPaid(id){
+  const l = state.lessons.find(x=>x.id===id);
+  if(!l) return;
+  if(l.status==='ertelendi'){ toast('Ertelenen ders için ödeme alınamaz'); return; }
+  if(l.paid){
+    if(!confirm('Bu dersin ödemesi geri alınsın mı? Bağlı ödeme kaydı da silinecek.')) return;
+    state.payments = state.payments.filter(p=>p.lessonId!==id);
+    l.paid = false;
+    toast('Ödeme geri alındı');
+  } else {
+    state.payments.push({
+      id: uid(), sid: l.sid, date: today(), amount: +l.fee||0, method: 'Nakit',
+      note: `Ders ödemesi · ${l.subject} (${fmtDate(l.date)})`, lessonId: id
+    });
+    l.paid = true;
+    toast(fmtTL(l.fee) + ' ödeme kaydedildi');
+  }
+  save(); render();
+}
+
+/* ================= GRAFİK (SVG) ================= */
+function examChart(list, ders){
+  ders = ders || '';
+  const title = `Net Gelişimi · ${ders||'Toplam'}`;
+  const pts = [...list]
+    .filter(e=>ders || e.kind!=='brans') // Toplam görünümünde branş denemeleri kıyasa girmez
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''))
+    .map(e=>({...e, _val: examNetFor(e, ders)}))
+    .filter(e=>e._val!=null);
+  if(pts.length < 2) return `<div class="card chart-box"><h3 style="font-size:.98rem;margin-bottom:8px">${title}</h3>
+    <p style="color:var(--muted);font-size:.86rem">Grafik için bu filtrede en az 2 deneme sonucu gerekli.</p></div>`;
+  const W=720, H=240, PL=44, PR=16, PT=18, PB=34;
+  const nets = pts.map(p=>+p._val);
+  let min = Math.min(...nets), max = Math.max(...nets);
+  if(min===max){ min-=5; max+=5; }
+  const pad = (max-min)*0.15; min=Math.max(0,min-pad); max+=pad;
+  const X = i => PL + (W-PL-PR) * (pts.length===1 ? .5 : i/(pts.length-1));
+  const Y = v => PT + (H-PT-PB) * (1-(v-min)/(max-min));
+  // yatay kılavuz çizgileri
+  let grid='', labels='';
+  for(let g=0; g<=4; g++){
+    const v = min + (max-min)*g/4, y = Y(v);
+    grid += `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    labels += `<text x="${PL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v.toFixed(0)}</text>`;
+  }
+  const coords = pts.map((p,i)=>[X(i), Y(+p._val)]);
+  const line = coords.map((c,i)=>(i?'L':'M')+c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' ');
+  const area = line + ` L ${coords[coords.length-1][0].toFixed(1)} ${H-PB} L ${coords[0][0].toFixed(1)} ${H-PB} Z`;
+  const hasBrans = pts.some(p=>p.kind==='brans');
+  const dots = pts.map((p,i)=>{
+    const [x,y]=coords[i];
+    const col = p.kind==='brans' ? 'var(--rose)' : 'var(--accent)';
+    const kindTxt = p.kind==='brans' ? `Branş · ${p.bransSubject}` : (p.type||'Genel');
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5" fill="var(--card)" stroke="${col}" stroke-width="2.5">
+      <title>${esc(p.name||kindTxt)} · ${kindTxt} · ${fmtDate(p.date)} · ${(+p._val).toLocaleString('tr-TR')} net${p.sure?' · '+p.sure+' dk':''}</title></circle>
+      <text x="${x.toFixed(1)}" y="${(y-11).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${col}">${(+p._val).toLocaleString('tr-TR')}</text>`;
+  }).join('');
+  const xLabels = pts.map((p,i)=>{
+    if(pts.length>8 && i%2===1) return '';
+    return `<text x="${X(i).toFixed(1)}" y="${H-12}" text-anchor="middle" font-size="10" fill="var(--muted)">${new Date(p.date+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>`;
+  }).join('');
+  const first = nets[0], last = nets[nets.length-1], diff = last-first;
+  const trend = diff>=0
+    ? `<span class="chip badge-pos">↑ ${diff.toLocaleString('tr-TR')} net artış</span>`
+    : `<span class="chip badge-neg">↓ ${(-diff).toLocaleString('tr-TR')} net düşüş</span>`;
+  const legend = hasBrans
+    ? `<div class="chart-legend"><span><i style="background:var(--accent)"></i>Genel deneme</span><span><i style="background:var(--rose)"></i>Branş denemesi</span></div>`
+    : '';
+  return `<div class="card chart-box">
+    <h3 style="font-size:.98rem;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">${title} ${trend}</h3>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      <defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/>
+        <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+      </linearGradient></defs>
+      ${grid}${labels}
+      <path d="${area}" fill="url(#gArea)"/>
+      <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}${xLabels}
+    </svg>
+    ${legend}
+  </div>`;
+}
+
+/* ================= YEDEKLEME ================= */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ogrenci-takip-yedek-' + today() + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Yedek dosyası indirildi');
+}
+function importData(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const d = JSON.parse(reader.result);
+      if(!d || !Array.isArray(d.students)) throw 0;
+      if(!confirm('Mevcut veriler yedekteki verilerle değiştirilecek. Devam edilsin mi?')) return;
+      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], notes:d.notes||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[]};
+      save(); go('dashboard'); toast('Yedek geri yüklendi');
+    }catch(e){ toast('Geçersiz yedek dosyası'); }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+/* ================= NOTLAR (DERS MATERYALLERİ) ================= */
+const NOTE_SUBJECTS = ['Matematik','Fizik','Kimya'];
+const NOTES_DB = 'ogrenciTakipDosyalar';
+function idb(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open(NOTES_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbPut(key, blob){
+  const db = await idb();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction('files','readwrite');
+    tx.objectStore('files').put(blob, key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbGet(key){
+  const db = await idb();
+  return new Promise((res,rej)=>{
+    const rq = db.transaction('files').objectStore('files').get(key);
+    rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbDel(key){
+  const db = await idb();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction('files','readwrite');
+    tx.objectStore('files').delete(key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+function fmtSize(b){
+  if(!b) return '';
+  if(b < 1024*1024) return (b/1024).toFixed(0)+' KB';
+  return (b/1024/1024).toFixed(1)+' MB';
+}
+const SVG_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+const SVG_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
+
+function viewNotes(){
+  let list = [...state.notes].sort(byDateDesc);
+  if(route.filter.subject) list = list.filter(n=>n.subject===route.filter.subject);
+  return `
+  <div class="topbar">
+    <div><h1>Notlar</h1><div class="sub">${list.length} materyal · dosyalar bu tarayıcıda saklanır</div></div>
+    <button class="btn btn-primary" onclick="openNoteForm()">＋ Not Yükle</button>
+  </div>
+  <div class="toolbar">
+    <select onchange="setFilter('subject',this.value)">
+      <option value="">Tüm dersler</option>
+      ${NOTE_SUBJECTS.map(s=>`<option ${route.filter.subject===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+  </div>
+  <div class="card">${notesTable(list)}</div>`;
+}
+function notesTable(list){
+  if(!list.length) return emptyState('📂','Henüz not yüklenmedi','"Not Yükle" ile PDF, fotoğraf veya belge ekle; ders bazında filtreleyip tek tıkla indir veya paylaş.');
+  return `<div class="table-wrap"><table>
+  <thead><tr><th>Tarih</th><th>Ders</th><th>Başlık</th><th>Dosya / Bağlantı</th><th></th></tr></thead>
+  <tbody>${list.map(n=>`<tr>
+    <td style="white-space:nowrap">${fmtDate(n.date)}</td>
+    <td>${subjectChip(n.subject)}</td>
+    <td style="font-size:.9rem;font-weight:600">${esc(n.title)}${n.desc?`<span class="row-note">${esc(n.desc)}</span>`:''}</td>
+    <td style="font-size:.85rem;color:var(--muted)">
+      ${n.hasFile ? `📄 ${esc(n.fileName||'')} <span style="opacity:.7">(${fmtSize(n.fileSize)})</span>` : ''}
+      ${n.link ? `${n.hasFile?'<br>':''}🔗 <a href="${esc(n.link)}" target="_blank" style="color:var(--accent)">Bağlantı</a>` : ''}
+      ${!n.hasFile && !n.link ? '—' : ''}
+    </td>
+    <td style="text-align:right;white-space:nowrap">
+      ${n.hasFile?`<button class="icon-btn" onclick="downloadNote('${n.id}')" title="İndir">${SVG_DOWN}</button>`:''}
+      <button class="icon-btn" onclick="shareNote('${n.id}')" title="Paylaş">${SVG_SHARE}</button>
+      <button class="icon-btn" onclick="openNoteForm('${n.id}')" title="Düzenle">${SVG_EDIT}</button>
+      <button class="icon-btn danger" onclick="delNote('${n.id}')" title="Sil">${SVG_DEL}</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+function openNoteForm(id){
+  const n = id ? state.notes.find(x=>x.id===id) : {};
+  openModal(`
+  <h3>${id?'Notu Düzenle':'Not Yükle'}</h3>
+  <div class="form-grid">
+    <div class="field"><label>Ders</label><select id="f_subject">
+      ${NOTE_SUBJECTS.map(s=>`<option ${n.subject===s?'selected':''}>${s}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${n.date||today()}"></div>
+    <div class="field full"><label>Başlık *</label><input id="f_title" value="${esc(n.title||'')}" placeholder="Örn. Türev alma kuralları özeti"></div>
+    <div class="field full"><label>Açıklama</label><input id="f_ndesc" value="${esc(n.desc||'')}" placeholder="Kısa açıklama (isteğe bağlı)"></div>
+    <div class="field full"><label>Dosya ${n.hasFile?`<span style="color:var(--green)">· mevcut: ${esc(n.fileName||'')}</span>`:''}</label>
+      <input id="f_file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.txt">
+    </div>
+    <div class="field full"><label>Bağlantı (Google Drive vb., isteğe bağlı)</label><input id="f_link" value="${esc(n.link||'')}" placeholder="https://..."></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveNote('${id||''}')">Kaydet</button>
+  </div>`);
+}
+async function saveNote(id){
+  const title = fv('f_title');
+  if(!title){ toast('Başlık gerekli'); return; }
+  const fileEl = document.getElementById('f_file');
+  const file = fileEl && fileEl.files && fileEl.files[0];
+  if(file && file.size > 30*1024*1024){ toast('Dosya çok büyük (en fazla 30 MB)'); return; }
+  let n = id ? state.notes.find(x=>x.id===id) : null;
+  const data = {subject:fv('f_subject'), date:fv('f_date')||today(), title, desc:fv('f_ndesc'), link:fv('f_link')};
+  if(n) Object.assign(n, data);
+  else { n = {id:uid(), hasFile:false, ...data}; state.notes.push(n); }
+  if(file){
+    try{
+      await idbPut(n.id, file);
+      n.hasFile = true; n.fileName = file.name; n.fileType = file.type; n.fileSize = file.size;
+    }catch(e){ toast('Dosya kaydedilemedi: '+e); }
+  }
+  save(); closeModal(); render(); toast(id?'Not güncellendi':'Not eklendi');
+}
+async function downloadNote(id){
+  const n = state.notes.find(x=>x.id===id);
+  if(!n || !n.hasFile) return;
+  const blob = await idbGet(id).catch(()=>null);
+  if(!blob){ toast('Dosya bulunamadı'); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = n.fileName || 'not';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+async function shareNote(id){
+  const n = state.notes.find(x=>x.id===id);
+  if(!n) return;
+  if(n.hasFile){
+    const blob = await idbGet(id).catch(()=>null);
+    if(blob && navigator.canShare){
+      const f = new File([blob], n.fileName||'not', {type:blob.type||n.fileType||''});
+      if(navigator.canShare({files:[f]})){
+        try{ await navigator.share({files:[f], title:n.title}); return; }
+        catch(e){ if(e.name==='AbortError') return; }
+      }
+    }
+  }
+  if(n.link && navigator.clipboard){
+    await navigator.clipboard.writeText(n.link).catch(()=>{});
+    toast('Bağlantı panoya kopyalandı — WhatsApp\'a yapıştırabilirsin');
+    return;
+  }
+  toast('Bu cihazda doğrudan paylaşım desteklenmiyor — dosyayı indirip WhatsApp/e-posta ile gönder');
+}
+async function delNote(id){
+  if(!confirm('Bu not ve ekli dosyası silinsin mi?')) return;
+  await idbDel(id).catch(()=>{});
+  state.notes = state.notes.filter(x=>x.id!==id);
+  save(); render(); toast('Not silindi');
+}
+
+/* ================= HAFTALIK TAKVİM (ders kayıtlarıyla ortak) ================= */
+const CAL_START = 8*60, CAL_END = 23*60, CAL_SLOT = 30, CAL_SLOT_H = 21;
+const CAL_DAYS = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+const fmtClock = m => String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+const calY = m => (m - CAL_START) / CAL_SLOT * CAL_SLOT_H;
+const calColH = () => calY(CAL_END);
+let calWeekOff = 0;
+function calShiftWeek(n){ calWeekOff = (n===0 ? 0 : calWeekOff + n); render(); }
+function calWeekDates(){
+  const d = new Date(); d.setDate(d.getDate() + calWeekOff*7);
+  d.setDate(d.getDate() - ((d.getDay()+6)%7)); // pazartesi
+  return Array.from({length:7}, (_,i)=>{
+    const x = new Date(d); x.setDate(x.getDate()+i);
+    return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+  });
+}
+function calWeekLessons(){
+  const dates = calWeekDates();
+  return state.lessons.filter(l=>dates.includes(l.date));
+}
+function lessonDur(l){ return Math.max(CAL_SLOT, Math.round((+l.hours||1)*60)); }
+function weekHours(sid){
+  const t = calWeekLessons().filter(l=>l.sid===sid).reduce((a,l)=>a+(+l.hours||0),0);
+  return (Math.round(t*10)/10).toLocaleString('tr-TR');
+}
+function lastSubject(sid){
+  const l = [...state.lessons].filter(x=>x.sid===sid).sort(byDateDesc)[0];
+  return l ? l.subject : 'Matematik';
+}
+function calBlockHtml(l){
+  const s = student(l.sid); if(!s || l.start==null) return '';
+  const dur = lessonDur(l);
+  const pp = l.status==='ertelendi';
+  return `<div class="cal-block${pp?' postponed':''}" data-id="${l.id}" style="top:${calY(l.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${avatarColor(l.sid)}"
+    onpointerdown="calMoveStart(event,'${l.id}')" ondblclick="openLessonForm('${l.id}')" title="Düzenlemek için çift tıkla">
+    <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="delItem('lessons','${l.id}')" title="Dersi sil">×</button>
+    <button class="cal-x" style="right:22px" onpointerdown="event.stopPropagation()" onclick="toggleLessonPostponed('${l.id}')" title="${pp?'Telafi edildi olarak işaretle':'Dersi ertele'}">⏳</button>
+    <b>${esc(s.name)}</b>
+    <span class="cal-hours">${fmtClock(l.start)}–${fmtClock(l.start+dur)}</span>
+    <span class="cal-hours">${pp ? '⏳ Ertelendi' : esc(l.subject)+(studentMode?'':' · '+fmtTL(l.fee)+(l.paid?' ✓':''))}</span>
+    <div class="cal-resize" onpointerdown="calResizeStart(event,'${l.id}')"></div>
+  </div>`;
+}
+function calColInner(di){
+  const date = calWeekDates()[di];
+  let lines = '';
+  for(let m=CAL_START+CAL_SLOT; m<CAL_END; m+=CAL_SLOT){
+    lines += `<div class="cal-line ${m%60?'half':''}" style="top:${calY(m)}px"></div>`;
+  }
+  return lines + calPersonalBlocks(di, date) + state.lessons.filter(l=>l.date===date).map(calBlockHtml).join('');
+}
+/* Kişisel bloklar (üniversite dersleri + saatli antrenmanlar) — Öğrenci Modunda hiç oluşturulmaz */
+function calPersonalBlocks(di, date){
+  if(studentMode) return '';
+  const cls = state.myClasses.filter(c=>c.day===di).map(c=>{
+    const dur = +c.dur||60;
+    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(c.code)}"
+      onclick="openMyClassForm('${c.id}')" title="Üniversite dersin — düzenlemek için tıkla">
+      <b>🎓 ${esc(c.code)}</b>
+      <span class="cal-hours">${fmtClock(c.start)}–${fmtClock(c.start+dur)}${c.room?' · '+esc(c.room):''}</span>
+    </div>`;
+  }).join('');
+  const wos = state.workouts.filter(w=>w.day===di && w.time!=null).map(w=>{
+    const dur = +w.dur||60;
+    const done = (w.doneDates||[]).includes(date);
+    return `<div class="cal-block personal${done?' wodone':''}" style="top:${calY(w.time)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:var(--green)"
+      onclick="openWorkoutForm('${w.id}')" title="Antrenmanın — düzenlemek için tıkla">
+      <button class="cal-x" style="opacity:1" onclick="event.stopPropagation();toggleWorkoutDoneKey('${w.id}','${date}')" title="${done?'İşareti kaldır':'Yapıldı olarak işaretle'}">${done?'✓':'○'}</button>
+      <b>🏋️ ${esc(w.title)}${done?' ✓':''}</b>
+      <span class="cal-hours">${fmtClock(w.time)}–${fmtClock(w.time+dur)}</span>
+    </div>`;
+  }).join('');
+  return cls + wos;
+}
+function refreshCal(){
+  document.querySelectorAll('.cal-col').forEach(c=>{ c.innerHTML = calColInner(+c.dataset.day); });
+}
+function viewSchedule(){
+  const dates = calWeekDates();
+  let times = '';
+  for(let m=CAL_START; m<=CAL_END; m+=60) times += `<div class="cal-time" style="top:${calY(m)}px">${fmtClock(m)}</div>`;
+  const wl = calWeekLessons();
+  const totH = wl.filter(isBillable).reduce((a,l)=>a+(+l.hours||0),0);
+  const totF = wl.filter(isBillable).reduce((a,l)=>a+(+l.fee||0),0);
+  const rangeLabel = fmtDate(dates[0]) + ' – ' + fmtDate(dates[6]);
+  const todayStr = today();
+  return `
+  <div class="topbar">
+    <div><h1>Haftalık Takvim</h1><div class="sub">${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat${studentMode?'':' · '+fmtTL(totF)}</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">⧉ Geçen Haftayı Kopyala</button>
+      <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(-1)">‹ Önceki</button>
+      <button class="btn ${calWeekOff===0?'btn-primary':'btn-ghost'} btn-sm" onclick="calShiftWeek(0)">Bu Hafta</button>
+      <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(1)">Sonraki ›</button>
+    </div>
+  </div>
+  <div class="cal-layout">
+    <div class="card cal-card">
+      <div class="cal-grid">
+        <div></div>
+        ${CAL_DAYS.map((d,di)=>`<div class="cal-dayhead" ${dates[di]===todayStr?'style="color:var(--accent)"':''}>${d} ${+dates[di].slice(8)}</div>`).join('')}
+        ${calDueRow(dates, todayStr)}
+        <div class="cal-timecol" style="height:${calColH()}px">${times}</div>
+        ${CAL_DAYS.map((d,di)=>`
+        <div class="cal-col" data-day="${di}" style="height:${calColH()}px${dates[di]===todayStr?';background:var(--row-hover)':''}"
+          ondragover="event.preventDefault()" ondrop="calDrop(event,${di})">${calColInner(di)}</div>`).join('')}
+      </div>
+    </div>
+    <div class="cal-side card">
+      <h3>Öğrenciler</h3>
+      <div class="hint">Bir öğrenciyi takvime sürükleyip bırak: ders kaydı otomatik oluşur, ücret saat ücretinden hesaplanır. Bloğu taşı, alt kenarından uzat, düzenlemek için çift tıkla.${studentMode?'':' Kesikli çerçeveli 🎓/🏋️ blokları ile üstteki Ajanda şeridi senin kişisel programındır; Öğrenci Modunda tamamen gizlenir.'}</div>
+      ${state.students.length ? state.students.map(s=>`
+      <div class="cal-chip" draggable="true" ondragstart="calChipDrag(event,'${s.id}')" style="border-left:4px solid ${avatarColor(s.id)}">
+        ${esc(s.name)}<span>${weekHours(s.id)} sa/hf</span>
+      </div>`).join('') : '<p style="font-size:.82rem;color:var(--muted)">Önce Öğrenciler sekmesinden öğrenci ekle.</p>'}
+    </div>
+  </div>`;
+}
+function calChipDrag(ev, sid){ ev.dataTransfer.setData('text/plain', sid); }
+function calDrop(ev, di){
+  ev.preventDefault();
+  const sid = ev.dataTransfer.getData('text/plain');
+  const s = student(sid); if(!s) return;
+  const rect = ev.currentTarget.getBoundingClientRect();
+  let start = CAL_START + Math.floor((ev.clientY - rect.top) / CAL_SLOT_H) * CAL_SLOT;
+  start = Math.max(CAL_START, Math.min(CAL_END - 90, start));
+  const hours = 1.5;
+  state.lessons.push({
+    id: uid(), sid, date: calWeekDates()[di], subject: lastSubject(sid),
+    hours, fee: Math.round(hours * (+s.rate||0)), topic: '', start
+  });
+  save(); render();
+  toast(`${s.name} · ${fmtClock(start)} · ders kaydı oluşturuldu`);
+}
+/* Süre değişince ücreti (ve varsa bağlı ödemeyi) güncelle */
+function calApplyDur(l, dur){
+  l.hours = Math.round(dur/CAL_SLOT) * CAL_SLOT / 60;
+  const s = student(l.sid);
+  l.fee = Math.round(l.hours * (s ? (+s.rate||0) : 0));
+  if(l.paid){
+    const p = state.payments.find(p=>p.lessonId===l.id);
+    if(p) p.amount = l.fee;
+  }
+}
+let calDrag = null;
+function calMoveStart(ev, id){
+  ev.preventDefault();
+  const l = state.lessons.find(x=>x.id===id); if(!l) return;
+  calDrag = {mode:'move', id, y0:ev.clientY, orig:{start:l.start, date:l.date, dur:lessonDur(l)}};
+  document.addEventListener('pointermove', calPointerMove);
+  document.addEventListener('pointerup', calPointerUp);
+}
+function calResizeStart(ev, id){
+  ev.preventDefault(); ev.stopPropagation();
+  const l = state.lessons.find(x=>x.id===id); if(!l) return;
+  calDrag = {mode:'resize', id, y0:ev.clientY, orig:{start:l.start, date:l.date, dur:lessonDur(l)}};
+  document.addEventListener('pointermove', calPointerMove);
+  document.addEventListener('pointerup', calPointerUp);
+}
+function calPointerMove(ev){
+  if(!calDrag) return;
+  const l = state.lessons.find(x=>x.id===calDrag.id); if(!l) return;
+  const dSlot = Math.round((ev.clientY - calDrag.y0) / CAL_SLOT_H);
+  if(calDrag.mode==='resize'){
+    const dur = Math.max(CAL_SLOT, Math.min(CAL_END - l.start, calDrag.orig.dur + dSlot*CAL_SLOT));
+    calApplyDur(l, dur);
+  } else {
+    let ns = calDrag.orig.start + dSlot*CAL_SLOT;
+    l.start = Math.max(CAL_START, Math.min(CAL_END - lessonDur(l), ns));
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const col = el && el.closest ? el.closest('.cal-col') : null;
+    if(col) l.date = calWeekDates()[+col.dataset.day];
+  }
+  refreshCal();
+}
+function calPointerUp(){
+  document.removeEventListener('pointermove', calPointerMove);
+  document.removeEventListener('pointerup', calPointerUp);
+  if(calDrag){ calDrag = null; save(); render(); }
+}
+
+/* ================= ÖDEME PLANIM (kişisel — öğrenci modunda gizli) ================= */
+function billsForMonth(ym){
+  return state.bills.map(b=>{
+    if(b.repeat==='tek'){
+      if((b.date||'').slice(0,7)!==ym) return null;
+      return {b, day:+b.date.slice(8)};
+    }
+    const dim = new Date(+ym.slice(0,4), +ym.slice(5,7), 0).getDate();
+    return {b, day: Math.min(+b.day||1, dim)};
+  }).filter(Boolean);
+}
+function billMonthKey(b){
+  return b.repeat==='tek' ? (b.date||'').slice(0,7) : new Date().toISOString().slice(0,7);
+}
+function isBillPaid(b, key){ return (b.paidMonths||[]).includes(key || billMonthKey(b)); }
+function toggleBillPaidKey(id, key){
+  const b = state.bills.find(x=>x.id===id); if(!b) return;
+  b.paidMonths = b.paidMonths || [];
+  const i = b.paidMonths.indexOf(key);
+  if(i>=0){ b.paidMonths.splice(i,1); toast('Ödenmedi olarak işaretlendi'); }
+  else { b.paidMonths.push(key); toast('Ödendi olarak işaretlendi'); }
+  save(); render();
+}
+function toggleBillPaid(id){
+  const b = state.bills.find(x=>x.id===id); if(!b) return;
+  toggleBillPaidKey(id, billMonthKey(b));
+}
+function billDueText(b){
+  return b.repeat==='tek' ? fmtDate(b.date) : `Her ayın ${+b.day||1}'i`;
+}
+function billStatusBtn(b){
+  const paid = isBillPaid(b);
+  if(paid) return `<button class="pay-btn pay-yes" onclick="toggleBillPaid('${b.id}')" title="Geri almak için tıkla">Ödendi ✓</button>`;
+  const ymNow = new Date().toISOString().slice(0,7);
+  const td = new Date().getDate();
+  let overdue = false;
+  if(b.repeat==='tek') overdue = (b.date||'') < today();
+  else overdue = true && +b.day < td;
+  if(overdue) return `<button class="pay-btn" style="background:var(--red-soft);color:var(--red)" onclick="toggleBillPaid('${b.id}')" title="Ödendi olarak işaretle">⚠ Gecikti</button>`;
+  return `<button class="pay-btn pay-no" onclick="toggleBillPaid('${b.id}')" title="Ödendi olarak işaretle">Ödenecek</button>`;
+}
+function dashboardBillsPanel(ym, td){
+  if(studentMode || (!state.bills.length && !state.subs.length)) return '';
+  const due = billsForMonth(ym)
+    .filter(x=>!isBillPaid(x.b, ym))
+    .sort((a,b)=>a.day-b.day);
+  const subsMonthly = state.subs.reduce((t,s)=>t+subMonthly(s),0);
+  if(!due.length && !state.subs.length) return '';
+  const dueTable = due.length ? `
+    <div class="table-wrap"><table><tbody>
+    ${due.map(({b,day})=>{
+      const lbl = day < td ? `<span class="chip badge-neg">⚠ Gecikti</span>`
+                : day === td ? `<span class="chip hw-bekliyor">Bugün!</span>`
+                : `<span class="chip badge-zero">${day-td} gün kaldı</span>`;
+      return `<tr>
+        <td style="font-weight:600">${esc(b.title)}${b.note?`<span class="row-note">${esc(b.note)}</span>`:''}</td>
+        <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">Ayın ${day}'i</td>
+        <td class="num">${b.amount!=null?fmtTL(b.amount):''}</td>
+        <td>${lbl}</td>
+        <td style="text-align:right"><button class="btn btn-ghost btn-sm" onclick="toggleBillPaid('${b.id}')">Ödendi ✓</button></td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>` : `<p style="font-size:.85rem;color:var(--muted)">Bu ayın tüm ödemeleri yapıldı ✓</p>`;
+  const subsLine = state.subs.length ? `
+    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">🔁 ${state.subs.length} abonelik · aylık toplam ${fmtTLd(subsMonthly)} <button class="more" onclick="go('bills');setBillsTab('abonelik')">Aboneliklerim →</button></p>` : '';
+  return `
+  <div class="card panel bills-panel">
+    <h3>💳 Bu Ayki Ödemelerim <button class="more" onclick="go('bills')">Tümü →</button></h3>
+    ${dueTable}${subsLine}
+  </div>`;
+}
+let billsTab = 'plan';
+function setBillsTab(t){ billsTab = t; render(); }
+function billsTabsHtml(){
+  return `<div class="subtabs">
+    <button class="${billsTab==='plan'?'active':''}" onclick="setBillsTab('plan')">💳 Ödemeler</button>
+    <button class="${billsTab==='abonelik'?'active':''}" onclick="setBillsTab('abonelik')">🔁 Aboneliklerim</button>
+  </div>`;
+}
+function viewBills(){
+  if(billsTab==='abonelik') return viewSubs();
+  const ymNow = new Date().toISOString().slice(0,7);
+  const monthBills = billsForMonth(ymNow);
+  const paidCount = monthBills.filter(x=>isBillPaid(x.b, ymNow)).length;
+  const totalAmt = monthBills.reduce((t,x)=>t+(+x.b.amount||0),0);
+  const list = [...state.bills].sort((a,b)=>{
+    const da = a.repeat==='tek' ? +(a.date||'99').slice(8) : (+a.day||1);
+    const db = b.repeat==='tek' ? +(b.date||'99').slice(8) : (+b.day||1);
+    return da - db;
+  });
+  const table = !list.length
+    ? emptyState('💳','Ödeme planın boş','Kira, fatura, taksit gibi kendi ödemelerini ekle; her ay Genel Bakış\'ta günü gelince hatırlatılır.')
+    : `<div class="table-wrap"><table>
+    <thead><tr><th>Ödeme</th><th>Tarih</th><th>Tutar</th><th>Bu Ay</th><th></th></tr></thead>
+    <tbody>${list.map(b=>`<tr>
+      <td style="font-weight:600">${esc(b.title)}${b.note?`<span class="row-note">${esc(b.note)}</span>`:''}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${billDueText(b)}${b.repeat==='tek'?' <span class="chip badge-zero">Tek sefer</span>':''}</td>
+      <td class="num">${b.amount!=null?fmtTL(b.amount):'—'}</td>
+      <td>${billStatusBtn(b)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="icon-btn" onclick="openBillForm('${b.id}')" title="Düzenle">${SVG_EDIT}</button>
+        <button class="icon-btn danger" onclick="delItem('bills','${b.id}')" title="Sil">${SVG_DEL}</button>
+      </td>
+    </tr>`).join('')}</tbody></table></div>`;
+  return `
+  <div class="topbar">
+    <div><h1>Ödeme Planım</h1><div class="sub">bu ay ${monthBills.length} ödeme · ${paidCount} ödendi · toplam ${fmtTL(totalAmt)}</div></div>
+    <button class="btn btn-primary" onclick="openBillForm()">＋ Ödeme Ekle</button>
+  </div>
+  ${billsTabsHtml()}
+  <div class="card">${table}</div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Ödemelerin günü geldiğinde Genel Bakış'ta ve Haftalık Takvim'in üst şeridinde görünür; takvimdeki etikete tıklayarak ödendi işaretleyebilirsin. Bu bölüm Öğrenci Modu açıkken menüde görünmez. "Ödendi" işaretleri her ay kendiliğinden sıfırlanır.</p>`;
+}
+function openBillForm(id){
+  const b = id ? state.bills.find(x=>x.id===id) : {};
+  window._editBill = b;
+  openModal(`
+  <h3>${id?'Ödemeyi Düzenle':'Ödeme Planına Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Başlık *</label><input id="f_btitle" value="${esc(b.title||'')}" placeholder="Örn. Kira, kredi kartı, internet faturası"></div>
+    <div class="field"><label>Tutar (₺)</label><input id="f_bamount" type="number" min="0" step="any" value="${b.amount??''}" placeholder="isteğe bağlı"></div>
+    <div class="field"><label>Tekrar</label><select id="f_rep" onchange="renderBillFields()">
+      <option value="aylik" ${b.repeat!=='tek'?'selected':''}>Her Ay</option>
+      <option value="tek" ${b.repeat==='tek'?'selected':''}>Tek Seferlik</option>
+    </select></div>
+    <div class="full" id="billFields"></div>
+    <div class="field full"><label>Not</label><input id="f_bnote" value="${esc(b.note||'')}" placeholder="Örn. otomatik ödemede değil, elden yatır"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveBill('${id||''}')">Kaydet</button>
+  </div>`);
+  renderBillFields();
+}
+function renderBillFields(){
+  const b = window._editBill || {};
+  const rep = fv('f_rep');
+  document.getElementById('billFields').innerHTML = rep==='tek'
+    ? `<div class="form-grid"><div class="field"><label>Tarih *</label><input id="f_bdate" type="date" value="${b.date||today()}"></div></div>`
+    : `<div class="form-grid"><div class="field"><label>Ayın Günü (1–31) *</label><input id="f_bday" type="number" min="1" max="31" value="${b.day??''}" placeholder="Örn. 5"></div></div>`;
+}
+function saveBill(id){
+  const title = fv('f_btitle');
+  if(!title){ toast('Başlık gerekli'); return; }
+  const rep = fv('f_rep');
+  const amount = parseFloat(fv('f_bamount'));
+  const data = {title, amount:isNaN(amount)?null:amount, repeat:rep, note:fv('f_bnote')};
+  if(rep==='tek'){
+    const date = fv('f_bdate');
+    if(!date){ toast('Tarih gerekli'); return; }
+    data.date = date; data.day = null;
+  } else {
+    const day = parseInt(fv('f_bday'));
+    if(isNaN(day) || day<1 || day>31){ toast('1 ile 31 arasında bir gün gir'); return; }
+    data.day = day; data.date = null;
+  }
+  if(id){ Object.assign(state.bills.find(x=>x.id===id), data); toast('Ödeme güncellendi'); }
+  else { state.bills.push({id:uid(), paidMonths:[], ...data}); toast('Ödeme planına eklendi'); }
+  save(); closeModal(); render();
+}
+
+/* ================= ABONELİKLERİM ================= */
+const subMonthly = s => s.period==='yillik' ? (+s.amount||0)/12 : (+s.amount||0);
+function viewSubs(){
+  const monthly = state.subs.reduce((t,s)=>t+subMonthly(s),0);
+  const yearly = monthly*12;
+  const list = [...state.subs].sort((a,b)=>subMonthly(b)-subMonthly(a));
+  const table = !list.length
+    ? emptyState('🔁','Abonelik eklenmemiş','Netflix, Spotify, Claude gibi aboneliklerini ekle; aylık toplam maliyet burada, yenileme günleri Haftalık Takvim\'de görünür.')
+    : `<div class="table-wrap"><table>
+    <thead><tr><th>Abonelik</th><th>Yenileme</th><th>Tutar</th><th>Aylık Maliyet</th><th style="text-align:right">Bütçedeki Payı</th><th></th></tr></thead>
+    <tbody>${list.map(s=>{
+      const m = subMonthly(s);
+      const share = monthly ? Math.round(m/monthly*100) : 0;
+      return `<tr>
+      <td style="font-weight:600">${esc(s.name)}${s.note?`<span class="row-note">${esc(s.note)}</span>`:''}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${s.period==='yillik' ? 'Yılda bir · '+fmtDate(s.date) : `Her ayın ${+s.day||1}'i`}</td>
+      <td class="num">${fmtTL(s.amount)}${s.period==='yillik'?' <span class="chip badge-zero">Yıllık</span>':''}</td>
+      <td class="num">${fmtTLd(m)}</td>
+      <td><div style="display:flex;align-items:center;gap:9px;justify-content:flex-end">
+        <div class="progress" style="width:70px"><i style="width:${share}%"></i></div>
+        <span style="font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums">%${share}</span>
+      </div></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="icon-btn" onclick="openSubForm('${s.id}')" title="Düzenle">${SVG_EDIT}</button>
+        <button class="icon-btn danger" onclick="delItem('subs','${s.id}')" title="Sil">${SVG_DEL}</button>
+      </td>
+    </tr>`;}).join('')}</tbody></table></div>`;
+  return `
+  <div class="topbar">
+    <div><h1>Ödeme Planım</h1><div class="sub">${state.subs.length} abonelik · aylık toplam ${fmtTLd(monthly)} · yıllık ${fmtTL(yearly)}</div></div>
+    <button class="btn btn-primary" onclick="openSubForm()">＋ Abonelik Ekle</button>
+  </div>
+  ${billsTabsHtml()}
+  <div class="card">${table}</div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Yıllık aboneliklerin aylık maliyeti tutarın 1/12'si olarak hesaplanır. Yenileme günleri Haftalık Takvim'in üst şeridinde görünür; bu bölüm Öğrenci Modu açıkken görünmez.</p>`;
+}
+function openSubForm(id){
+  const s = id ? state.subs.find(x=>x.id===id) : {};
+  window._editSub = s;
+  openModal(`
+  <h3>${id?'Aboneliği Düzenle':'Abonelik Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Abonelik *</label><input id="f_sname" value="${esc(s.name||'')}" placeholder="Örn. Netflix, Spotify, Claude"></div>
+    <div class="field"><label>Tutar (₺) *</label><input id="f_samount" type="number" min="0" step="any" value="${s.amount??''}" placeholder="Örn. 230"></div>
+    <div class="field"><label>Dönem</label><select id="f_speriod" onchange="renderSubFields()">
+      <option value="aylik" ${s.period!=='yillik'?'selected':''}>Aylık</option>
+      <option value="yillik" ${s.period==='yillik'?'selected':''}>Yıllık</option>
+    </select></div>
+    <div class="full" id="subFields"></div>
+    <div class="field full"><label>Not</label><input id="f_snote" value="${esc(s.note||'')}" placeholder="Örn. dolar kuruna göre değişiyor"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveSub('${id||''}')">Kaydet</button>
+  </div>`);
+  renderSubFields();
+}
+function renderSubFields(){
+  const s = window._editSub || {};
+  document.getElementById('subFields').innerHTML = fv('f_speriod')==='yillik'
+    ? `<div class="form-grid"><div class="field"><label>Yenileme Tarihi *</label><input id="f_sdate" type="date" value="${s.date||today()}"></div></div>`
+    : `<div class="form-grid"><div class="field"><label>Yenileme Günü (1–31) *</label><input id="f_sday" type="number" min="1" max="31" value="${s.day??''}" placeholder="Örn. 12"></div></div>`;
+}
+function saveSub(id){
+  const name = fv('f_sname');
+  if(!name){ toast('Abonelik adı gerekli'); return; }
+  const amount = parseFloat(fv('f_samount'));
+  if(isNaN(amount) || amount<0){ toast('Geçerli bir tutar gir'); return; }
+  const period = fv('f_speriod');
+  const data = {name, amount, period, note:fv('f_snote')};
+  if(period==='yillik'){
+    const date = fv('f_sdate');
+    if(!date){ toast('Yenileme tarihi gerekli'); return; }
+    data.date = date; data.day = null;
+  } else {
+    const day = parseInt(fv('f_sday'));
+    if(isNaN(day) || day<1 || day>31){ toast('1 ile 31 arasında bir gün gir'); return; }
+    data.day = day; data.date = null;
+  }
+  if(id){ Object.assign(state.subs.find(x=>x.id===id), data); toast('Abonelik güncellendi'); }
+  else { state.subs.push({id:uid(), ...data}); toast('Abonelik eklendi'); }
+  save(); closeModal(); render();
+}
+
+/* ================= TAKVİM ÖDEME ENTEGRASYONU ================= */
+/* Fatura ve abonelik yenilemeleri Haftalık Takvim'in üst şeridinde gösterilir.
+   Öğrenci Modu açıkken bu şerit hiç oluşturulmaz. */
+function clampDay(day, ym){
+  const dim = new Date(+ym.slice(0,4), +ym.slice(5,7), 0).getDate();
+  return Math.min(+day||1, dim);
+}
+function calDueForDate(ds){
+  const ym = ds.slice(0,7), dd = +ds.slice(8);
+  const items = [];
+  state.bills.forEach(b=>{
+    if(b.repeat==='tek'){ if(b.date===ds) items.push({kind:'bill', b}); }
+    else if(clampDay(b.day, ym)===dd) items.push({kind:'bill', b});
+  });
+  state.subs.forEach(s=>{
+    if(s.period==='yillik'){ if((s.date||'').slice(5)===ds.slice(5)) items.push({kind:'sub', s}); }
+    else if(clampDay(s.day, ym)===dd) items.push({kind:'sub', s});
+  });
+  return items;
+}
+function calDueChip(it, ds){
+  const ym = ds.slice(0,7);
+  if(it.kind==='bill'){
+    const paid = isBillPaid(it.b, ym);
+    const late = !paid && ds < today();
+    const cls = paid ? ' paid' : late ? ' late' : '';
+    return `<button class="bill-chip${cls}" onclick="toggleBillPaidKey('${it.b.id}','${ym}')"
+      title="${esc(it.b.title)}${it.b.amount!=null?' · '+fmtTL(it.b.amount):''} — ${paid?'ödendi, geri almak için tıkla':'ödendi olarak işaretlemek için tıkla'}">
+      💳 ${esc(it.b.title)}${it.b.amount!=null?' · '+fmtTL(it.b.amount):''}${paid?' ✓':''}</button>`;
+  }
+  return `<button class="bill-chip sub" onclick="go('bills');setBillsTab('abonelik')"
+    title="Abonelik yenilemesi — Aboneliklerim'e git">🔁 ${esc(it.s.name)}${it.s.amount!=null?' · '+fmtTL(it.s.amount):''}</button>`;
+}
+function calDueRow(dates, todayStr){
+  const perDay = dates.map(calAgendaForDate);
+  if(!perDay.some(a=>a.length)) return '';
+  return `<div class="cal-allday-label">Ajanda</div>` + perDay.map((a,di)=>`
+    <div class="cal-allday" ${dates[di]===todayStr?'style="background:var(--row-hover)"':''}>${a.join('')}</div>`).join('');
+}
+/* Bir günün ajanda etiketleri: ödemeler ve saatsiz antrenmanlar (kişisel — Öğrenci Modunda gizli),
+   ödev teslimleri ve denemeler (herkese görünür) */
+function calAgendaForDate(ds){
+  const chips = [];
+  if(!studentMode){
+    calDueForDate(ds).forEach(it=>chips.push(calDueChip(it, ds)));
+    const di = (new Date(ds+'T12:00').getDay()+6)%7;
+    state.workouts.filter(w=>w.day===di && w.time==null).forEach(w=>{
+      const done = (w.doneDates||[]).includes(ds);
+      chips.push(`<button class="bill-chip ${done?'paid':'wo'}" onclick="toggleWorkoutDoneKey('${w.id}','${ds}')"
+        title="${esc(w.title)} — ${done?'işareti kaldırmak':'yapıldı işaretlemek'} için tıkla">🏋️ ${esc(w.title)}${done?' ✓':''}</button>`);
+    });
+  }
+  state.homeworks.filter(h=>h.due===ds && h.status!=='yapildi').forEach(h=>{
+    chips.push(`<button class="bill-chip ${h.status==='eksik'?'late':'hw'}" onclick="go('homework')"
+      title="Ödev teslimi — Ödevler'e git">📝 ${esc(studentName(h.sid))} · ${esc(h.subject)}</button>`);
+  });
+  state.exams.filter(e=>e.date===ds).forEach(e=>{
+    chips.push(`<button class="bill-chip exam" onclick="go('exams')"
+      title="Deneme — Denemeler'e git">📈 ${esc(studentName(e.sid))} · ${esc(e.name||e.type||'Deneme')}</button>`);
+  });
+  return chips;
+}
+
+/* ================= KİŞİSEL BÖLÜMLER ================= */
+/* Ders Programım, Spor Programım ve Okuma Listem yalnızca sana özeldir;
+   Öğrenci Modu açıkken menüden, rotalardan ve Genel Bakış'tan tamamen kaldırılır. */
+const WD_LONG = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+const todayIdx = () => (new Date().getDay()+6)%7; // 0 = Pazartesi
+function thisWeekDate(day){
+  const d = new Date();
+  d.setDate(d.getDate() - ((d.getDay()+6)%7) + day);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function daySelect(id, sel){
+  return `<select id="${id}">${WD_LONG.map((n,i)=>`<option value="${i}" ${i===sel?'selected':''}>${n}</option>`).join('')}</select>`;
+}
+
+/* ---------- DERS PROGRAMIM (kendi üniversite programın) ---------- */
+const MC_START = 8*60, MC_END = 21*60;
+const mcY = m => (m - MC_START) / CAL_SLOT * CAL_SLOT_H;
+function mcColor(code){
+  let h = 0; const s = String(code||'');
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function viewMySchedule(){
+  const ti = todayIdx();
+  const totalH = state.myClasses.reduce((t,c)=>t+(+c.dur||0),0)/60;
+  let lines = '';
+  for(let m=MC_START+CAL_SLOT; m<MC_END; m+=CAL_SLOT)
+    lines += `<div class="cal-line${m%60?' half':''}" style="top:${mcY(m)}px"></div>`;
+  let times = '';
+  for(let m=MC_START; m<=MC_END; m+=60) times += `<div class="cal-time" style="top:${mcY(m)}px">${fmtClock(m)}</div>`;
+  const colH = mcY(MC_END);
+  return `
+  <div class="topbar">
+    <div><h1>Ders Programım</h1><div class="sub">${state.myClasses.length} ders bloğu · haftada ${totalH.toLocaleString('tr-TR')} saat</div></div>
+    <button class="btn btn-primary" onclick="openMyClassForm()">＋ Ders Ekle</button>
+  </div>
+  <div class="card cal-card">
+    <div class="cal-grid">
+      <div></div>
+      ${CAL_DAYS.map((d,di)=>`<div class="cal-dayhead" ${di===ti?'style="color:var(--accent)"':''}>${d}</div>`).join('')}
+      <div class="cal-timecol" style="height:${colH}px">${times}</div>
+      ${CAL_DAYS.map((d,di)=>`
+      <div class="cal-col" style="height:${colH}px;cursor:copy" onclick="mcColClick(event, ${di})">
+        ${lines}
+        ${state.myClasses.filter(c=>c.day===di).map(c=>`
+        <div class="cal-block" style="top:${mcY(c.start)}px;height:${(+c.dur||60)/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(c.code)};cursor:pointer"
+          onclick="event.stopPropagation();openMyClassForm('${c.id}')"
+          title="${esc(c.code)} · ${fmtClock(c.start)}–${fmtClock(c.start+(+c.dur||60))}${c.room?' · '+esc(c.room):''}">
+          <b>${esc(c.code)}</b>
+          <span class="cal-hours">${fmtClock(c.start)}${c.room?' · '+esc(c.room):''}</span>
+        </div>`).join('')}
+      </div>`).join('')}
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Boş bir alana tıklayarak o gün ve saate ders ekle, bloğa tıklayarak düzenle. Derslerin Haftalık Takvim'de de 🎓 bloğu olarak görünür. Bu bölüm Öğrenci Modu açıkken görünmez.</p>`;
+}
+function mcColClick(ev, di){
+  const rect = ev.currentTarget.getBoundingClientRect();
+  let start = MC_START + Math.floor((ev.clientY - rect.top) / CAL_SLOT_H) * CAL_SLOT;
+  start = Math.max(MC_START, Math.min(MC_END - 60, start));
+  openMyClassForm(null, di, start);
+}
+function mcTimeOptions(sel){
+  let o = '';
+  for(let m=MC_START; m<=MC_END-30; m+=30) o += `<option value="${m}" ${m===sel?'selected':''}>${fmtClock(m)}</option>`;
+  return o;
+}
+function openMyClassForm(id, day, start){
+  const c = id ? state.myClasses.find(x=>x.id===id) : {day:day??todayIdx(), start:start??9*60, dur:60};
+  openModal(`
+  <h3>${id?'Dersi Düzenle':'Ders Programına Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field"><label>Ders Kodu *</label><input id="f_mcode" value="${esc(c.code||'')}" placeholder="Örn. CHEM 220"></div>
+    <div class="field"><label>Derslik</label><input id="f_mroom" value="${esc(c.room||'')}" placeholder="Örn. D-201"></div>
+    <div class="field full"><label>Ders Adı</label><input id="f_mname" value="${esc(c.name||'')}" placeholder="Örn. Analitik Kimya"></div>
+    <div class="field"><label>Gün</label>${daySelect('f_mday', +c.day||0)}</div>
+    <div class="field"><label>Başlangıç</label><select id="f_mstart">${mcTimeOptions(+c.start||9*60)}</select></div>
+    <div class="field"><label>Süre (dk)</label><input id="f_mdur" type="number" min="30" max="300" step="5" value="${c.dur??60}"></div>
+  </div>
+  <div class="modal-actions">
+    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="closeModal();delItem('myClasses','${id}')">Sil</button>`:''}
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveMyClass('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function saveMyClass(id){
+  const code = fv('f_mcode');
+  if(!code){ toast('Ders kodu gerekli'); return; }
+  const start = +fv('f_mstart');
+  let dur = parseInt(fv('f_mdur'));
+  if(isNaN(dur) || dur<30){ toast('Süre en az 30 dk olmalı'); return; }
+  dur = Math.min(dur, MC_END - start);
+  const data = {code, name:fv('f_mname'), room:fv('f_mroom'), day:+fv('f_mday'), start, dur};
+  if(id){ Object.assign(state.myClasses.find(x=>x.id===id), data); toast('Ders güncellendi'); }
+  else { state.myClasses.push({id:uid(), ...data}); toast('Ders programına eklendi'); }
+  save(); closeModal(); render();
+}
+
+/* ---------- SPOR PROGRAMIM ---------- */
+function viewWorkout(){
+  const ti = todayIdx();
+  const doneThisWeek = state.workouts.filter(w=>(w.doneDates||[]).includes(thisWeekDate(w.day))).length;
+  const totalDone = state.workouts.reduce((t,w)=>t+(w.doneDates||[]).length,0);
+  const days = WD_LONG.map((name,di)=>{
+    const items = state.workouts.filter(w=>w.day===di);
+    if(!items.length) return '';
+    return `
+    <div class="wk-day">
+      <h4>${name} ${di===ti?'<span class="chip badge-zero">Bugün</span>':''}</h4>
+      ${items.map(w=>{
+        const done = (w.doneDates||[]).includes(thisWeekDate(w.day));
+        return `
+        <div class="wk-item${done?' done':''}${di===ti?' wk-today':''}">
+          <span class="t">${esc(w.title)}</span>
+          ${w.time!=null?`<span class="chip badge-zero">${fmtClock(w.time)}</span>`:''}
+          <span style="margin-left:auto;white-space:nowrap;display:flex;align-items:center;gap:4px">
+            <button class="pay-btn ${done?'pay-yes':'pay-no'}" onclick="toggleWorkoutDone('${w.id}')" title="${done?'Geri almak için tıkla':'Bu haftaki antrenmanı tamamlandı işaretle'}">${done?'Yapıldı ✓':'Yapılacak'}</button>
+            <button class="icon-btn" onclick="openWorkoutForm('${w.id}')" title="Düzenle">${SVG_EDIT}</button>
+            <button class="icon-btn danger" onclick="delItem('workouts','${w.id}')" title="Sil">${SVG_DEL}</button>
+          </span>
+          ${w.detail?`<span class="d">${esc(w.detail)}</span>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+  return `
+  <div class="topbar">
+    <div><h1>Spor Programım</h1><div class="sub">haftada ${state.workouts.length} antrenman · bu hafta ${doneThisWeek}/${state.workouts.length} tamamlandı · toplam ${totalDone} antrenman</div></div>
+    <button class="btn btn-primary" onclick="openWorkoutForm()">＋ Antrenman Ekle</button>
+  </div>
+  <div class="card panel">
+    ${state.workouts.length ? days : emptyState('🏋️','Spor programın boş','Haftalık antrenman planını gün gün ekle; her haftanın "Yapıldı" işaretleri o haftaya özel tutulur.')}
+  </div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">"Yapıldı" işaretleri haftalıktır; yeni hafta başladığında kendiliğinden sıfırdan başlar. Saati olan antrenmanlar Haftalık Takvim'de 🏋️ bloğu, saati olmayanlar Ajanda şeridinde etiket olarak görünür. Bu bölüm Öğrenci Modu açıkken görünmez.</p>`;
+}
+function toggleWorkoutDoneKey(id, key){
+  const w = state.workouts.find(x=>x.id===id); if(!w) return;
+  w.doneDates = w.doneDates || [];
+  const i = w.doneDates.indexOf(key);
+  if(i>=0){ w.doneDates.splice(i,1); toast('İşaret kaldırıldı'); }
+  else { w.doneDates.push(key); toast('Antrenman tamamlandı 💪'); }
+  save(); render();
+}
+function toggleWorkoutDone(id){
+  const w = state.workouts.find(x=>x.id===id); if(!w) return;
+  toggleWorkoutDoneKey(id, thisWeekDate(w.day));
+}
+function openWorkoutForm(id){
+  const w = id ? state.workouts.find(x=>x.id===id) : {day:todayIdx()};
+  openModal(`
+  <h3>${id?'Antrenmanı Düzenle':'Spor Programına Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Başlık *</label><input id="f_wtitle" value="${esc(w.title||'')}" placeholder="Örn. Push günü, koşu, yüzme"></div>
+    <div class="field"><label>Gün</label>${daySelect('f_wday', +w.day||0)}</div>
+    <div class="field"><label>Saat</label><input id="f_wtime" type="time" value="${w.time!=null?fmtClock(w.time):''}"></div>
+    <div class="field"><label>Süre (dk)</label><input id="f_wdur" type="number" min="15" max="300" step="5" value="${w.dur??60}" placeholder="60"></div>
+    <div class="field full"><label>İçerik / Not</label><textarea id="f_wdetail" placeholder="Örn. Bench 4×8 · OHP 3×10 · dips 3×12">${esc(w.detail||'')}</textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveWorkout('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function saveWorkout(id){
+  const title = fv('f_wtitle');
+  if(!title){ toast('Başlık gerekli'); return; }
+  const t = fv('f_wtime');
+  const time = t ? (+t.slice(0,2))*60 + (+t.slice(3,5)) : null;
+  const dur = parseInt(fv('f_wdur'));
+  const data = {title, day:+fv('f_wday'), time, dur:isNaN(dur)?60:Math.max(15,dur), detail:fv('f_wdetail')};
+  if(id){ Object.assign(state.workouts.find(x=>x.id===id), data); toast('Antrenman güncellendi'); }
+  else { state.workouts.push({id:uid(), doneDates:[], ...data}); toast('Spor programına eklendi'); }
+  save(); closeModal(); render();
+}
+
+/* ---------- OKUMA LİSTEM ---------- */
+const BOOK_STATUS = [
+  {v:'okunuyor', t:'Okunuyor', cls:'bk-okunuyor'},
+  {v:'okunacak', t:'Okunacak', cls:'hw-bekliyor'},
+  {v:'bitti',    t:'Bitti',    cls:'hw-yapildi'},
+];
+function bookPct(b){
+  if(b.status==='bitti') return 100;
+  if(!+b.pages) return null;
+  return Math.min(100, Math.round((+b.current||0)/+b.pages*100));
+}
+function viewReading(){
+  const order = {okunuyor:0, okunacak:1, bitti:2};
+  const list = [...state.books].sort((a,b)=>(order[a.status]??1)-(order[b.status]??1));
+  const reading = state.books.filter(b=>b.status==='okunuyor').length;
+  const done = state.books.filter(b=>b.status==='bitti').length;
+  const table = !list.length
+    ? emptyState('📚','Okuma listen boş','Okumak istediğin ya da okumakta olduğun kitapları ekle; sayfa ilerlemeni buradan takip et.')
+    : `<div class="table-wrap"><table>
+    <thead><tr><th>Kitap</th><th>İlerleme</th><th>Durum</th><th></th></tr></thead>
+    <tbody>${list.map(b=>{
+      const pct = bookPct(b);
+      const st = BOOK_STATUS.find(s=>s.v===b.status) || BOOK_STATUS[1];
+      return `<tr>
+      <td style="font-weight:600">${esc(b.title)}${b.author?`<span class="row-note">${esc(b.author)}</span>`:''}${b.note?`<span class="row-note">${esc(b.note)}</span>`:''}</td>
+      <td style="white-space:nowrap">${pct!=null?`
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="progress"><i style="width:${pct}%"></i></div>
+          <span style="font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums">${b.status==='bitti'?'%100':`${+b.current||0}/${+b.pages} · %${pct}`}</span>
+        </div>`:'<span style="color:var(--muted);font-size:.82rem">—</span>'}</td>
+      <td><select class="hw-status ${st.cls}" onchange="setBookStatus('${b.id}', this.value)">
+        ${BOOK_STATUS.map(s=>`<option value="${s.v}" ${s.v===b.status?'selected':''}>${s.t}</option>`).join('')}
+      </select></td>
+      <td style="text-align:right;white-space:nowrap">
+        ${b.status==='okunuyor'&&+b.pages?`<button class="btn btn-ghost btn-sm" onclick="openProgressForm('${b.id}')">Sayfa Gir</button>`:''}
+        <button class="icon-btn" onclick="openBookForm('${b.id}')" title="Düzenle">${SVG_EDIT}</button>
+        <button class="icon-btn danger" onclick="delItem('books','${b.id}')" title="Sil">${SVG_DEL}</button>
+      </td>
+    </tr>`;}).join('')}</tbody></table></div>`;
+  return `
+  <div class="topbar">
+    <div><h1>Okuma Listem</h1><div class="sub">${state.books.length} kitap · ${reading} okunuyor · ${done} bitti</div></div>
+    <button class="btn btn-primary" onclick="openBookForm()">＋ Kitap Ekle</button>
+  </div>
+  <div class="card">${table}</div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Bu bölüm Öğrenci Modu açıkken görünmez.</p>`;
+}
+function setBookStatus(id, v){
+  const b = state.books.find(x=>x.id===id); if(!b) return;
+  b.status = v;
+  if(v==='bitti'){ if(+b.pages) b.current = +b.pages; b.finished = today(); toast('Kitap bitti olarak işaretlendi 🎉'); }
+  else { delete b.finished; toast('Durum güncellendi'); }
+  save(); render();
+}
+function openProgressForm(id){
+  const b = state.books.find(x=>x.id===id); if(!b) return;
+  openModal(`
+  <h3>Sayfa İlerlemesi</h3>
+  <p style="font-size:.88rem;color:var(--muted);margin:-8px 0 14px">${esc(b.title)} · toplam ${+b.pages} sayfa</p>
+  <div class="form-grid"><div class="field full"><label>Kaldığın Sayfa</label>
+    <input id="f_bkpage" type="number" min="0" max="${+b.pages}" value="${+b.current||0}">
+  </div></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveProgress('${id}')">Kaydet</button>
+  </div>`);
+}
+function saveProgress(id){
+  const b = state.books.find(x=>x.id===id); if(!b) return;
+  const p = parseInt(fv('f_bkpage'));
+  if(isNaN(p) || p<0){ toast('Geçerli bir sayfa numarası gir'); return; }
+  b.current = Math.min(p, +b.pages||p);
+  if(+b.pages && b.current>=+b.pages){ b.status='bitti'; b.finished=today(); toast('Kitap tamamlandı 🎉'); }
+  else toast('İlerleme kaydedildi');
+  save(); closeModal(); render();
+}
+function openBookForm(id){
+  const b = id ? state.books.find(x=>x.id===id) : {status:'okunacak'};
+  openModal(`
+  <h3>${id?'Kitabı Düzenle':'Okuma Listesine Ekle'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Kitap Adı *</label><input id="f_bktitle" value="${esc(b.title||'')}" placeholder="Örn. Sanatın Öyküsü"></div>
+    <div class="field full"><label>Yazar</label><input id="f_bkauthor" value="${esc(b.author||'')}" placeholder="Örn. E. H. Gombrich"></div>
+    <div class="field"><label>Toplam Sayfa</label><input id="f_bkpages" type="number" min="1" value="${b.pages??''}" placeholder="isteğe bağlı"></div>
+    <div class="field"><label>Kaldığın Sayfa</label><input id="f_bkcur" type="number" min="0" value="${b.current??''}" placeholder="0"></div>
+    <div class="field full"><label>Durum</label><select id="f_bkstatus">
+      ${BOOK_STATUS.map(s=>`<option value="${s.v}" ${s.v===b.status?'selected':''}>${s.t}</option>`).join('')}
+    </select></div>
+    <div class="field full"><label>Not</label><input id="f_bknote" value="${esc(b.note||'')}" placeholder="Örn. felsefe okuma grubu için"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveBook('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function saveBook(id){
+  const title = fv('f_bktitle');
+  if(!title){ toast('Kitap adı gerekli'); return; }
+  const pages = parseInt(fv('f_bkpages')), cur = parseInt(fv('f_bkcur'));
+  const data = {title, author:fv('f_bkauthor'), pages:isNaN(pages)?null:pages,
+    current:isNaN(cur)?0:cur, status:fv('f_bkstatus'), note:fv('f_bknote')};
+  if(data.pages && data.current > data.pages) data.current = data.pages;
+  if(data.pages && data.current >= data.pages) data.status = 'bitti';
+  if(data.status==='bitti') data.finished = today();
+  if(id){ Object.assign(state.books.find(x=>x.id===id), data); toast('Kitap güncellendi'); }
+  else { state.books.push({id:uid(), ...data}); toast('Okuma listesine eklendi'); }
+  save(); closeModal(); render();
+}
+
+/* ---------- GENEL BAKIŞ: KİŞİSEL PANEL ---------- */
+function dashboardPersonalPanel(){
+  if(studentMode) return '';
+  const ti = todayIdx();
+  const classes = state.myClasses.filter(c=>c.day===ti).sort((a,b)=>a.start-b.start);
+  const wos = state.workouts.filter(w=>w.day===ti);
+  const reading = state.books.filter(b=>b.status==='okunuyor');
+  if(!classes.length && !wos.length && !reading.length) return '';
+  const rows = [
+    ...classes.map(c=>`<tr>
+      <td style="width:36px">🎓</td>
+      <td style="font-weight:600">${esc(c.code)}${c.name?`<span class="row-note">${esc(c.name)}</span>`:''}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${fmtClock(c.start)}–${fmtClock(c.start+(+c.dur||60))}${c.room?' · '+esc(c.room):''}</td>
+      <td style="text-align:right"><button class="btn btn-ghost btn-sm" onclick="go('myschedule')">Program →</button></td>
+    </tr>`),
+    ...wos.map(w=>{
+      const done = (w.doneDates||[]).includes(thisWeekDate(w.day));
+      return `<tr>
+      <td style="width:36px">🏋️</td>
+      <td style="font-weight:600${done?';opacity:.55;text-decoration:line-through':''}">${esc(w.title)}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${w.time!=null?fmtClock(w.time):''}</td>
+      <td style="text-align:right"><button class="pay-btn ${done?'pay-yes':'pay-no'}" onclick="toggleWorkoutDone('${w.id}')">${done?'Yapıldı ✓':'Yapılacak'}</button></td>
+    </tr>`;}),
+    ...reading.map(b=>{
+      const pct = bookPct(b);
+      return `<tr>
+      <td style="width:36px">📖</td>
+      <td style="font-weight:600">${esc(b.title)}${b.author?`<span class="row-note">${esc(b.author)}</span>`:''}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${pct!=null?`sayfa ${+b.current||0}/${+b.pages} · %${pct}`:''}</td>
+      <td style="text-align:right">${+b.pages?`<button class="btn btn-ghost btn-sm" onclick="openProgressForm('${b.id}')">Sayfa Gir</button>`:''}</td>
+    </tr>`;})
+  ].join('');
+  return `
+  <div class="card panel personal-panel">
+    <h3>🎯 Bugün Bana Özel <span class="chip badge-zero">${WD_LONG[ti]}</span></h3>
+    <div class="table-wrap"><table><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+
+/* ================= ÖĞRENCİ SAYFASI YAYINI (GitHub Pages) ================= */
+/* Her öğrenci için ödev/deneme/ders verisi, öğrencinin erişim koduyla şifrelenip
+   GitHub deposuna data/<id>.json olarak yazılır. Öğrenci ogrenci.html?o=<id>
+   adresinden kodunu girerek kendi verisini tarayıcısında çözer. Sunucu gerekmez. */
+const PUB_KEY = 'ogrenciTakipYayin';
+let pub = loadPub();
+function loadPub(){ try{ return JSON.parse(localStorage.getItem(PUB_KEY)) || {}; }catch(e){ return {}; } }
+function savePub(){ localStorage.setItem(PUB_KEY, JSON.stringify(pub)); }
+function pubReady(){ return !!(pub.user && pub.repo && pub.token); }
+function pubSiteUrl(){
+  const u = (pub.site || (pub.user && pub.repo ? `https://${pub.user}.github.io/${pub.repo}` : '')).trim();
+  return u.replace(/\/+$/,'');
+}
+function genCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const a = crypto.getRandomValues(new Uint8Array(6));
+  return Array.from(a, b => chars[b % chars.length]).join('');
+}
+function studentCode(s){ if(!s.code){ s.code = genCode(); save(); } return s.code; }
+function studentLink(s){ return pubSiteUrl() ? `${pubSiteUrl()}/ogrenci.html?o=${s.id}` : ''; }
+
+/* --- Şifreleme (WebCrypto: PBKDF2 + AES-GCM) --- */
+const _te = new TextEncoder();
+function bufToB64(buf){
+  const u = new Uint8Array(buf); let s = '';
+  for(let i=0;i<u.length;i+=0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i+0x8000));
+  return btoa(s);
+}
+async function deriveKey(code, salt){
+  const base = await crypto.subtle.importKey('raw', _te.encode(code.trim().toUpperCase()), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt:_te.encode(salt), iterations:120000, hash:'SHA-256'},
+    base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function encryptPayload(obj, code, salt){
+  const key = await deriveKey(code, salt);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, _te.encode(JSON.stringify(obj)));
+  return {v:1, iv:bufToB64(iv), data:bufToB64(ct)};
+}
+
+/* Öğrenciye gösterilecek veri: ücret, telefon, öğretmen notu dahil edilmez */
+function studentPayload(s){
+  return {
+    v:1, publishedAt:new Date().toISOString(),
+    student:{name:s.name, grade:s.grade||''},
+    lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||''})),
+    homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({subject:h.subject, desc:h.desc, due:h.due, status:h.status})),
+    exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets})),
+  };
+}
+
+/* --- GitHub Contents API --- */
+async function ghFetch(path, opts={}){
+  const r = await fetch(`https://api.github.com/repos/${pub.user}/${pub.repo}/contents/${path}`, {
+    ...opts,
+    headers:{ 'Authorization':`Bearer ${pub.token}`, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28', ...(opts.headers||{}) }
+  });
+  return r;
+}
+async function ghPutFile(path, contentStr, message){
+  const branch = pub.branch || 'main';
+  let sha;
+  const g = await ghFetch(`${path}?ref=${encodeURIComponent(branch)}`);
+  if(g.status === 200) sha = (await g.json()).sha;
+  else if(g.status !== 404){ throw new Error(await ghErr(g)); }
+  const body = {message, content:bufToB64(_te.encode(contentStr)), branch};
+  if(sha) body.sha = sha;
+  const r = await ghFetch(path, {method:'PUT', body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(await ghErr(r));
+}
+async function ghErr(r){
+  let msg = `HTTP ${r.status}`;
+  try{ const j = await r.json(); if(j.message) msg += ' · ' + j.message; }catch(e){}
+  if(r.status===401) msg += ' — token geçersiz veya süresi dolmuş';
+  if(r.status===404) msg += ' — depo bulunamadı ya da token bu depoya yetkili değil';
+  return msg;
+}
+
+async function publishStudents(ids){
+  if(!pubReady()){ toast('Önce GitHub bilgilerini gir'); openPublishForm(); return; }
+  const list = state.students.filter(s=>!ids || ids.includes(s.id));
+  const log = document.getElementById('pubLog');
+  const say = (m, ok=true) => { if(log){ log.innerHTML += `<div style="color:${ok?'inherit':'var(--red)'}">${esc(m)}</div>`; log.scrollTop = log.scrollHeight; } };
+  const btns = document.querySelectorAll('.pub-action'); btns.forEach(b=>b.disabled=true);
+  let okCount = 0;
+  for(const s of list){
+    try{
+      const payload = await encryptPayload(studentPayload(s), studentCode(s), s.id);
+      await ghPutFile(`data/${s.id}.json`, JSON.stringify(payload), `Öğrenci sayfası güncellendi: ${s.name}`);
+      say(`✓ ${s.name}`); okCount++;
+    }catch(e){ say(`✗ ${s.name}: ${e.message}`, false); }
+  }
+  btns.forEach(b=>b.disabled=false);
+  if(okCount){ pub.lastPublish = new Date().toISOString(); savePub(); }
+  toast(okCount===list.length ? `${okCount} öğrenci yayınlandı` : `${okCount}/${list.length} öğrenci yayınlandı — hatalara bak`);
+  const st = document.getElementById('pubStatus'); if(st) st.innerHTML = pubStatusText();
+}
+function pubStatusText(){
+  return pub.lastPublish
+    ? `Son yayın: ${new Date(pub.lastPublish).toLocaleString('tr-TR')}<br>Site: <a href="${esc(pubSiteUrl())}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(pubSiteUrl())}</a>`
+    : 'Henüz yayınlanmadı. Değişikliklerin öğrencilere ulaşması için her seferinde "Tümünü Yayınla"ya bas.';
+}
+
+/* --- Yayın ayarları --- */
+function openPublishForm(){
+  openModal(`
+  <h3>Öğrenci Sayfalarını Yayınla</h3>
+  <p class="hint-text" style="margin:-8px 0 14px">Veriler GitHub deponuza şifreli olarak yazılır ve GitHub Pages üzerinden sunulur. Sunucu ya da hesap gerekmez; her öğrenci kendi kodunu girerek sadece kendi sayfasını görür.</p>
+  <div class="form-grid">
+    <div class="field"><label>GitHub Kullanıcı Adı</label><input id="p_user" value="${esc(pub.user||'')}" placeholder="örn. ahmethoca"></div>
+    <div class="field"><label>Depo Adı</label><input id="p_repo" value="${esc(pub.repo||'')}" placeholder="örn. ogrenci-takip"></div>
+    <div class="field"><label>Branch</label><input id="p_branch" value="${esc(pub.branch||'main')}"></div>
+    <div class="field"><label>Site Adresi (isteğe bağlı)</label><input id="p_site" value="${esc(pub.site||'')}" placeholder="boşsa kullanici.github.io/depo"></div>
+    <div class="field full"><label>GitHub Token (Contents: Read & Write)</label><input id="p_token" type="password" value="${esc(pub.token||'')}" placeholder="github_pat_…">
+      <div class="hint-text">GitHub → Settings → Developer settings → Fine-grained tokens → sadece bu depo, "Contents" izni Read and write. Token yalnızca bu tarayıcıda saklanır.</div></div>
+  </div>
+  <div class="pub-status" id="pubStatus">${pubStatusText()}</div>
+  <div class="pub-log" id="pubLog" style="display:none"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Kapat</button>
+    <button class="btn btn-ghost pub-action" onclick="savePublishForm()">Kaydet</button>
+    <button class="btn btn-primary pub-action" onclick="savePublishForm() && publishAllFromForm()">Tümünü Yayınla</button>
+  </div>`);
+}
+function savePublishForm(){
+  pub.user = fv('p_user'); pub.repo = fv('p_repo'); pub.branch = fv('p_branch') || 'main';
+  pub.site = fv('p_site'); pub.token = fv('p_token');
+  savePub();
+  if(!pubReady()){ toast('Kullanıcı adı, depo ve token gerekli'); return false; }
+  toast('Yayın ayarları kaydedildi'); return true;
+}
+function publishAllFromForm(){
+  const log = document.getElementById('pubLog'); if(log){ log.style.display='block'; log.innerHTML=''; }
+  publishStudents(null);
+}
+
+/* --- Öğrenciyle paylaşım --- */
+function openShareForm(id){
+  const s = student(id); if(!s) return;
+  const code = studentCode(s);
+  const link = studentLink(s);
+  const msg = `Merhaba ${s.name.split(' ')[0]}, ödevlerini, deneme sonuçlarını ve ders programını buradan görebilirsin:\n${link}\nErişim kodun: ${code}`;
+  openModal(`
+  <h3>${esc(s.name)} · Öğrenci Sayfası</h3>
+  ${link ? `<div class="share-box"><div class="lbl">Bağlantı</div><div class="val">${esc(link)}</div>
+    <div class="share-row">
+      <button class="btn btn-ghost btn-sm" onclick="copyText(${JSON.stringify(link)})">Kopyala</button>
+      <a class="btn btn-ghost btn-sm" href="${esc(link)}" target="_blank" rel="noopener">Aç</a>
+    </div></div>`
+  : `<div class="share-box"><div class="lbl">Bağlantı</div><div class="hint-text">Önce "Yayınla" menüsünden GitHub bilgilerini gir; bağlantı otomatik oluşur.</div></div>`}
+  <div class="share-box"><div class="lbl">Erişim Kodu</div><div class="val code">${esc(code)}</div>
+    <div class="share-row">
+      <button class="btn btn-ghost btn-sm" onclick="copyText('${esc(code)}')">Kopyala</button>
+      <button class="btn btn-ghost btn-sm" onclick="regenCode('${s.id}')">Yeni Kod Üret</button>
+    </div>
+    <div class="hint-text">Kodu değiştirirsen öğrencinin sayfasını yeniden yayınlaman gerekir.</div>
+  </div>
+  <div class="share-row">
+    <button class="btn btn-ghost btn-sm" onclick="copyText(${JSON.stringify(msg)})">Mesajı Kopyala</button>
+    <a class="btn btn-ghost btn-sm" href="https://wa.me/${esc((s.phone||'').replace(/\D/g,'').replace(/^0/,'90'))}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp ile Gönder</a>
+  </div>
+  <div class="pub-log" id="pubLog" style="display:none"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Kapat</button>
+    <button class="btn btn-primary pub-action" onclick="publishOne('${s.id}')">Bu Öğrenciyi Yayınla</button>
+  </div>`);
+}
+function regenCode(id){
+  const s = student(id); if(!s) return;
+  if(!confirm('Yeni kod üretilsin mi? Eski kod artık çalışmaz; sayfayı yeniden yayınlamalısın.')) return;
+  s.code = genCode(); save(); openShareForm(id); toast('Yeni kod üretildi');
+}
+function publishOne(id){
+  const log = document.getElementById('pubLog'); if(log){ log.style.display='block'; log.innerHTML=''; }
+  publishStudents([id]);
+}
+function copyText(t){
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
+    ()=>toast('Kopyalandı'),
+    ()=>{ prompt('Kopyala:', t); });
+}
+
+/* ================= TEMA ================= */
+const THEME_KEY = 'ogrenciTakipTema';
+function applyTheme(t){
+  document.body.classList.toggle('dark', t==='dark');
+  const lbl = document.getElementById('themeLabel');
+  if(lbl) lbl.textContent = t==='dark' ? 'Açık Tema' : 'Koyu Tema';
+}
+function toggleTheme(){
+  const t = document.body.classList.contains('dark') ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, t);
+  applyTheme(t);
+}
+
+/* ================= BAŞLAT ================= */
+applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+studentMode = localStorage.getItem(SM_KEY) === '1';
+applyStudentMode();
+render();
+</script>
+</body>
+</html>
