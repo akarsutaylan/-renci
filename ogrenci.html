@@ -93,6 +93,14 @@ input,select{font-family:inherit;font-size:1rem}
 .hw-eksik{background:var(--red-soft);color:var(--red)}
 .hw-gecikti{background:var(--red-soft);color:var(--red)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tick{
+  flex-shrink:0;width:38px;height:38px;border-radius:12px;border:2px solid var(--line-strong);display:grid;place-items:center;
+  font-size:1.1rem;color:transparent;transition:all .15s;background:var(--field-bg);
+}
+.tick.on{background:var(--green);border-color:var(--green);color:#fff}
+.tick:active{transform:scale(.92)}
+.item.done .t{text-decoration:line-through;opacity:.6}
+.tick-hint{font-size:.74rem;color:var(--muted);margin:-2px 4px 10px}
 
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty .emoji{font-size:2rem;margin-bottom:8px}
@@ -129,6 +137,8 @@ input,select{font-family:inherit;font-size:1rem}
 .foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
 .foot button{color:var(--accent);font-weight:600}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -173,22 +183,73 @@ async function decryptPayload(pkg, code, salt){
 }
 
 /* ================= DURUM ================= */
+const FB_CONFIG = {
+  apiKey: "AIzaSyAxe1WkM7_70B_Ywon0fepX6NZCGWEX7gg",
+  authDomain: "ogrenci-takip-42ff6.firebaseapp.com",
+  projectId: "ogrenci-takip-42ff6",
+  storageBucket: "ogrenci-takip-42ff6.firebasestorage.app",
+  messagingSenderId: "991799943147",
+  appId: "1:991799943147:web:ad03ceafe0afafab4303ae"
+};
 const sid = new URLSearchParams(location.search).get('o') || '';
 const CODE_KEY = 'ogrenciKod_' + sid;
 let data = null, tab = 'program', dersFilter = '';
+let myCode = '', tid = '', ticks = {}, db = null, unsubPage = null, unsubTicks = null;
 const app = document.getElementById('app');
 
+function getDb(){
+  if(db) return db;
+  if(typeof firebase === 'undefined') throw new Error('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.');
+  if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+  db = firebase.firestore(); return db;
+}
+async function sha256hex(str){
+  const h = await crypto.subtle.digest('SHA-256', _te.encode(str));
+  return Array.from(new Uint8Array(h), b=>b.toString(16).padStart(2,'0')).join('');
+}
 async function fetchPackage(){
-  const r = await fetch(`data/${encodeURIComponent(sid)}.json?t=${Date.now()}`, {cache:'no-store'});
-  if(r.status===404) throw new Error('Sayfan henüz yayınlanmamış. Öğretmenine haber ver.');
-  if(!r.ok) throw new Error('Veri alınamadı (HTTP ' + r.status + '). Biraz sonra tekrar dene.');
-  return r.json();
+  let snap;
+  try{ snap = await getDb().collection('pages').doc(sid).get(); }
+  catch(e){ throw new Error('Veri alınamadı. İnternetini kontrol edip tekrar dene.'); }
+  if(!snap.exists) throw new Error('Sayfan henüz hazırlanmamış. Öğretmenine haber ver.');
+  return snap.data();
 }
 async function unlock(code, remember=true){
   const pkg = await fetchPackage();
   try{ data = await decryptPayload(pkg, code, sid); }
   catch(e){ throw new Error('Erişim kodu hatalı.'); }
-  if(remember){ try{ localStorage.setItem(CODE_KEY, code.trim().toUpperCase()); }catch(e){} }
+  myCode = code.trim().toUpperCase();
+  if(remember){ try{ localStorage.setItem(CODE_KEY, myCode); }catch(e){} }
+  await startLive();
+}
+/* Canlı takip: öğretmen değişiklik yapınca sayfa kendini yeniler, tikler eşitlenir */
+async function startLive(){
+  if(unsubPage) unsubPage(); if(unsubTicks) unsubTicks();
+  tid = await sha256hex(`tick:${sid}:${myCode}`);
+  unsubPage = getDb().collection('pages').doc(sid).onSnapshot(async snap => {
+    if(!snap.exists) return;
+    try{ data = await decryptPayload(snap.data(), myCode, sid); if(document.querySelector('.hero')) render(); }catch(e){}
+  }, ()=>{});
+  unsubTicks = getDb().collection('ticks').doc(tid).onSnapshot(snap => {
+    ticks = (snap.exists && snap.data().hw) || {};
+    if(document.querySelector('.hero')) render();
+  }, ()=>{});
+}
+/* Ödevin görünen durumu: öğrencinin tiki öğretmenin son düzenlemesinden yeniyse tik geçerli */
+function hwStatus(h){
+  const t = ticks[h.id];
+  if(t && t.status && (+t.at||0) > (+h.updatedAt||0)) return t.status;
+  return h.status;
+}
+async function toggleTick(hwId){
+  const h = data.homeworks.find(x=>x.id===hwId); if(!h) return;
+  const next = hwStatus(h)==='yapildi' ? 'bekliyor' : 'yapildi';
+  const at = Date.now();
+  ticks = {...ticks, [hwId]:{status:next, at}}; render();
+  try{
+    await getDb().collection('ticks').doc(tid).set({hw:{[hwId]:{status:next, at}}, updatedAt:at}, {merge:true});
+    toastMsg(next==='yapildi' ? 'Tamamlandı olarak işaretlendi ✓' : 'İşaret kaldırıldı');
+  }catch(e){ toastMsg('Kaydedilemedi, tekrar dene'); }
 }
 
 /* ================= EKRANLAR ================= */
@@ -212,7 +273,7 @@ async function submitCode(){
   try{ await unlock(code); render(); }
   catch(e){ renderGate(e.message); }
 }
-function logout(){ try{ localStorage.removeItem(CODE_KEY); }catch(e){} data = null; renderGate(); }
+function logout(){ try{ localStorage.removeItem(CODE_KEY); }catch(e){} if(unsubPage) unsubPage(); if(unsubTicks) unsubTicks(); data = null; ticks = {}; renderGate(); }
 async function refresh(){
   const code = localStorage.getItem(CODE_KEY); if(!code) return logout();
   try{ await unlock(code, false); render(); toastMsg('Güncellendi'); }
@@ -228,7 +289,7 @@ function setDers(v){ dersFilter = v; render(); }
 
 function render(){
   const s = data.student, td = today();
-  const pendingHw = data.homeworks.filter(h=>h.status!=='yapildi').length;
+  const pendingHw = data.homeworks.filter(h=>hwStatus(h)!=='yapildi').length;
   const upcoming = data.lessons.filter(l=>l.date >= td && l.status!=='ertelendi').length;
   const lastExam = [...data.exams].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
   const tabs = [['program','📅 Ders Programı'],['odevler','📝 Ödevler'],['denemeler','📈 Denemeler']];
@@ -297,20 +358,22 @@ function viewHomework(){
   if(!data.homeworks.length) return emptyState('📝','Ödev yok','Öğretmenin ödev verdiğinde burada görünür.');
   const td = today();
   const order = {bekliyor:0, eksik:1, yapildi:2};
-  const list = [...data.homeworks].sort((a,b)=>(order[a.status]-order[b.status]) || (a.due||'').localeCompare(b.due||''));
-  const open = list.filter(h=>h.status!=='yapildi'), done = list.filter(h=>h.status==='yapildi');
+  const list = [...data.homeworks].map(h=>({...h, st:hwStatus(h)})).sort((a,b)=>(order[a.st]-order[b.st]) || (a.due||'').localeCompare(b.due||''));
+  const open = list.filter(h=>h.st!=='yapildi'), done = list.filter(h=>h.st==='yapildi');
   const item = h => {
-    const late = h.status==='bekliyor' && h.due && h.due < td;
-    const label = {bekliyor:'Bekliyor', yapildi:'Yapıldı ✓', eksik:'Eksik'}[h.status] || h.status;
-    return `<div class="item ${h.status==='yapildi'?'muted':''} ${h.due===td && h.status!=='yapildi'?'today':''}">
+    const late = h.st==='bekliyor' && h.due && h.due < td;
+    const label = {bekliyor:'Bekliyor', yapildi:'Yapıldı ✓', eksik:'Eksik'}[h.st] || h.st;
+    const isDone = h.st==='yapildi';
+    return `<div class="item ${isDone?'done':''} ${h.due===td && !isDone?'today':''}">
       ${h.due ? dateBox(h.due) : '<div class="date"><b>—</b><span>tarih</span></div>'}
       <div class="body">
         <div class="t">${esc(h.desc||'')}</div>
-        <div class="chips">${subjectChip(h.subject)}<span class="chip ${late?'hw-gecikti':'hw-'+h.status}">${late?'Gecikti':label}</span>${h.due===td && h.status!=='yapildi'?'<span class="chip badge-zero">Bugün teslim</span>':''}</div>
+        <div class="chips">${subjectChip(h.subject)}<span class="chip ${late?'hw-gecikti':'hw-'+h.st}">${late?'Gecikti':label}</span>${h.due===td && !isDone?'<span class="chip badge-zero">Bugün teslim</span>':''}</div>
       </div>
+      ${h.id ? `<button class="tick ${isDone?'on':''}" onclick="toggleTick('${h.id}')" title="${isDone?'İşareti kaldır':'Tamamladım'}">✓</button>` : ''}
     </div>`;
   };
-  let html = '';
+  let html = '<div class="tick-hint">Bitirdiğin ödevin sağındaki kutuya dokun; öğretmenin anında görür.</div>';
   if(open.length){ html += `<div class="section-title">Yapılacaklar</div>` + open.map(item).join(''); }
   else html += emptyState('🎉','Bekleyen ödevin yok','Harika, hepsini tamamlamışsın!');
   if(done.length){ html += `<div class="section-title">Tamamlananlar</div>` + done.map(item).join(''); }
