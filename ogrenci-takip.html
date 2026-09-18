@@ -542,7 +542,9 @@ function load(){
 }
 const PANEL_AT_KEY = 'ogrenciTakipPanelAt';
 let _panelAt = +localStorage.getItem(PANEL_AT_KEY) || 0;
-if(!_panelAt && state.students.length){ _panelAt = 1; localStorage.setItem(PANEL_AT_KEY, '1'); } // eski veri: ilk girişte buluta yazılsın
+function stateCount(d){ d = d || state; return ['students','lessons','payments','homeworks','exams','bills','workouts','books','myClasses','subs','studies','reminders','memos']
+  .reduce((t,k)=>t + ((d[k]||[]).length), 0); }
+if(!_panelAt && stateCount()){ _panelAt = 1; localStorage.setItem(PANEL_AT_KEY, '1'); } // eski veri: ilk girişte buluta yazılsın
 function save(){
   _panelAt = Date.now(); localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
   localStorage.setItem(KEY, JSON.stringify(state));
@@ -2781,14 +2783,19 @@ function resyncAll(){ cloud.synced = {}; saveCloud(); scheduleSync(true); toast(
 const _tickUnsubs = {};
 /* ---------- PANEL SENKRONU: tüm panel verisi panel/<uid> belgesinde, yalnızca öğretmen hesabı okur/yazar.
    Telefon ve bilgisayar aynı hesapla girince aynı veriyi görür; son kaydeden kazanır. ---------- */
-let _panelUnsub = null, _panelSeen = false;
+let _panelUnsub = null, _panelSeen = false, _panelRemoteCount = 0, _panelRemoteAt = 0;
 function panelRef(){ return fb.db.collection('panel').doc(fb.user.uid); }
-async function pushPanel(){
-  if(!fb.user || !fb.db || !_panelSeen) return;            // uzak kopyayı görmeden yazma (boş cihaz veriyi ezmesin)
-  if(!_panelAt || _panelAt <= (cloud.panelPushed||0)) return;
+async function pushPanel(force){
+  if(!fb.user || !fb.db) return;
+  if(!force){
+    if(!_panelSeen) return;                                // uzak kopyayı görmeden yazma
+    if(!_panelAt || _panelAt <= (cloud.panelPushed||0)) return;
+    if(!stateCount() && _panelRemoteCount > 0) return;      // boş cihaz, dolu bulut kopyasını ezmesin
+  }
   const data = JSON.stringify(state);
   if(data.length > 950000){ fb.error = 'Panel verisi bulut sınırını aştı (1 MB)'; return; }
-  const at = _panelAt;
+  const at = force ? (_panelAt = Date.now()) : _panelAt;
+  if(force) localStorage.setItem(PANEL_AT_KEY, String(at));
   await panelRef().set({data, updatedAt: at, device: navigator.userAgent.slice(0,60)});
   cloud.panelPushed = at; saveCloud();
 }
@@ -2799,7 +2806,9 @@ function watchPanel(){
   _panelUnsub = panelRef().onSnapshot(doc=>{
     _panelSeen = true;
     const r = doc.exists ? doc.data() : null;
-    if(!r || !r.data){ scheduleSync(true); return; }        // bulutta panel yok: yerel veriyi gönder
+    if(!r || !r.data){ _panelRemoteCount = 0; _panelRemoteAt = 0; scheduleSync(true); return; } // bulutta panel yok: yerel veriyi gönder
+    _panelRemoteAt = r.updatedAt || 0;
+    try{ _panelRemoteCount = stateCount(JSON.parse(r.data)); }catch(e){ _panelRemoteCount = 0; }
     if(r.updatedAt > _panelAt){
       try{
         const d = JSON.parse(r.data);
@@ -2812,11 +2821,39 @@ function watchPanel(){
         cloud.panelPushed = r.updatedAt; saveCloud();
         render(); toast('Panel verisi buluttan güncellendi');
       }catch(e){}
-    } else if(_panelAt > r.updatedAt){ scheduleSync(true); } // yerel daha yeni: gönder
+    } else if(_panelAt > r.updatedAt){ scheduleSync(true); }  // yerel daha yeni: gönder
     else if(cloud.panelPushed !== r.updatedAt){ cloud.panelPushed = r.updatedAt; saveCloud(); }
   }, err=>{ fb.error = 'Panel senkronu: ' + err.message; fb.status='error'; updateCloudBadge(); });
 }
 function stopPanel(){ if(_panelUnsub){ _panelUnsub(); _panelUnsub = null; } _panelSeen = false; }
+/* Elle: buluttaki paneli bu cihaza indir */
+async function pullPanelNow(){
+  if(!fb.user || !fb.db){ toast('Önce Bulut penceresinden giriş yap'); return; }
+  try{
+    const doc = await panelRef().get();
+    const r = doc.exists ? doc.data() : null;
+    if(!r || !r.data){ toast('Bulutta panel verisi yok — diğer cihazdan "Paneli Buluta Gönder" de'); return; }
+    const d = JSON.parse(r.data);
+    if(!d || !Array.isArray(d.students)) throw 0;
+    if(stateCount() && !confirm(`Bu cihazdaki ${stateCount()} kayıt, buluttaki ${stateCount(d)} kayıtla değiştirilecek. Devam edilsin mi?`)) return;
+    localStorage.setItem(KEY, r.data);
+    state = load();
+    _panelAt = r.updatedAt || Date.now(); localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
+    cloud.panelPushed = _panelAt; saveCloud();
+    closeModal(); go('dashboard'); toast(`Buluttan indirildi · ${stateCount()} kayıt`);
+  }catch(e){ toast('İndirilemedi: ' + (e.message||'veri okunamadı')); }
+}
+/* Elle: bu cihazdaki paneli buluta gönder */
+async function pushPanelNow(){
+  if(!fb.user || !fb.db){ toast('Önce Bulut penceresinden giriş yap'); return; }
+  if(!stateCount()){ toast('Bu cihazda kayıt yok — gönderilecek bir şey yok'); return; }
+  if(_panelRemoteCount && !confirm(`Buluttaki ${_panelRemoteCount} kayıt, bu cihazdaki ${stateCount()} kayıtla değiştirilecek. Devam edilsin mi?`)) return;
+  try{
+    await pushPanel(true);
+    toast(`Buluta gönderildi · ${stateCount()} kayıt`);
+    const st = document.getElementById('cloudStatus'); if(st) st.innerHTML = cloudStatusText();
+  }catch(e){ toast('Gönderilemedi: ' + (e.message||'')); }
+}
 
 async function watchTicks(){
   if(!fb.user || !fb.db) return;
@@ -2972,7 +3009,9 @@ function openCloudForm(){
   <div class="pub-status" id="cloudStatus">${cloudStatusText()}</div>
   <div class="share-row" style="margin-top:12px">
     <button class="btn btn-ghost btn-sm" onclick="copyRules()">Firestore Kurallarını Kopyala</button>
-    ${signed ? `<button class="btn btn-ghost btn-sm" onclick="resyncAll()">Tümünü Yeniden Gönder</button>
+    ${signed ? `<button class="btn btn-ghost btn-sm" onclick="pushPanelNow()">⬆️ Paneli Buluta Gönder</button>
+    <button class="btn btn-ghost btn-sm" onclick="pullPanelNow()">⬇️ Buluttan İndir</button>
+    <button class="btn btn-ghost btn-sm" onclick="resyncAll()">Tümünü Yeniden Gönder</button>
     <button class="btn btn-ghost btn-sm" onclick="cloudSignOut(); closeModal(); toast('Çıkış yapıldı')">Çıkış Yap</button>` : ''}
   </div>
   <div class="hint-text" style="margin-top:8px">Kurallar: Firebase → Firestore Database → <b>Rules</b> sekmesi → içeriği sil, kopyaladığını yapıştır → <b>Publish</b>. Kuralda e-posta olarak yukarıdaki adres kullanılır.</div>
@@ -2985,6 +3024,7 @@ function cloudStatusText(){
   const n = Object.keys(cloud.synced).length;
   let s = fb.user ? `Giriş: <b>${esc(fb.user.email)}</b><br>` : 'Giriş yapılmadı. E-posta ve şifreyle bağlan.<br>';
   if(cloud.lastSync) s += `Son senkron: ${new Date(cloud.lastSync).toLocaleString('tr-TR')} · ${n} öğrenci bulutta<br>`;
+  if(fb.user) s += `Panel: bu cihazda <b>${stateCount()}</b> kayıt · bulutta <b>${_panelSeen ? _panelRemoteCount : '?'}</b> kayıt${_panelRemoteAt>1?' ('+new Date(_panelRemoteAt).toLocaleString('tr-TR')+')':''}<br>`;
   if(fb.error) s += `<span style="color:var(--red)">${esc(fb.error)}</span>`;
   return s;
 }
