@@ -362,6 +362,54 @@ body.sm .main::before{
 .bill-chip.hw{background:var(--amber-soft);color:var(--amber)}
 .bill-chip.exam{background:var(--rose-soft);color:var(--rose)}
 .bill-chip.rem{background:var(--blue-soft);color:var(--blue)}
+/* Müfredat */
+.curr-progress{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.curr-progress .lbl{display:flex;align-items:baseline;gap:6px;font-size:.8rem;color:var(--muted);margin-bottom:5px}
+.curr-progress .lbl b{font-size:1rem;color:var(--ink)}
+.curr-item{display:flex;align-items:flex-start;gap:11px;padding:10px 13px;border:1px solid var(--line);
+  border-radius:11px;margin-bottom:7px;background:var(--field-bg)}
+.curr-item.done{border-color:color-mix(in srgb,var(--green) 45%,var(--line))}
+.curr-item.done .t{color:var(--muted)}
+.curr-item input[type=checkbox]{width:17px;height:17px;margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.curr-item .t{font-weight:600;font-size:.9rem}
+.curr-item .m{font-size:.76rem;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+/* Veli raporu */
+.report h2{font-size:1.15rem;letter-spacing:-.01em}
+.report .rep-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;
+  padding-bottom:14px;border-bottom:2px solid var(--line);margin-bottom:16px}
+.report .rep-sec{margin-bottom:18px}
+.report .rep-sec h4{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);margin-bottom:8px}
+.report .rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.report .rep-box{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--field-bg)}
+.report .rep-box .v{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
+.report .rep-box .l{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.report ul.rep-list{list-style:none;font-size:.88rem;line-height:1.7}
+.report ul.rep-list li{padding-left:16px;position:relative}
+.report ul.rep-list li:before{content:'•';position:absolute;left:3px;color:var(--accent)}
+.report .print-note{display:none}
+.report textarea{width:100%;min-height:80px;font:inherit;font-size:.88rem;padding:10px 12px;
+  border:1px solid var(--line);border-radius:10px;background:var(--field-bg);color:var(--ink);resize:vertical}
+@media print{
+  .sidebar,.modal-backdrop,.no-print{display:none !important}
+  #main > *:not(.report){display:none !important}
+  .app{display:block}
+  .main{padding:0;max-width:none;margin:0}
+  body,.card{background:#fff}
+  .report .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;page-break-inside:avoid}
+  .report .rep-box{background:#fff}
+  .report .print-note{display:block !important}
+}
+/* Erken uyarı */
+.warn-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:12px;margin-bottom:8px;background:var(--field-bg);cursor:pointer;transition:border-color .15s}
+.warn-row:hover{border-color:var(--line-strong)}
+.warn-row.hot{border-left:4px solid var(--red)}
+.warn-row.mild{border-left:4px solid var(--amber)}
+.warn-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.warn-chip{font-size:.73rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.warn-chip.hot{background:var(--red-soft);color:var(--red)}
+.warn-chip.mild{background:var(--amber-soft);color:var(--amber)}
 .rem-alert{border-radius:14px;padding:14px 16px;margin-bottom:18px;border:1.5px solid var(--amber);background:var(--amber-soft);
   box-shadow:0 0 0 4px color-mix(in srgb,var(--amber) 14%,transparent);animation:remPulse 2.2s ease-in-out 3}
 .rem-alert.urgent{border-color:var(--red);background:var(--red-soft);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 14%,transparent)}
@@ -484,6 +532,9 @@ a.icon-btn{text-decoration:none}
   table{font-size:.84rem}
   .card{padding:16px 14px}
   .toolbar .btn{width:100%;justify-content:center}
+  .curr-toolbar .btn{width:auto;flex:1 1 auto;padding-left:10px;padding-right:10px}
+  .curr-toolbar .spacer{display:none}
+  .curr-progress{gap:12px}
   .subtabs{overflow-x:auto;flex-wrap:nowrap;gap:4px;-webkit-overflow-scrolling:touch}
   .subtabs button{white-space:nowrap}
   /* Hatırlatma uyarısı ve notlar */
@@ -556,6 +607,34 @@ const SUBJECTS = [
   {n:'Türkçe',    bg:'var(--amber-soft)', fg:'var(--amber)'},
   {n:'Deneme',    bg:'var(--rose-soft)',  fg:'var(--rose)'},
 ];
+/* ================= MÜFREDAT (YKS · mevcut MEB programı) =================
+   e: 1 = yalnızca TYT, 2 = yalnızca AYT, 3 = her ikisi.
+   Kaynaklar farklı isimlendirme kullandığı için liste birleştirilmiştir;
+   panelden konu ekleyip gereksizleri gizleyebilirsin. */
+const _C = (str, e) => str.split('|').map(t => ({t: t.trim(), e}));
+const CURRICULUM = {
+  'Matematik': [
+    ..._C("Temel Kavramlar|Sayı Basamakları|Bölme ve Bölünebilme|EBOB - EKOK|Rasyonel Sayılar|Basit Eşitsizlikler|Mutlak Değer|Üslü Sayılar|Köklü Sayılar|Çarpanlara Ayırma|Oran - Orantı|Denklem Çözme|Problemler|Kümeler ve Kartezyen Çarpım|Fonksiyonlar|Polinomlar|2. Dereceden Denklemler|Permütasyon ve Kombinasyon|Olasılık|Veri ve İstatistik", 3),
+    ..._C("Mantık", 1),
+    ..._C("Karmaşık Sayılar|Parabol|Binom|Trigonometri|Logaritma|Diziler|Limit ve Süreklilik|Türev|İntegral", 2),
+  ],
+  'Geometri': [
+    ..._C("Doğruda Açılar|Üçgende Açılar|Dik Üçgen ve Öklid Bağıntıları|İkizkenar ve Eşkenar Üçgen|Üçgende Açıortay|Üçgende Kenarortay|Üçgende Eşlik ve Benzerlik|Üçgende Alan|Açı - Kenar Bağıntıları|Çokgenler|Paralelkenar|Dikdörtgen, Kare ve Eşkenar Dörtgen|Yamuk|Deltoid|Çember ve Daire|Çemberde Açı|Çemberde Uzunluk ve Alan|Analitik Geometri: Nokta ve Doğru|Katı Cisimler", 3),
+    ..._C("Çemberin Analitiği|Vektörler|Dönüşüm Geometrisi|Konikler|Uzay Geometri", 2),
+  ],
+  'Fizik': [
+    ..._C("Fizik Bilimine Giriş|Madde ve Özellikleri|Hareket ve Kuvvet|Dinamik|İş, Güç ve Enerji|Isı, Sıcaklık ve Genleşme|Basınç|Kaldırma Kuvveti|Elektrostatik|Elektrik Akımı ve Devreler|Mıknatıs ve Manyetik Alan|Dalgalar|Optik", 3),
+    ..._C("Vektörler|Bağıl Hareket|Newton Hareket Yasaları|Atışlar|Tork ve Denge|Kütle Merkezi|Basit Makineler|İtme ve Momentum|Elektriksel Kuvvet ve Elektriksel Alan|Elektriksel Potansiyel|Paralel Levhalar ve Sığa|Manyetik Kuvvet ve Uygulamaları|İndüksiyon ve Alternatif Akım|Transformatörler|Düzgün Çembersel Hareket|Basit Harmonik Hareket|Dalga Mekaniği ve Elektromanyetik Dalgalar|Kütle Çekim ve Kepler Yasaları|Atom Fiziğine Giriş ve Radyoaktivite|Modern Fizik|Modern Fiziğin Teknolojideki Uygulamaları", 2),
+  ],
+  'Kimya': [
+    ..._C("Kimya Bilimi|Atom ve Periyodik Sistem|Kimyasal Türler Arası Etkileşimler|Maddenin Halleri|Doğa ve Kimya|Kimyanın Temel Kanunları|Mol Kavramı ve Kimyasal Hesaplamalar|Karışımlar|Asitler, Bazlar ve Tuzlar|Kimya Her Yerde", 3),
+    ..._C("Modern Atom Teorisi|Gazlar|Sıvı Çözeltiler ve Çözünürlük|Kimyasal Tepkimelerde Enerji|Kimyasal Tepkimelerde Hız|Kimyasal Denge|Asit - Baz Dengesi|Çözünürlük Dengesi|Kimya ve Elektrik|Karbon Kimyasına Giriş|Organik Bileşikler|Organik Tepkimeler|Enerji Kaynakları ve Bilimsel Gelişmeler", 2),
+  ],
+  'Biyoloji': [
+    ..._C("Canlıların Ortak Özellikleri|Canlıların Yapısındaki Temel Bileşikler|Hücre ve Organelleri|Hücre Zarından Madde Geçişi|Canlıların Sınıflandırılması|Mitoz ve Eşeysiz Üreme|Mayoz ve Eşeyli Üreme|Kalıtım|Ekosistem Ekolojisi|Güncel Çevre Sorunları|Sindirim Sistemi|Dolaşım ve Bağışıklık Sistemi|Solunum Sistemi|Boşaltım Sistemi|Destek ve Hareket Sistemi|Sinir Sistemi|Duyu Organları|Endokrin Sistem", 3),
+    ..._C("Nükleik Asitler|Genetik Şifre ve Protein Sentezi|Modern Genetik Uygulamaları|Fotosentez|Kemosentez|Hücresel Solunum|Bitki Biyolojisi|Komünite ve Popülasyon Ekolojisi|Üreme Sistemi ve Embriyonik Gelişim|Canlılar ve Çevre", 2),
+  ],
+};
 const AVATAR_COLORS = ['#5b5bd6','#0e7490','#0f9d6e','#b45309','#be185d','#7c3aed','#2563eb','#dc6803','#15803d','#9f1239'];
 
 let state = load();
@@ -564,7 +643,7 @@ function load(){
     const d = JSON.parse(localStorage.getItem(KEY));
     if(d && Array.isArray(d.students)){
       d.schedule = d.schedule || []; d.bills = d.bills || [];
-      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || [];
+      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || [];
       // Eski "Notlar" bölümü kaldırıldı: notlar artık GitHub deposundan okunur; eski kayıtlar ve tarayıcı dosya deposu temizlenir
       if(d.notes){ delete d.notes; try{ indexedDB.deleteDatabase('ogrenciTakipDosyalar'); }catch(e){} }
       d.students.forEach(x=>{ delete x.driveFolder; });
@@ -590,7 +669,7 @@ function load(){
       return d;
     }
   }catch(e){}
-  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[]};
+  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[]};
 }
 const PANEL_AT_KEY = 'ogrenciTakipPanelAt';
 let _panelAt = +localStorage.getItem(PANEL_AT_KEY) || 0;
@@ -930,6 +1009,7 @@ function viewDashboard(){
   </div>
   ${dashboardReminderAlert()}
   ${stats}
+  ${dashboardWarnPanel()}
   ${dashboardPersonalPanel()}
   ${dashboardBillsPanel(ym, now.getDate())}
   ${telafiPanel}
@@ -987,6 +1067,8 @@ function viewStudentDetail(){
     {id:'dersler',  label:'Dersler'},
     {id:'odevler',  label:'Ödevler'},
     {id:'denemeler',label:'Denemeler'},
+    {id:'mufredat', label:'Müfredat'},
+    {id:'rapor',    label:'Veli Raporu'},
     {id:'calismalar',label:'Çalışmalar'},
     {id:'notlar',   label:'Notlar'},
   ].filter(t=>!(studentMode && t.id==='odemeler'));
@@ -1002,6 +1084,10 @@ function viewStudentDetail(){
   } else if(route.subtab==='calismalar'){
     const list = (state.studies||[]).filter(x=>x.sid===s.id).sort(byDateDesc);
     body = `${studyWeekSummary(s.id)}<div class="card">${studiesTable(list,false)}</div>`;
+  } else if(route.subtab==='mufredat'){
+    body = curriculumTab(s);
+  } else if(route.subtab==='rapor'){
+    body = reportTab(s);
   } else if(route.subtab==='notlar'){
     body = studentNotesTab(s);
   } else {
@@ -1321,10 +1407,13 @@ function openLessonForm(id, sid){
     <div class="field full"><label>Öğrenci</label><select id="f_sid" onchange="calcFee()">${studentOptions(selSid)}</select></div>
     <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${l.date||today()}"></div>
     <div class="field"><label>Başlangıç Saati</label><input id="f_start" type="time" value="${l.start!=null?fmtClock(l.start):'18:00'}" step="1800"></div>
-    <div class="field"><label>Ders</label><select id="f_subject">${subjectOptions(l.subject)}</select></div>
+    <div class="field"><label>Ders</label><select id="f_subject" onchange="fillTopicList()">${subjectOptions(l.subject)}</select></div>
     <div class="field"><label>Süre (saat)</label><input id="f_hours" type="number" min="0" step="0.5" value="${l.hours??1.5}" oninput="calcFee()"></div>
     <div class="field"${studentMode?' style="display:none"':''}><label>Ücret (₺)</label><input id="f_fee" type="number" min="0" step="any" value="${l.fee??''}"></div>
-    <div class="field full"><label>Konu / Not</label><input id="f_topic" value="${esc(l.topic||'')}" placeholder="Örn. Limit ve süreklilik"></div>
+    <div class="field full"><label>Konu / Not</label>
+      <input id="f_topic" list="topicList" value="${esc(l.topic||'')}" placeholder="Müfredattan seç ya da serbest yaz">
+      <datalist id="topicList">${currTopics(l.subject || SUBJECTS[0].n).map(c=>`<option value="${esc(c.t)}">`).join('')}</datalist>
+      <div class="hint-text">Müfredat konusunu seçersen öğrencinin Müfredat sekmesinde otomatik işaretlenir.</div></div>
   </div>
   <div class="modal-actions">
     <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
@@ -1342,7 +1431,7 @@ function saveLesson(id){
   if(isNaN(hours) || hours<=0){ toast('Geçerli bir süre gir'); return; }
   const stv = fv('f_start');
   const start = /^\d{1,2}:\d{2}/.test(stv) ? (+stv.slice(0,stv.indexOf(':')))*60 + +stv.slice(stv.indexOf(':')+1, stv.indexOf(':')+3) : 18*60;
-  const data = {sid:fv('f_sid'), date:fv('f_date')||today(), subject:fv('f_subject'), hours, fee:isNaN(fee)?0:fee, topic:fv('f_topic'), start};
+  const data = {sid:fv('f_sid'), date:fv('f_date')||today(), subject:fv('f_subject'), hours, fee:isNaN(fee)?0:fee, topic:fv('f_topic'), start, updatedAt:Date.now()};
   if(id){ Object.assign(state.lessons.find(x=>x.id===id), data); toast('Ders güncellendi'); }
   else { state.lessons.push({id:uid(), ...data}); toast('Ders eklendi'); }
   save(); closeModal(); render();
@@ -1656,7 +1745,7 @@ function importData(ev){
       const d = JSON.parse(reader.result);
       if(!d || !Array.isArray(d.students)) throw 0;
       if(!confirm('Mevcut veriler yedekteki verilerle değiştirilecek. Devam edilsin mi?')) return;
-      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[]};
+      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[], currHidden:d.currHidden||[], currExtra:d.currExtra||[]};
       save(); go('dashboard'); toast('Yedek geri yüklendi');
     }catch(e){ toast('Geçersiz yedek dosyası'); }
   };
@@ -2183,7 +2272,7 @@ function calAgendaForDate(ds){
   const chips = [];
   if(!studentMode){
     calDueForDate(ds).forEach(it=>chips.push(calDueChip(it, ds)));
-    state.reminders.filter(r=>r.date===ds).forEach(r=>chips.push(reminderChip(r)));
+    state.reminders.filter(r=>remOccursOn(r, ds)).forEach(r=>chips.push(reminderChip(r, ds)));
     const di = (new Date(ds+'T12:00').getDay()+6)%7;
     state.workouts.filter(w=>w.day===di && w.time==null).forEach(w=>{
       const done = (w.doneDates||[]).includes(ds);
@@ -2486,6 +2575,345 @@ function saveBook(id){
   save(); closeModal(); render();
 }
 
+/* ================= ERKEN UYARI =================
+   Mevcut kayıtlardan üretilir: ödev oranı, çalışma kaydı, deneme trendi,
+   ders arası ve ödeme gecikmesi. Öğrenci Modunda hiç oluşturulmaz. */
+const daysDiff = (a, b) => Math.round((new Date(b+'T12:00') - new Date(a+'T12:00')) / 864e5);
+function studentAlerts(sid){
+  const out = [], t = today();
+  // 1. Son 1 haftada teslim tarihi geçmiş ödevlerin yarısından azı yapıldıysa
+  const due = state.homeworks.filter(h=>h.sid===sid && h.due && h.due<=t && h.due>=shiftDate(t,-7));
+  if(due.length){
+    const ok = due.filter(h=>h.status==='yapildi').length;
+    if(ok / due.length < 0.5)
+      out.push({lvl:2, t:`Ödevlerin ${ok}/${due.length} tanesi yapıldı`, d:`son 1 haftada teslim tarihi geçen ödevler`});
+  }
+  // 2. Çalışma kaydı duraklamış (daha önce kayıt girmiş öğrenciler için)
+  const st = (state.studies||[]).filter(x=>x.sid===sid && x.date);
+  if(st.length){
+    const son = st.map(x=>x.date).sort().pop();
+    const g = daysDiff(son, t);
+    if(g >= 4) out.push({lvl:1, t:`${g} gündür çalışma kaydı yok`, d:`son kayıt ${fmtDate(son)}`});
+  }
+  // 3. Deneme netleri geriliyor (aynı tür denemeler karşılaştırılır)
+  const ex = state.exams.filter(e=>e.sid===sid && e.kind!=='brans' && e.date).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if(ex.length){
+    const tur = ex[ex.length-1].type;
+    const ayni = ex.filter(e=>e.type===tur);
+    if(ayni.length >= 3){
+      const son = +ayni[ayni.length-1].net || 0;
+      const onceki = ((+ayni[ayni.length-2].net||0) + (+ayni[ayni.length-3].net||0)) / 2;
+      if(onceki > 0 && son < onceki * 0.9)
+        out.push({lvl:2, t:`${tur} netleri düşüyor`, d:`önceki ortalama ${onceki.toFixed(1)} → son deneme ${son.toFixed(1)} net`});
+    }
+  }
+  // 4. Ders arası uzadı ve ileri tarihli ders yok
+  const ls = state.lessons.filter(l=>l.sid===sid && isActive(l));
+  const gecmis = ls.filter(l=>l.date<=t).map(l=>l.date).sort();
+  if(gecmis.length && !ls.some(l=>l.date>t)){
+    const g = daysDiff(gecmis[gecmis.length-1], t);
+    if(g >= 14) out.push({lvl:2, t:`${g} gündür ders işlenmedi`, d:'ileri tarihli ders de planlanmamış'});
+  }
+  // 5. Ödeme gecikmesi
+  const un = unpaidLessons(sid);
+  if(un.length){
+    const g = daysDiff(un[0].date, t);
+    if(g >= 21) out.push({lvl:2, t:`${fmtTL(debt(sid))} ödeme bekliyor`, d:`en eski ödenmemiş ders ${g} gün önce`});
+  }
+  return out;
+}
+function dashboardWarnPanel(){
+  if(studentMode || !state.students.length) return '';
+  const rows = state.students.map(s=>({s, a:studentAlerts(s.id)})).filter(x=>x.a.length)
+    .sort((a,b)=>{
+      const h = z => z.a.filter(y=>y.lvl===2).length;
+      return (h(b)-h(a)) || (b.a.length-a.a.length);
+    });
+  if(!rows.length) return `
+  <div class="card panel" style="margin-bottom:18px">
+    <h3>🩺 Erken Uyarı <span class="chip badge-pos">Her şey yolunda</span></h3>
+    <p style="color:var(--muted);font-size:.85rem">Ödev, çalışma, deneme ve ödeme tarafında dikkat gerektiren öğrenci yok.</p>
+  </div>`;
+  const hot = rows.filter(x=>x.a.some(y=>y.lvl===2)).length;
+  return `
+  <div class="card panel" style="margin-bottom:18px">
+    <h3>🩺 Erken Uyarı <span class="chip ${hot?'badge-neg':'badge-zero'}">${rows.length} öğrenci</span></h3>
+    ${rows.map(({s,a})=>{
+      const lvl = a.some(y=>y.lvl===2) ? 'hot' : 'mild';
+      return `<div class="warn-row ${lvl}" onclick="go('studentDetail','${s.id}')" title="Öğrenci detayına git">
+        ${avatarHtml(s.id,'sm')}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.92rem">${esc(s.name)}</div>
+          <div class="warn-chips">${a.map(y=>`<span class="warn-chip ${y.lvl===2?'hot':'mild'}" title="${esc(y.d)}">${esc(y.t)}</span>`).join('')}</div>
+        </div>
+      </div>`;}).join('')}
+    <p class="hint-text" style="margin-top:10px">Ödev oranı, çalışma kaydı, deneme trendi, ders arası ve ödeme gecikmesinden üretilir. Öğrenci Modunda gizlenir.</p>
+  </div>`;
+}
+
+/* ================= MÜFREDAT TAKİBİ =================
+   Konu, derste işlendiyse otomatik (ders konusu müfredat adıyla eşleşince),
+   değilse elle işaretlenir. İlerleme ikisinin birleşimidir. */
+const keySlug = t => (t||'').toLowerCase()
+  .replace(/ı/g,'i')
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'')   // ayrık kodlanmış Türkçe harfleri de yakala
+  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+function currKey(sub, t){ return keySlug(sub)+':'+keySlug(t); }
+function currTopics(sub){
+  const extra = (state.currExtra||[]).filter(x=>x.sub===sub).map(x=>({t:x.t, e:+x.e||3, own:true}));
+  const hidden = state.currHidden||[];
+  return (CURRICULUM[sub]||[]).concat(extra).filter(c=>!hidden.includes(currKey(sub,c.t)));
+}
+function currSubjects(sid){
+  const used = [...new Set(state.lessons.filter(l=>l.sid===sid && l.subject && l.subject!=='Deneme').map(l=>l.subject))];
+  const all = SUBJECTS.map(x=>x.n).filter(n=>n!=='Deneme');
+  const rest = all.filter(n=>!used.includes(n));
+  return used.concat(rest);
+}
+const normTopic = t => keySlug(t).replace(/-/g,' ');
+/* Ders konularından otomatik eşleşen müfredat konuları: {anahtar: son işlendiği tarih} */
+function autoCovered(sid, sub){
+  const out = {}, tops = currTopics(sub);
+  state.lessons.filter(l=>l.sid===sid && l.subject===sub && l.topic && isActive(l) && l.date<=today()).forEach(l=>{
+    const lt = normTopic(l.topic);
+    if(lt.length < 4) return;
+    tops.forEach(c=>{
+      const ct = normTopic(c.t);
+      if(ct.length < 5) return;
+      if(lt.includes(ct) || (ct.includes(lt) && lt.length >= 6)){
+        const k = currKey(sub, c.t);
+        if(!out[k] || out[k] < l.date) out[k] = l.date;
+      }
+    });
+  });
+  return out;
+}
+function currStats(s, sub, lvl){
+  const auto = autoCovered(s.id, sub), man = s.curr || {};
+  const list = currTopics(sub).filter(c => !lvl || (c.e & lvl));
+  const done = list.filter(c => { const k = currKey(sub,c.t); return man[k] || auto[k]; }).length;
+  return {done, total:list.length, pct: list.length ? Math.round(done/list.length*100) : 0};
+}
+function toggleCurr(sid, sub, t){
+  const s = state.students.find(x=>x.id===sid); if(!s) return;
+  s.curr = s.curr || {};
+  const k = currKey(sub, t);
+  if(s.curr[k]) delete s.curr[k]; else s.curr[k] = today();
+  save(); render();
+}
+function setCurrSub(v){ route.curSub = v; render(); }
+function setCurrLvl(v){ route.curLvl = +v; render(); }
+function hideCurrTopic(sub, t){
+  if(!confirm(`"${t}" konusu tüm öğrenciler için listeden gizlensin mi?`)) return;
+  state.currHidden = state.currHidden || [];
+  state.currHidden.push(currKey(sub, t)); save(); render(); toast('Konu gizlendi');
+}
+function showHiddenTopics(sub){
+  const pre = keySlug(sub)+':';
+  state.currHidden = (state.currHidden||[]).filter(k=>!k.startsWith(pre));
+  save(); render(); toast('Gizlenen konular geri getirildi');
+}
+function openCurrAddForm(sub){
+  openModal(`
+  <h3>Müfredata Konu Ekle</h3>
+  <p class="hint-text" style="margin:-8px 0 14px">${esc(sub)} dersine eklenir ve tüm öğrencilerde görünür.</p>
+  <div class="form-grid">
+    <div class="field full"><label>Konu Adı *</label><input id="f_ctopic" placeholder="Örn. Elektriksel Alan Problemleri"></div>
+    <div class="field full"><label>Hangi sınavda?</label><select id="f_clevel">
+      <option value="3">TYT ve AYT</option><option value="1">Yalnızca TYT</option><option value="2">Yalnızca AYT</option>
+    </select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveCurrTopic('${esc(sub)}')">Kaydet</button>
+  </div>`);
+}
+function saveCurrTopic(sub){
+  const t = fv('f_ctopic');
+  if(!t){ toast('Konu adı gerekli'); return; }
+  state.currExtra = state.currExtra || [];
+  if(currTopics(sub).some(c=>keySlug(c.t)===keySlug(t))){ toast('Bu konu zaten listede'); return; }
+  state.currExtra.push({sub, t, e:+fv('f_clevel')||3});
+  save(); closeModal(); render(); toast('Konu eklendi');
+}
+function fillTopicList(){
+  const sel = document.getElementById('f_subject'), dl = document.getElementById('topicList');
+  if(!sel || !dl) return;
+  dl.innerHTML = currTopics(sel.value).map(c=>`<option value="${esc(c.t)}">`).join('');
+}
+function currBar(pct, col){
+  return `<div style="height:7px;border-radius:5px;background:var(--line);overflow:hidden">
+    <i style="display:block;height:100%;width:${Math.max(2,pct)}%;background:${col}"></i></div>`;
+}
+function curriculumTab(s){
+  const subs = currSubjects(s.id);
+  const sub = subs.includes(route.curSub) ? route.curSub : subs[0];
+  const lvl = route.curLvl || 0;
+  const tops = currTopics(sub);
+  if(!tops.length) return `<div class="card">${emptyState('📘','Bu ders için müfredat listesi yok','Kendi konularını ekleyerek bu dersin takibini başlatabilirsin.')}
+    <div style="text-align:center"><button class="btn btn-primary btn-sm" onclick="openCurrAddForm('${esc(sub)}')">＋ Konu Ekle</button></div></div>`;
+  const auto = autoCovered(s.id, sub), man = s.curr || {};
+  const tyt = currStats(s, sub, 1), ayt = currStats(s, sub, 2);
+  const list = tops.filter(c => !lvl || (c.e & lvl));
+  const hiddenN = (state.currHidden||[]).filter(k=>k.startsWith(keySlug(sub)+':')).length;
+  const rows = list.map(c=>{
+    const k = currKey(sub, c.t), a = auto[k], m = man[k];
+    const done = !!(a || m);
+    return `<div class="curr-item ${done?'done':''}">
+      <input type="checkbox" ${m?'checked':''} onchange="toggleCurr('${s.id}','${esc(sub)}','${esc(c.t).replace(/'/g,"\\'")}')" title="Elle işaretle">
+      <div style="flex:1;min-width:0">
+        <div class="t">${esc(c.t)}</div>
+        <div class="m">
+          ${c.e===1?'<span class="chip badge-zero">TYT</span>':c.e===2?'<span class="chip hw-bekliyor">AYT</span>':'<span class="chip badge-pos">TYT + AYT</span>'}
+          ${a?`<span style="color:var(--green)">✓ ${fmtDate(a)} dersinde işlendi</span>`:''}
+          ${m&&!a?`<span style="color:var(--muted)">elle işaretlendi · ${fmtDate(m)}</span>`:''}
+        </div>
+      </div>
+      <button class="icon-btn" onclick="hideCurrTopic('${esc(sub)}','${esc(c.t).replace(/'/g,"\\'")}')" title="Bu konuyu listeden gizle">✕</button>
+    </div>`;}).join('');
+  return `
+  <div class="card panel">
+    <h3>📘 ${esc(sub)} Müfredatı</h3>
+    <div class="subtabs" style="margin-top:0">
+      ${subs.map(x=>`<button class="${x===sub?'active':''}" onclick="setCurrSub('${esc(x)}')">${esc(x)}</button>`).join('')}
+    </div>
+    <div class="curr-progress">
+      <div><div class="lbl">TYT <b>%${tyt.pct}</b> <span>${tyt.done}/${tyt.total}</span></div>${currBar(tyt.pct,'var(--accent)')}</div>
+      <div><div class="lbl">AYT <b>%${ayt.pct}</b> <span>${ayt.done}/${ayt.total}</span></div>${currBar(ayt.pct,'var(--violet)')}</div>
+    </div>
+    <div class="toolbar curr-toolbar" style="margin:14px 0 10px">
+      ${[[0,'Tümü'],[1,'TYT'],[2,'AYT']].map(([v,t])=>`<button class="btn btn-sm ${lvl===v?'btn-primary':'btn-ghost'}" onclick="setCurrLvl(${v})">${t}</button>`).join('')}
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="openCurrAddForm('${esc(sub)}')">＋ Konu Ekle</button>
+      ${hiddenN?`<button class="btn btn-ghost btn-sm" onclick="showHiddenTopics('${esc(sub)}')">${hiddenN} gizli konuyu geri getir</button>`:''}
+    </div>
+    ${rows || emptyState('📘','Bu filtrede konu yok','Filtreyi değiştir ya da yeni konu ekle.')}
+    <p class="hint-text" style="margin-top:12px">Ders kaydında konu olarak müfredat başlığını seçersen buraya otomatik işlenir. Elle işaret koymak için kutucuğu kullan.</p>
+  </div>`;
+}
+
+/* ================= VELİ RAPORU (aylık özet) ================= */
+function repMonth(){ return route.repMonth || today().slice(0,7); }
+function setRepMonth(v){ if(v) route.repMonth = v; render(); }
+function monthLabel(ym){ return new Date(ym+'-01T12:00').toLocaleDateString('tr-TR',{month:'long',year:'numeric'}); }
+function saveRepNote(sid, ym, v){
+  const s = state.students.find(x=>x.id===sid); if(!s) return;
+  s.repNotes = s.repNotes || {};
+  if(v.trim()) s.repNotes[ym] = v.trim(); else delete s.repNotes[ym];
+  save();
+}
+function reportData(s, ym){
+  const t = today();
+  const ls = state.lessons.filter(l=>l.sid===s.id && (l.date||'').startsWith(ym) && isActive(l) && l.date<=t)
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const saat = ls.reduce((x,l)=>x+(+l.hours||0),0);
+  const dersDagilim = {};
+  ls.forEach(l=>{ dersDagilim[l.subject] = (dersDagilim[l.subject]||0) + (+l.hours||0); });
+  const konular = [];
+  ls.forEach(l=>{ if(l.topic && !konular.some(k=>k.t===l.topic)) konular.push({t:l.topic, sub:l.subject, d:l.date}); });
+  const hw = state.homeworks.filter(h=>h.sid===s.id && (h.due||'').startsWith(ym));
+  const hwOk = hw.filter(h=>h.status==='yapildi').length;
+  const ex = state.exams.filter(e=>e.sid===s.id && (e.date||'').startsWith(ym)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const oncekiYm = (()=>{ const d = new Date(ym+'-01T12:00'); d.setMonth(d.getMonth()-1); return d.toISOString().slice(0,7); })();
+  const exOnce = state.exams.filter(e=>e.sid===s.id && (e.date||'').startsWith(oncekiYm) && e.kind!=='brans');
+  const ort = list => list.length ? list.reduce((x,e)=>x+(+e.net||0),0)/list.length : null;
+  const st = (state.studies||[]).filter(x=>x.sid===s.id && (x.date||'').startsWith(ym));
+  const stSaat = st.reduce((x,y)=>x+(+y.hours||0),0);
+  const stDagilim = {};
+  st.forEach(x=>{ stDagilim[x.subject] = (stDagilim[x.subject]||0) + (+x.hours||0); });
+  const dersler = [...new Set(ls.map(l=>l.subject))].filter(x=>x && x!=='Deneme' && CURRICULUM[x]);
+  const muf = dersler.map(sub=>({sub, tyt:currStats(s,sub,1), ayt:currStats(s,sub,2)}));
+  return {ls, saat, dersDagilim, konular, hw, hwOk, ex, exOrt:ort(ex.filter(e=>e.kind!=='brans')), exOnceOrt:ort(exOnce),
+    st, stSaat, stDagilim, muf, oncekiYm};
+}
+function reportText(s, ym){
+  const r = reportData(s, ym);
+  const L = [`${s.name} — ${monthLabel(ym)} ders raporu`, ''];
+  L.push(`Ders: ${r.ls.length} ders, ${r.saat.toLocaleString('tr-TR')} saat` +
+    (Object.keys(r.dersDagilim).length ? ` (${Object.entries(r.dersDagilim).map(([k,v])=>k+' '+v.toLocaleString('tr-TR')+' sa').join(', ')})` : ''));
+  if(r.konular.length) L.push(`İşlenen konular: ${r.konular.map(k=>k.t).join(', ')}`);
+  if(r.hw.length) L.push(`Ödev: ${r.hw.length} ödevin ${r.hwOk} tanesi yapıldı (%${Math.round(r.hwOk/r.hw.length*100)})`);
+  if(r.ex.length){
+    L.push(`Deneme: ${r.ex.length} deneme, ortalama ${r.exOrt!=null?r.exOrt.toFixed(1)+' net':'—'}` +
+      (r.exOnceOrt!=null && r.exOrt!=null ? ` (önceki ay ${r.exOnceOrt.toFixed(1)})` : ''));
+  }
+  if(r.stSaat) L.push(`Kendi çalışması: ${r.stSaat.toLocaleString('tr-TR')} saat`);
+  r.muf.forEach(m=>L.push(`Müfredat (${m.sub}): TYT %${m.tyt.pct} · AYT %${m.ayt.pct}`));
+  const n = (s.repNotes||{})[ym];
+  if(n) L.push('', 'Not: ' + n);
+  return L.join('\n');
+}
+function copyReport(sid, ym){
+  const s = state.students.find(x=>x.id===sid); if(!s) return;
+  copyText(reportText(s, ym));
+}
+function reportTab(s){
+  const ym = repMonth(), r = reportData(s, ym);
+  const bos = !r.ls.length && !r.hw.length && !r.ex.length && !r.st.length;
+  const not = (s.repNotes||{})[ym] || '';
+  const kutu = (l, v, h) => `<div class="rep-box"><div class="l">${l}</div><div class="v">${v}</div>${h?`<div class="l" style="text-transform:none;letter-spacing:0;margin-top:3px">${h}</div>`:''}</div>`;
+  return `
+  <div class="toolbar no-print">
+    <label style="font-size:.85rem;color:var(--muted)">Ay</label>
+    <input type="month" value="${ym}" onchange="setRepMonth(this.value)" style="padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--field-bg);color:var(--ink);font:inherit">
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn btn-ghost btn-sm" onclick="copyReport('${s.id}','${ym}')">Metni Kopyala</button>
+    <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Yazdır / PDF</button>
+  </div>
+  <div class="card report">
+    <div class="rep-head">
+      <div>
+        <h2>${esc(s.name)}</h2>
+        <div style="color:var(--muted);font-size:.86rem;margin-top:3px">${esc(s.grade||'')}${s.grade?' · ':''}${monthLabel(ym)} ders raporu</div>
+      </div>
+      <div style="text-align:right;font-size:.76rem;color:var(--muted)">Hazırlanma: ${fmtDate(today())}</div>
+    </div>
+    ${bos ? emptyState('📄','Bu ayda kayıt yok','Başka bir ay seç ya da önce ders, ödev ve deneme kaydı gir.') : `
+    <div class="rep-sec">
+      <h4>Özet</h4>
+      <div class="rep-grid">
+        ${kutu('Ders', r.ls.length, r.saat.toLocaleString('tr-TR')+' saat')}
+        ${kutu('Ödev', r.hw.length ? `${r.hwOk}/${r.hw.length}` : '—', r.hw.length ? '%'+Math.round(r.hwOk/r.hw.length*100)+' tamamlandı' : 'ödev verilmedi')}
+        ${kutu('Deneme', r.ex.length || '—', r.exOrt!=null ? 'ortalama '+r.exOrt.toFixed(1)+' net' : 'deneme yok')}
+        ${kutu('Kendi Çalışması', r.stSaat ? r.stSaat.toLocaleString('tr-TR')+' sa' : '—', r.st.length+' kayıt')}
+      </div>
+    </div>
+    ${r.konular.length ? `<div class="rep-sec">
+      <h4>Bu ay işlenen konular</h4>
+      <ul class="rep-list">${r.konular.map(k=>`<li>${esc(k.t)} <span style="color:var(--muted);font-size:.82rem">· ${esc(k.sub)} · ${fmtDate(k.d)}</span></li>`).join('')}</ul>
+    </div>` : ''}
+    ${r.muf.length ? `<div class="rep-sec">
+      <h4>Müfredat durumu</h4>
+      ${r.muf.map(m=>`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+          <b>${esc(m.sub)}</b><span style="color:var(--muted)">TYT %${m.tyt.pct} (${m.tyt.done}/${m.tyt.total}) · AYT %${m.ayt.pct} (${m.ayt.done}/${m.ayt.total})</span>
+        </div>
+        ${currBar(m.tyt.pct,'var(--accent)')}
+      </div>`).join('')}
+    </div>` : ''}
+    ${r.ex.length ? `<div class="rep-sec">
+      <h4>Deneme sonuçları</h4>
+      <ul class="rep-list">${r.ex.map(e=>`<li>${fmtDate(e.date)} · ${esc(e.name||e.type||'Deneme')} — <b>${(+e.net||0).toLocaleString('tr-TR')} net</b>${e.kind==='brans'&&e.bransSubject?` (${esc(e.bransSubject)})`:''}</li>`).join('')}</ul>
+      ${r.exOnceOrt!=null && r.exOrt!=null ? `<p style="font-size:.85rem;color:var(--muted);margin-top:6px">
+        Önceki ay ortalaması ${r.exOnceOrt.toFixed(1)} net, bu ay ${r.exOrt.toFixed(1)} net
+        <b style="color:${r.exOrt>=r.exOnceOrt?'var(--green)':'var(--red)'}">(${r.exOrt>=r.exOnceOrt?'+':''}${(r.exOrt-r.exOnceOrt).toFixed(1)})</b>.</p>` : ''}
+    </div>` : ''}
+    ${r.hw.length ? `<div class="rep-sec">
+      <h4>Ödevler</h4>
+      <ul class="rep-list">${r.hw.map(h=>`<li>${fmtDate(h.due)} · ${esc(h.subject||'')} ${esc(h.desc||h.title||'')} — <b style="color:${h.status==='yapildi'?'var(--green)':'var(--red)'}">${h.status==='yapildi'?'yapıldı':h.status==='eksik'?'eksik':'bekliyor'}</b></li>`).join('')}</ul>
+    </div>` : ''}
+    ${r.stSaat ? `<div class="rep-sec">
+      <h4>Kendi çalışma kayıtları</h4>
+      <p style="font-size:.88rem">Toplam ${r.stSaat.toLocaleString('tr-TR')} saat · ${Object.entries(r.stDagilim).map(([k,v])=>esc(k)+' '+v.toLocaleString('tr-TR')+' sa').join(' · ')}</p>
+    </div>` : ''}
+    <div class="rep-sec">
+      <h4>Öğretmen notu</h4>
+      <textarea class="no-print" placeholder="Veliye iletmek istediğin kısa değerlendirme..." onchange="saveRepNote('${s.id}','${ym}',this.value)">${esc(not)}</textarea>
+      ${not ? `<p class="print-note" style="font-size:.9rem;line-height:1.6;white-space:pre-wrap">${esc(not)}</p>` : ''}
+    </div>`}
+  </div>`;
+}
+
 /* ---------- HATIRLATMA & NOTLAR (kişisel — öğrenci modunda gizli) ---------- */
 /* Genel Bakış üst uyarısı: geciken, bugünkü ve yarınki açık hatırlatmalar. Öğrenci Modunda hiç oluşturulmaz. */
 function dashboardReminderAlert(){
@@ -2493,20 +2921,20 @@ function dashboardReminderAlert(){
   const t = today();
   const tm = new Date(); tm.setDate(tm.getDate()+1);
   const tomorrow = localDate(tm);
-  const list = state.reminders.filter(r=>!r.done && r.date && r.date<=tomorrow)
-    .sort((a,b)=>a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''));
+  const list = state.reminders.map(r=>({r, date:remWhenDate(r)})).filter(x=>x.date && x.date<=tomorrow)
+    .sort((a,b)=>a.date.localeCompare(b.date) || (a.r.time||'').localeCompare(b.r.time||''));
   if(!list.length) return '';
-  const urgent = list.some(r=>r.date<=t);
-  const nToday = list.filter(r=>r.date===t).length, nLate = list.filter(r=>r.date<t).length, nTom = list.length-nToday-nLate;
+  const urgent = list.some(x=>x.date<=t);
+  const nToday = list.filter(x=>x.date===t).length, nLate = list.filter(x=>x.date<t).length, nTom = list.length-nToday-nLate;
   const parts = [];
   if(nLate) parts.push(`${nLate} gecikmiş`); if(nToday) parts.push(`${nToday} bugün`); if(nTom) parts.push(`${nTom} yarın`);
-  const rows = list.map(r=>{
-    const k = r.date<t ? 'late' : r.date===t ? 'today' : 'tomorrow';
-    const lbl = k==='late' ? 'Gecikti · '+fmtDate(r.date) : k==='today' ? 'Bugün' : 'Yarın';
+  const rows = list.map(({r, date})=>{
+    const k = date<t ? 'late' : date===t ? 'today' : 'tomorrow';
+    const lbl = k==='late' ? 'Gecikti · '+fmtDate(date) : k==='today' ? 'Bugün' : 'Yarın';
     return `<div class="rem-alert-row">
       <span class="when ${k}">${lbl}${r.time?' '+r.time:''}</span>
-      <span class="t">${esc(r.title)}<span class="m" style="display:block;font-weight:500">${fmtDate(r.date)} ${reminderDayWeek(r.date)}${r.note?' · '+esc(r.note):''}</span></span>
-      <button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}')">Tamamla</button>
+      <span class="t">${esc(r.title)}${remRepeats(r)?' 🔁':''}<span class="m" style="display:block;font-weight:500">${fmtDate(date)} ${reminderDayWeek(date)}${remRepeats(r)?' · '+esc(remLabel(r)):''}${r.note?' · '+esc(r.note):''}</span></span>
+      <button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}','${date}')">Tamamla</button>
     </div>`;}).join('');
   return `
   <div class="rem-alert ${urgent?'urgent':''}" role="alert">
@@ -2515,9 +2943,67 @@ function dashboardReminderAlert(){
     <div class="rem-alert-list">${rows}</div>
   </div>`;
 }
-function reminderChip(r){
-  return `<button class="bill-chip ${r.done?'paid':'rem'}" onclick="toggleReminderDone('${r.id}')"
-    title="${esc(r.title)} — ${r.done?'işareti kaldırmak':'tamamlandı işaretlemek'} için tıkla">🔔 ${r.time?r.time+' ':''}${esc(r.title)}${r.done?' ✓':''}</button>`;
+/* --- Tekrarlayan hatırlatmalar --- */
+const REM_REPEATS = [
+  {v:'tek',      t:'Tekrarlamaz'},
+  {v:'gunluk',   t:'Her gün'},
+  {v:'haftalik', t:'Her hafta'},
+  {v:'aylik',    t:'Her ay'},
+  {v:'yillik',   t:'Her yıl'},
+];
+const remRepeats = r => !!r.repeat && r.repeat !== 'tek';
+function remLabel(r){
+  switch(r.repeat){
+    case 'gunluk':   return 'Her gün';
+    case 'haftalik': return `Her ${WD_LONG[+r.wd||0]}`;
+    case 'aylik':    return `Her ayın ${+r.day||1}. günü`;
+    case 'yillik':   return `Her yıl ${new Date((r.date||today())+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}`;
+    default:         return '';
+  }
+}
+/* r hatırlatması ds gününe düşüyor mu? (r.date tekrarlayanlarda başlangıç tarihidir) */
+function remOccursOn(r, ds){
+  if(r.date && ds < r.date) return false;
+  switch(r.repeat){
+    case 'gunluk':   return true;
+    case 'haftalik': return ((new Date(ds+'T12:00').getDay()+6)%7) === (+r.wd||0);
+    case 'aylik':    return +ds.slice(8) === clampDay(+r.day||1, ds.slice(0,7));
+    case 'yillik':   return !!r.date && ds.slice(5) === r.date.slice(5);
+    default:         return r.date === ds;
+  }
+}
+function remDoneOn(r, ds){ return remRepeats(r) ? (r.doneDates||[]).includes(ds) : !!r.done; }
+/* Bugünden ileriye doğru ilk yapılmamış tekrar */
+function remNext(r, from){
+  const t = from || today();
+  if(!remRepeats(r)) return (!r.done && r.date && r.date >= t) ? r.date : null;
+  let d = t;
+  for(let i=0; i<400; i++){
+    if(remOccursOn(r,d) && !remDoneOn(r,d)) return d;
+    d = shiftDate(d,1);
+  }
+  return null;
+}
+/* Yalnızca EN SON geçmiş tekrar; o yapıldıysa null döner.
+   Böylece eski tekrarlar birikip kuyruk oluşturmaz: bir tekrarı işaretleyince
+   daha eskileri geri gelmez, sıradaki tekrara geçilir. */
+function remOverdue(r){
+  const t = today();
+  if(!remRepeats(r)) return (!r.done && r.date && r.date < t) ? r.date : null;
+  let d = shiftDate(t,-1);
+  for(let i=0; i<400; i++){
+    if(r.date && d < r.date) return null;
+    if(remOccursOn(r,d)) return remDoneOn(r,d) ? null : d;
+    d = shiftDate(d,-1);
+  }
+  return null;
+}
+/* Listede ve uyarıda gösterilecek asıl tarih: önce gecikmiş olan, yoksa sıradaki */
+function remWhenDate(r){ return remOverdue(r) || remNext(r); }
+function reminderChip(r, ds){
+  const done = remDoneOn(r, ds);
+  return `<button class="bill-chip ${done?'paid':'rem'}" onclick="toggleReminderDone('${r.id}','${ds}')"
+    title="${esc(r.title)}${remRepeats(r)?' · '+remLabel(r):''} — ${done?'işareti kaldırmak':'tamamlandı işaretlemek'} için tıkla">🔔 ${r.time?r.time+' ':''}${esc(r.title)}${remRepeats(r)?' 🔁':''}${done?' ✓':''}</button>`;
 }
 /* Hatırlatma tarihi: gün adı ve hafta numarası ile (0. hafta = 21 Eylül 2026 Pazartesi) */
 function reminderDayWeek(ds){
@@ -2525,28 +3011,30 @@ function reminderDayWeek(ds){
   const n = weekNo(ds);
   return wd + (n!=null ? ` · ${n}. hafta` : ' · numarasız hafta');
 }
-function reminderWhen(r){
-  if(!r.date) return 'Tarihsiz';
+function reminderWhen(r, ds){
+  const d = ds || remWhenDate(r) || r.date;
+  if(!d) return 'Tarihsiz';
   const t = today();
-  const rel = r.date===t ? 'Bugün' : r.date===shiftDate(t,1) ? 'Yarın' : '';  // 'Gecikti' etiketi listede ayrıca yazılır
-  return (rel ? rel+' · ' : '') + fmtDate(r.date) + ' ' + reminderDayWeek(r.date) + (r.time ? ' · '+r.time : '');
+  const rel = d===t ? 'Bugün' : d===shiftDate(t,1) ? 'Yarın' : '';  // 'Gecikti' etiketi listede ayrıca yazılır
+  return (rel ? rel+' · ' : '') + fmtDate(d) + ' ' + reminderDayWeek(d) + (r.time ? ' · '+r.time : '');
 }
 function viewNotes(){
   const t = today();
-  const rems = [...state.reminders].sort((a,b)=>{
-    if(a.done!==b.done) return a.done?1:-1;
-    return (a.date||'9999').localeCompare(b.date||'9999') || (a.time||'').localeCompare(b.time||'');
+  const rems = state.reminders.map(r=>({r, d:remWhenDate(r), late:!!remOverdue(r)})).sort((a,b)=>{
+    const ao = a.d?0:1, bo = b.d?0:1;
+    if(ao!==bo) return ao-bo;
+    return (a.d||'9999').localeCompare(b.d||'9999') || (a.r.time||'').localeCompare(b.r.time||'');
   });
-  const open = state.reminders.filter(r=>!r.done).length;
+  const open = rems.filter(x=>x.d).length;
   const remList = !rems.length
     ? emptyState('🔔','Hatırlatma yok','Kendine hatırlatmalar ekle; tarihli olanlar Takvim şeridinde ve Genel Bakış\'ta görünür.')
-    : rems.map(r=>{
-      const late = !r.done && r.date && r.date < t;
-      return `<div class="rem-item ${r.done?'done':''} ${late?'late':''}">
-        <input type="checkbox" ${r.done?'checked':''} onchange="toggleReminderDone('${r.id}')" title="Tamamlandı">
+    : rems.map(({r, d, late})=>{
+      const kapali = !d;
+      return `<div class="rem-item ${kapali?'done':''} ${late?'late':''}">
+        <input type="checkbox" ${kapali?'checked':''} onchange="toggleReminderDone('${r.id}'${d?`,'${d}'`:''})" title="${remRepeats(r)?'Bu tekrarı tamamlandı işaretle':'Tamamlandı'}">
         <div style="flex:1;min-width:0">
-          <div class="t">${esc(r.title)}</div>
-          <div class="m" ${late?'style="color:var(--red)"':''}>${late?'⚠️ Gecikti · ':''}${reminderWhen(r)}${r.note?' · '+esc(r.note):''}</div>
+          <div class="t">${esc(r.title)}${remRepeats(r)?` <span class="chip badge-zero">🔁 ${esc(remLabel(r))}</span>`:''}</div>
+          <div class="m" ${late?'style="color:var(--red)"':''}>${late?'⚠️ Gecikti · ':''}${reminderWhen(r, d)}${r.note?' · '+esc(r.note):''}</div>
         </div>
         <button class="icon-btn" onclick="openReminderForm('${r.id}')" title="Düzenle">${SVG_EDIT}</button>
         <button class="icon-btn danger" onclick="delItem('reminders','${r.id}')" title="Sil">${SVG_DEL}</button>
@@ -2579,34 +3067,77 @@ function viewNotes(){
   <div class="card panel"><h3>📝 Notlarım</h3>${memoGrid}</div>
   <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Bu bölüm Öğrenci Modu açıkken görünmez. Veriler yalnızca bu cihazda tutulur, buluta gönderilmez.</p>`;
 }
-function toggleReminderDone(id){
+function toggleReminderDone(id, ds){
   const r = state.reminders.find(x=>x.id===id); if(!r) return;
-  r.done = !r.done;
-  toast(r.done ? 'Hatırlatma tamamlandı ✓' : 'Hatırlatma yeniden açıldı');
+  if(!remRepeats(r)){
+    r.done = !r.done;
+    toast(r.done ? 'Hatırlatma tamamlandı ✓' : 'Hatırlatma yeniden açıldı');
+  } else {
+    const d = ds || remWhenDate(r) || today();
+    r.doneDates = r.doneDates || [];
+    const i = r.doneDates.indexOf(d);
+    if(i >= 0){ r.doneDates.splice(i,1); toast(`${fmtDate(d)} tekrarı yeniden açıldı`); }
+    else { r.doneDates.push(d); toast(`${fmtDate(d)} tekrarı tamamlandı ✓`); }
+    if(r.doneDates.length > 120) r.doneDates = r.doneDates.sort().slice(-120);  // geçmişi sınırla
+  }
   save(); render();
 }
+function remRepeatChange(){
+  const v = document.getElementById('f_rmrepeat').value;
+  const g = (id, goster) => { const el = document.getElementById(id); if(el) el.style.display = goster ? '' : 'none'; };
+  g('wrap_rmwd',  v === 'haftalik');
+  g('wrap_rmday', v === 'aylik');
+  const lbl = document.getElementById('lbl_rmdate');
+  if(lbl) lbl.textContent = v === 'tek' ? 'Tarih' : v === 'yillik' ? 'Gün ve Ay' : 'Başlangıç';
+  const ipucu = document.getElementById('rm_ipucu');
+  if(ipucu) ipucu.textContent = v === 'tek' ? '' :
+    v === 'gunluk'   ? 'Başlangıç tarihinden itibaren her gün tekrar eder.' :
+    v === 'haftalik' ? 'Seçtiğin günde her hafta tekrar eder.' :
+    v === 'aylik'    ? 'Her ayın seçtiğin gününde tekrar eder; o gün olmayan aylarda ayın son gününe kayar.' :
+                       'Seçtiğin tarihin gün ve ayında her yıl tekrar eder.';
+}
 function openReminderForm(id){
-  const r = id ? state.reminders.find(x=>x.id===id) : {date: today()};
+  const r = id ? state.reminders.find(x=>x.id===id) : {date: today(), repeat:'tek'};
+  const rep = r.repeat || 'tek';
   openModal(`
   <h3>${id?'Hatırlatmayı Düzenle':'Yeni Hatırlatma'}</h3>
   <div class="form-grid">
     <div class="field full"><label>Başlık *</label><input id="f_rmtitle" value="${esc(r.title||'')}" placeholder="Örn. Ayşe'nin velisini ara"></div>
-    <div class="field"><label>Tarih</label><input id="f_rmdate" type="date" value="${r.date||''}"></div>
+    <div class="field full"><label>Tekrar</label><select id="f_rmrepeat" onchange="remRepeatChange()">
+      ${REM_REPEATS.map(x=>`<option value="${x.v}" ${x.v===rep?'selected':''}>${x.t}</option>`).join('')}
+    </select><div class="hint-text" id="rm_ipucu"></div></div>
+    <div class="field"><label id="lbl_rmdate">Tarih</label><input id="f_rmdate" type="date" value="${r.date||''}"></div>
     <div class="field"><label>Saat</label><input id="f_rmtime" type="time" value="${r.time||''}"></div>
+    <div class="field" id="wrap_rmwd" style="display:none"><label>Haftanın Günü</label><select id="f_rmwd">
+      ${WD_LONG.map((g,i)=>`<option value="${i}" ${i===(+r.wd||0)?'selected':''}>${g}</option>`).join('')}
+    </select></div>
+    <div class="field" id="wrap_rmday" style="display:none"><label>Ayın Kaçında</label>
+      <input id="f_rmday" type="number" min="1" max="31" value="${+r.day || +(r.date||today()).slice(8) || 1}"></div>
     <div class="field full"><label>Not</label><input id="f_rmnote" value="${esc(r.note||'')}" placeholder="isteğe bağlı"></div>
   </div>
   <div class="modal-actions">
     <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
     <button class="btn btn-primary" onclick="saveReminder('${id||''}')">Kaydet</button>
   </div>`);
+  remRepeatChange();
   setTimeout(()=>{ const el=document.getElementById('f_rmtitle'); if(el) el.focus(); }, 50);
 }
 function saveReminder(id){
   const title = fv('f_rmtitle');
   if(!title){ toast('Başlık gerekli'); return; }
-  const data = {title, date:fv('f_rmdate')||null, time:fv('f_rmtime')||null, note:fv('f_rmnote')};
-  if(id){ Object.assign(state.reminders.find(x=>x.id===id), data); toast('Hatırlatma güncellendi'); }
-  else { state.reminders.push({id:uid(), done:false, ...data}); toast('Hatırlatma eklendi'); }
+  const repeat = fv('f_rmrepeat') || 'tek';
+  const date = fv('f_rmdate') || (repeat === 'tek' ? null : today());
+  if(repeat === 'yillik' && !date){ toast('Yıllık tekrar için gün ve ay gerekli'); return; }
+  const data = {title, repeat, date, time:fv('f_rmtime')||null, note:fv('f_rmnote'),
+    wd: repeat==='haftalik' ? (+fv('f_rmwd')||0) : null,
+    day: repeat==='aylik' ? Math.min(31, Math.max(1, parseInt(fv('f_rmday'))||1)) : null};
+  if(id){
+    const r = state.reminders.find(x=>x.id===id);
+    Object.assign(r, data);
+    if(repeat !== 'tek'){ r.done = false; r.doneDates = r.doneDates || []; }
+    toast('Hatırlatma güncellendi');
+  }
+  else { state.reminders.push({id:uid(), done:false, doneDates:[], ...data}); toast(repeat==='tek' ? 'Hatırlatma eklendi' : 'Tekrarlayan hatırlatma eklendi'); }
   save(); closeModal(); render();
 }
 function toggleMemoPin(id){
@@ -2643,14 +3174,15 @@ function dashboardPersonalPanel(){
   const classes = state.myClasses.filter(c=>c.day===ti).sort((a,b)=>a.start-b.start);
   const wos = state.workouts.filter(w=>w.day===ti);
   const reading = state.books.filter(b=>b.status==='okunuyor');
-  const rems = state.reminders.filter(r=>!r.done && r.date && r.date<=today()).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  const rems = state.reminders.map(r=>({r, d:remWhenDate(r)})).filter(x=>x.d && x.d<=today())
+    .sort((a,b)=>a.d.localeCompare(b.d)||(a.r.time||'').localeCompare(b.r.time||''));
   if(!classes.length && !wos.length && !reading.length && !rems.length) return '';
   const rows = [
-    ...rems.map(r=>`<tr>
+    ...rems.map(({r, d})=>`<tr>
       <td style="width:36px">🔔</td>
-      <td style="font-weight:600">${esc(r.title)}${r.note?`<span class="row-note">${esc(r.note)}</span>`:''}</td>
-      <td style="color:${r.date<today()?'var(--red)':'var(--muted)'};font-size:.85rem;white-space:nowrap">${r.date<today()?'Gecikti · '+fmtDate(r.date):(r.time?r.time:'Bugün')}</td>
-      <td style="text-align:right"><button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}')">Tamamla</button></td>
+      <td style="font-weight:600">${esc(r.title)}${remRepeats(r)?' 🔁':''}${r.note?`<span class="row-note">${esc(r.note)}</span>`:''}</td>
+      <td style="color:${d<today()?'var(--red)':'var(--muted)'};font-size:.85rem;white-space:nowrap">${d<today()?'Gecikti · '+fmtDate(d):(r.time?r.time:'Bugün')}</td>
+      <td style="text-align:right"><button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}','${d}')">Tamamla</button></td>
     </tr>`),
     ...classes.map(c=>`<tr>
       <td style="width:36px">🎓</td>
@@ -2758,9 +3290,9 @@ function studentPayload(s){
   return {
     v:2,
     student:{name:s.name, grade:s.grade||''},
-    lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||''})),
+    lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, status:h.status, updatedAt:h.updatedAt||0})),
-    exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent})),
+    exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
   };
 }
 
