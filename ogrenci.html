@@ -78,6 +78,7 @@ input,select{font-family:inherit;font-size:1rem}
   width:52px;flex-shrink:0;text-align:center;border-radius:10px;padding:6px 0;background:var(--field-bg);border:1px solid var(--line);
 }
 .item .date b{display:block;font-size:1.15rem;line-height:1.1}
+.item .date b.sm{font-size:.8rem;line-height:1.5}
 .item .date span{display:block;font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;line-height:1.3}
 .item .body{flex:1;min-width:0}
 .item .t{font-weight:700;font-size:.95rem}
@@ -121,14 +122,6 @@ input,select{font-family:inherit;font-size:1rem}
 .note-acts a{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 12px;border-radius:10px;font-size:.8rem;font-weight:700;text-decoration:none;white-space:nowrap}
 .note-acts .dl{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 14px -8px var(--glow)}
 .note-acts .op{background:var(--field-bg);border:1px solid var(--line);color:var(--ink)}
-.folder-card{padding:16px 16px;margin-bottom:14px;border-color:var(--line-strong);background:linear-gradient(135deg,var(--card),var(--accent-soft))}
-.folder-card h3{font-size:.98rem;display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.folder-card p{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
-.folder-card .row{display:flex;gap:8px;flex-wrap:wrap}
-.folder-card a.btn{text-decoration:none}
-.folder-embed{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
-.folder-embed iframe{width:100%;height:340px;border:0;display:block}
-.note-title .topic{color:var(--muted);font-weight:600}
 
 /* Giriş ekranı */
 .gate{max-width:400px;margin:10vh auto 0;padding:28px 24px;text-align:center}
@@ -440,72 +433,88 @@ function viewHomework(){
   return html;
 }
 
-/* --- Ders notları (Google Drive bağlantıları) --- */
-function driveInfo(link){
-  link = String(link||'').trim();
-  if(!link) return null;
-  let m;
-  if((m = link.match(/drive\.google\.com\/(?:drive\/(?:u\/\d+\/)?)?folders\/([\w-]{10,})/)))
-    return {kind:'folder', id:m[1], view:`https://drive.google.com/drive/folders/${m[1]}`, download:null, embed:`https://drive.google.com/embeddedfolderview?id=${m[1]}#list`};
-  if((m = link.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/)) || (m = link.match(/drive\.google\.com\/(?:open|uc)\?(?:.*&)?id=([\w-]{10,})/)))
-    return {kind:'file', id:m[1], view:`https://drive.google.com/file/d/${m[1]}/view`, download:`https://drive.google.com/uc?export=download&id=${m[1]}`};
-  if((m = link.match(/docs\.google\.com\/document\/d\/([\w-]{10,})/)))
-    return {kind:'doc', id:m[1], view:link, download:`https://docs.google.com/document/d/${m[1]}/export?format=pdf`};
-  if((m = link.match(/docs\.google\.com\/presentation\/d\/([\w-]{10,})/)))
-    return {kind:'slides', id:m[1], view:link, download:`https://docs.google.com/presentation/d/${m[1]}/export/pdf`};
-  if((m = link.match(/docs\.google\.com\/spreadsheets\/d\/([\w-]{10,})/)))
-    return {kind:'sheet', id:m[1], view:link, download:`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=pdf`};
-  if(/^https?:\/\//i.test(link)) return {kind:'link', id:null, view:link, download:null};
-  return null;
+/* --- Ders notları (GitHub Pages deposundan, GitHub API ile listelenir) --- */
+const NOTES_REPO = ''; // 'kullanici/depo' — boş bırakılırsa sayfanın adresinden türetilir
+const DERS_LABEL = {fizik:'Fizik', kimya:'Kimya', matematik:'Matematik'};
+const SEVIYE_LABEL = {tyt:'TYT', ayt:'AYT'};
+const DERS_ORDER = ['fizik','kimya','matematik'], SEVIYE_ORDER = ['tyt','ayt'];
+/* Panelle birebir aynı slug kuralı */
+function studentSlug(name){
+  const map = {'ç':'c','ğ':'g','ı':'i','ö':'o','ş':'s','ü':'u','Ç':'c','Ğ':'g','İ':'i','I':'i','Ö':'o','Ş':'s','Ü':'u'};
+  return String(name||'').trim().replace(/[çğıöşüÇĞİIÖŞÜ]/g, c=>map[c]).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
-const NOTE_KIND = {file:'PDF / Dosya', doc:'Doküman', slides:'Sunum', sheet:'Tablo', link:'Bağlantı'};
-let noteFilter = '', showFolder = false;
-function setNoteFilter(v){ noteFilter = v; render(); }
-function toggleFolder(){ showFolder = !showFolder; render(); }
+function notesRepo(){
+  if(NOTES_REPO){ const [user, repo] = NOTES_REPO.split('/'); return {user, repo}; }
+  const m = location.hostname.match(/^([\w-]+)\.github\.io$/i); if(!m) return null;
+  const seg = location.pathname.split('/').filter(Boolean); // /DEPO/ogrenci.html → DEPO ; /ogrenci.html → kullanıcı sitesi
+  return {user:m[1], repo: seg.length >= 2 ? seg[0] : `${m[1]}.github.io`};
+}
+let notesState = {status:'idle', files:[]}; // idle | loading | ok | error
+let notesDers = '', notesSeviye = '';
+function setNotesDers(v){ notesDers = v; notesSeviye = ''; render(); }
+function setNotesSeviye(v){ notesSeviye = v; render(); }
+function retryNotes(){ notesState = {status:'idle', files:[]}; render(); }
+async function loadNotes(){
+  const repo = notesRepo();
+  if(!repo){ notesState = {status:'error', files:[]}; return; }
+  notesState = {status:'loading', files:[]};
+  try{
+    const r = await fetch(`https://api.github.com/repos/${repo.user}/${repo.repo}/git/trees/main?recursive=1`, {headers:{Accept:'application/vnd.github+json'}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const prefix = `notlar/${studentSlug(data.student.name)}/`;
+    const files = (j.tree||[]).filter(t=>t.type==='blob' && t.path.startsWith(prefix) && /\.pdf$/i.test(t.path)).map(t=>parseNote(t.path, prefix)).filter(Boolean);
+    notesState = {status:'ok', files};
+  }catch(e){ notesState = {status:'error', files:[]}; }
+  if(tab==='notlar' && document.querySelector('.hero')) render();
+}
+/* notlar/<slug>/<ders>/<seviye>/<YYYY-AA-GG Başlık>.pdf → {ders, seviye, date, title, file, url} */
+function parseNote(path, prefix){
+  const parts = path.slice(prefix.length).split('/');
+  if(parts.length !== 3) return null;
+  const [ders, seviye, file] = parts;
+  const base = file.replace(/\.pdf$/i,'');
+  const m = base.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
+  // Bağlantı aynı depodaki GitHub Pages adresine (sayfayla aynı alan adı) verilir
+  const url = new URL(path.split('/').map(encodeURIComponent).join('/'), location.href).href;
+  return {ders, seviye, file, date: m ? m[1] : '', title: (m ? m[2] : base).trim(), url};
+}
+function noteSort(a,b){
+  if(a.date && b.date) return b.date.localeCompare(a.date) || a.title.localeCompare(b.title,'tr');
+  if(a.date !== b.date) return a.date ? -1 : 1; // tarihliler üstte
+  return a.title.localeCompare(b.title,'tr');
+}
+const orderBy = (list, order) => [...new Set(list)].sort((a,b)=>{ const i=order.indexOf(a), j=order.indexOf(b); return (i<0?99:i)-(j<0?99:j) || a.localeCompare(b,'tr'); });
+const cap = s => s ? s[0].toUpperCase()+s.slice(1) : s;
 function viewNotes(){
-  const notes = data.notes || [];
-  const folder = driveInfo(data.driveFolder);
+  if(notesState.status==='idle'){ loadNotes(); }
+  if(notesState.status==='idle' || notesState.status==='loading') return emptyState('⏳','Notlar yükleniyor','Bir saniye…');
+  if(notesState.status==='error') return emptyState('⚠️','Notlar şu an yüklenemedi, sayfayı yenile','') + `<div style="text-align:center;margin-top:-10px"><button class="link-btn" onclick="retryNotes()">Tekrar dene</button></div>`;
+  const all = notesState.files;
+  if(!all.length) return emptyState('📂','Henüz ders notu yok','Öğretmenin not eklediğinde burada görünür.');
+  const dersList = orderBy(all.map(f=>f.ders), DERS_ORDER);
+  if(!dersList.includes(notesDers)) notesDers = dersList[0];
+  const inDers = all.filter(f=>f.ders===notesDers);
+  const sevList = orderBy(inDers.map(f=>f.seviye), SEVIYE_ORDER);
+  if(!sevList.includes(notesSeviye)) notesSeviye = sevList[0];
+  const list = inDers.filter(f=>f.seviye===notesSeviye).sort(noteSort);
   let html = '';
-  if(folder){
-    html += `<div class="card folder-card">
-      <h3>📁 Ders Klasörüm</h3>
-      <p>Öğretmeninin senin için ayırdığı Google Drive klasörü. Buraya eklenen her dosya anında burada görünür; dosya adları <b>Ders - Konu - Başlık</b> sırasıyla yazılıdır.</p>
-      <div class="row">
-        <a class="btn btn-sm" href="${esc(folder.view)}" target="_blank" rel="noopener">Klasörü Aç</a>
-        <button class="btn-ghost" onclick="toggleFolder()">${showFolder?'Listeyi gizle':'Dosyaları burada listele'}</button>
-      </div>
-      ${showFolder ? `<div class="folder-embed"><iframe src="${esc(folder.embed)}" loading="lazy" title="Ders klasörü"></iframe></div>` : ''}
-    </div>`;
-  }
-  if(!notes.length){
-    return html + emptyState('📂', folder ? 'Ayrıca eklenmiş not yok' : 'Henüz ders notu yok', folder ? 'Öğretmenin dosyaları yukarıdaki klasöre koyuyor.' : 'Öğretmenin ders notu paylaştığında burada görünür; tek dokunuşla indirebilirsin.');
-  }
-  const subjects = [...new Set(notes.map(n=>n.subject).filter(Boolean))];
-  let list = [...notes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(noteFilter) list = list.filter(n=>n.subject===noteFilter);
-  if(subjects.length > 1){
-    html += `<div class="toolbar"><select onchange="setNoteFilter(this.value)"><option value="">Tüm dersler · ${notes.length} not</option>${subjects.map(s=>`<option ${noteFilter===s?'selected':''}>${s}</option>`).join('')}</select></div>`;
-  }
-  // Konuya göre grupla: aynı konunun notları alt alta, en yeni konu üstte
-  let lastKey = null;
-  list.forEach(n=>{
-    const d = driveInfo(n.link);
-    const key = `${n.subject}|${n.topic||''}`;
-    if(key !== lastKey){ html += `<div class="section-title">${esc(n.subject)}${n.topic?' · '+esc(n.topic):''}</div>`; lastKey = key; }
-    html += `<div class="item">
-      ${dateBox(n.date)}
-      <div class="body">
-        <div class="t note-title">${esc(n.title)}</div>
-        <div class="chips">${subjectChip(n.subject)}${d?`<span class="chip badge-zero">${NOTE_KIND[d.kind]||'Dosya'}</span>`:''}</div>
-        ${n.desc?`<div class="d">${esc(n.desc)}</div>`:''}
-      </div>
-      ${d ? `<div class="note-acts">
-        ${d.download ? `<a class="dl" href="${esc(d.download)}" target="_blank" rel="noopener">⬇ İndir</a>` : ''}
-        <a class="op" href="${esc(d.view)}" target="_blank" rel="noopener">${d.download?'Görüntüle':'Aç ↗'}</a>
-      </div>` : ''}
-    </div>`;
-  });
-  if(!list.length) html += emptyState('📂','Bu derste not yok','Başka bir ders seç.');
+  if(dersList.length > 1) html += `<div class="seg" style="margin-bottom:8px">${dersList.map(d=>`<button class="${notesDers===d?'on':''}" onclick="setNotesDers('${esc(d)}')">${esc(DERS_LABEL[d]||cap(d))}</button>`).join('')}</div>`;
+  if(sevList.length > 1) html += `<div class="seg" style="margin-bottom:8px">${sevList.map(v=>`<button class="${notesSeviye===v?'on':''}" onclick="setNotesSeviye('${esc(v)}')">${esc(SEVIYE_LABEL[v]||v.toUpperCase())}</button>`).join('')}</div>`;
+  html += `<div class="section-title">${esc(DERS_LABEL[notesDers]||cap(notesDers))} · ${esc(SEVIYE_LABEL[notesSeviye]||notesSeviye.toUpperCase())} · ${list.length} not</div>`;
+  html += list.map(f=>`<div class="item">
+    ${f.date ? dateBox(f.date) : '<div class="date"><b class="sm">PDF</b><span>not</span></div>'}
+    <div class="body">
+      <div class="t">${esc(f.title)}</div>
+      ${f.date ? `<div class="d">${fmtDate(f.date)}</div>` : ''}
+    </div>
+    <div class="note-acts">
+      <a class="op" href="${esc(f.url)}" target="_blank" rel="noopener">Aç ↗</a>
+      <a class="dl" href="${esc(f.url)}" download="${esc(f.file)}">⬇ İndir</a>
+    </div>
+  </div>`).join('');
   return html;
 }
 
