@@ -2842,6 +2842,30 @@ const _tickUnsubs = {};
 /* ---------- PANEL SENKRONU: tüm panel verisi panel/<uid> belgesinde, yalnızca öğretmen hesabı okur/yazar.
    Telefon ve bilgisayar aynı hesapla girince aynı veriyi görür; son kaydeden kazanır. ---------- */
 let _panelUnsub = null, _panelSeen = false, _panelRemoteCount = 0, _panelRemoteAt = 0;
+let _panelBytes = 0, _panelRaw = 0, _panelWarned = false;
+/* Firestore belge sınırı 1.048.576 bayt; alan adları ve ek alanlar için pay bırakıyoruz. */
+const PANEL_LIMIT = 1000000;
+const canZip = () => typeof CompressionStream === 'function' && typeof DecompressionStream === 'function';
+const FBytes = () => (typeof firebase!=='undefined' && firebase.firestore) ? (firebase.firestore.Blob || firebase.firestore.Bytes) : null;
+async function deflateStr(str){
+  const cs = new CompressionStream('deflate-raw');
+  const w = cs.writable.getWriter(); w.write(new TextEncoder().encode(str)); w.close();
+  return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+}
+async function inflateBytes(u8){
+  const ds = new DecompressionStream('deflate-raw');
+  const w = ds.writable.getWriter(); w.write(u8); w.close();
+  return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+}
+/* Belgeyi oku: sıkıştırılmış (gz) ya da eski düz (data) biçim */
+async function panelJson(r){
+  if(r.gz){
+    if(!canZip()) throw new Error('Bu cihaz sıkıştırılmış veriyi açamıyor (tarayıcı eski)');
+    const u8 = r.gz.toUint8Array ? r.gz.toUint8Array() : new Uint8Array(r.gz);
+    return await inflateBytes(u8);
+  }
+  return r.data || '';
+}
 function panelRef(){ return fb.db.collection('panel').doc(fb.user.uid); }
 async function pushPanel(force){
   if(!fb.user || !fb.db) return;
@@ -2850,30 +2874,49 @@ async function pushPanel(force){
     if(!_panelAt || _panelAt <= (cloud.panelPushed||0)) return;
     if(!stateCount() && _panelRemoteCount > 0) return;      // boş cihaz, dolu bulut kopyasını ezmesin
   }
-  const data = JSON.stringify(state);
-  if(data.length > 950000){ fb.error = 'Panel verisi bulut sınırını aştı (1 MB)'; return; }
+  const json = JSON.stringify(state);
+  const raw = new TextEncoder().encode(json).length;
+  let payload, bytes;
+  if(canZip() && FBytes()){
+    const u8 = await deflateStr(json);
+    bytes = u8.length;
+    payload = {gz: FBytes().fromUint8Array(u8), enc: 'deflate-raw'};
+  } else {
+    bytes = raw; payload = {data: json};                   // eski tarayıcı: düz metin
+  }
+  if(bytes > PANEL_LIMIT){
+    fb.error = `Panel verisi bulut sınırını aştı (${fmtKB(bytes)} / ${fmtKB(PANEL_LIMIT)}). Eski kayıtları yedekleyip temizle.`;
+    fb.status = 'error'; updateCloudBadge(); toast('Bulut sınırı aşıldı — veri gönderilemedi'); return;
+  }
   const at = force ? (_panelAt = Date.now()) : _panelAt;
   if(force) localStorage.setItem(PANEL_AT_KEY, String(at));
-  await panelRef().set({data, updatedAt: at, device: navigator.userAgent.slice(0,60)});
+  await panelRef().set({...payload, raw, bytes, count: stateCount(), updatedAt: at, device: navigator.userAgent.slice(0,60)});
+  _panelBytes = bytes; _panelRaw = raw;
   cloud.panelPushed = at; saveCloud();
+  panelSizeWarn();
 }
 function watchPanel(){
   stopPanel();
   if(!fb.user || !fb.db) return;
   _panelSeen = false;
-  _panelUnsub = panelRef().onSnapshot(doc=>{
+  _panelUnsub = panelRef().onSnapshot(async doc=>{
     _panelSeen = true;
     const r = doc.exists ? doc.data() : null;
-    if(!r || !r.data){ _panelRemoteCount = 0; _panelRemoteAt = 0; scheduleSync(true); return; } // bulutta panel yok: yerel veriyi gönder
+    if(!r || (!r.data && !r.gz)){ _panelRemoteCount = 0; _panelRemoteAt = 0; _panelBytes = 0; scheduleSync(true); return; } // bulutta panel yok
     _panelRemoteAt = r.updatedAt || 0;
-    try{ _panelRemoteCount = stateCount(JSON.parse(r.data)); }catch(e){ _panelRemoteCount = 0; }
+    let json = '';
+    try{ json = await panelJson(r); }catch(e){ fb.error = e.message; fb.status='error'; updateCloudBadge(); return; }
+    _panelBytes = r.bytes || new TextEncoder().encode(json).length;
+    _panelRaw = r.raw || _panelBytes;
+    try{ _panelRemoteCount = r.count!=null ? r.count : stateCount(JSON.parse(json)); }catch(e){ _panelRemoteCount = 0; }
+    panelSizeWarn();
     if(r.updatedAt > _panelAt){
       try{
-        const d = JSON.parse(r.data);
+        const d = JSON.parse(json);
         if(!d || !Array.isArray(d.students)) return;
         const modal = document.getElementById('modalBackdrop');
         if(modal && modal.classList.contains('open')) return; // form açıkken ezme; sonraki değişiklikte gelir
-        localStorage.setItem(KEY, r.data);
+        localStorage.setItem(KEY, json);
         state = load();
         _panelAt = r.updatedAt; localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
         cloud.panelPushed = r.updatedAt; saveCloud();
@@ -2884,17 +2927,54 @@ function watchPanel(){
   }, err=>{ fb.error = 'Panel senkronu: ' + err.message; fb.status='error'; updateCloudBadge(); });
 }
 function stopPanel(){ if(_panelUnsub){ _panelUnsub(); _panelUnsub = null; } _panelSeen = false; }
+/* Bulut belgesi doluluk ölçeri */
+const fmtKB = b => b >= 1048576 ? (b/1048576).toFixed(2)+' MB' : Math.max(1,Math.round(b/1024))+' KB';
+function panelPct(){ return Math.min(100, Math.round(_panelBytes / PANEL_LIMIT * 100)); }
+function panelSizeWarn(){
+  const pct = panelPct();
+  if(pct >= 75 && !_panelWarned){
+    _panelWarned = true;
+    toast(`Bulut belgesi %${pct} dolu — Bulut penceresinden kontrol et`);
+  }
+  if(pct < 70) _panelWarned = false;
+}
+function panelSizeHtml(){
+  if(!fb.user || !_panelBytes) return '';
+  const pct = panelPct();
+  const col = pct >= 90 ? 'var(--red)' : pct >= 75 ? 'var(--amber)' : 'var(--green)';
+  const ratio = _panelRaw && _panelBytes ? (_panelRaw/_panelBytes) : 1;
+  const kalan = Math.max(0, PANEL_LIMIT - _panelBytes);
+  const perRec = _panelRemoteCount ? (_panelBytes/_panelRemoteCount) : 0;
+  const tahmin = perRec ? Math.floor(kalan/perRec) : null;
+  let uyari = '';
+  if(pct >= 90) uyari = `<div style="color:var(--red);font-weight:600;margin-top:6px">Sınıra çok yaklaştın. Yedek al ve eski kayıtları temizle.</div>`;
+  else if(pct >= 75) uyari = `<div style="color:var(--amber);font-weight:600;margin-top:6px">Belge dolmak üzere. Eski yılların kayıtlarını temizlemeyi düşün.</div>`;
+  return `
+  <div style="margin-top:10px">
+    <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:5px">
+      <span>Bulut belgesi doluluğu</span><span style="font-variant-numeric:tabular-nums;color:${col};font-weight:700">%${pct}</span>
+    </div>
+    <div style="height:8px;border-radius:5px;background:var(--line);overflow:hidden">
+      <i style="display:block;height:100%;width:${Math.max(2,pct)}%;background:${col}"></i>
+    </div>
+    <div class="hint-text" style="margin-top:6px">
+      ${fmtKB(_panelBytes)} / ${fmtKB(PANEL_LIMIT)} kullanıldı${ratio>1.2?` · ${ratio.toFixed(1)} kat sıkıştırıldı (ham ${fmtKB(_panelRaw)})`:' · sıkıştırma kapalı'}
+      ${tahmin!=null?`<br>Bu hızla yaklaşık <b>${tahmin.toLocaleString('tr-TR')}</b> kayıt daha sığar.`:''}
+    </div>${uyari}
+  </div>`;
+}
 /* Elle: buluttaki paneli bu cihaza indir */
 async function pullPanelNow(){
   if(!fb.user || !fb.db){ toast('Önce Bulut penceresinden giriş yap'); return; }
   try{
     const doc = await panelRef().get();
     const r = doc.exists ? doc.data() : null;
-    if(!r || !r.data){ toast('Bulutta panel verisi yok — diğer cihazdan "Paneli Buluta Gönder" de'); return; }
-    const d = JSON.parse(r.data);
+    if(!r || (!r.data && !r.gz)){ toast('Bulutta panel verisi yok — diğer cihazdan "Paneli Buluta Gönder" de'); return; }
+    const json = await panelJson(r);
+    const d = JSON.parse(json);
     if(!d || !Array.isArray(d.students)) throw 0;
     if(stateCount() && !confirm(`Bu cihazdaki ${stateCount()} kayıt, buluttaki ${stateCount(d)} kayıtla değiştirilecek. Devam edilsin mi?`)) return;
-    localStorage.setItem(KEY, r.data);
+    localStorage.setItem(KEY, json);
     state = load();
     _panelAt = r.updatedAt || Date.now(); localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
     cloud.panelPushed = _panelAt; saveCloud();
@@ -3083,6 +3163,7 @@ function cloudStatusText(){
   let s = fb.user ? `Giriş: <b>${esc(fb.user.email)}</b><br>` : 'Giriş yapılmadı. E-posta ve şifreyle bağlan.<br>';
   if(cloud.lastSync) s += `Son senkron: ${new Date(cloud.lastSync).toLocaleString('tr-TR')} · ${n} öğrenci bulutta<br>`;
   if(fb.user) s += `Panel: bu cihazda <b>${stateCount()}</b> kayıt · bulutta <b>${_panelSeen ? _panelRemoteCount : '?'}</b> kayıt${_panelRemoteAt>1?' ('+new Date(_panelRemoteAt).toLocaleString('tr-TR')+')':''}<br>`;
+  s += panelSizeHtml();
   if(fb.error) s += `<span style="color:var(--red)">${esc(fb.error)}</span>`;
   return s;
 }
