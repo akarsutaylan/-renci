@@ -2505,7 +2505,7 @@ function dashboardReminderAlert(){
     const lbl = k==='late' ? 'Gecikti · '+fmtDate(r.date) : k==='today' ? 'Bugün' : 'Yarın';
     return `<div class="rem-alert-row">
       <span class="when ${k}">${lbl}${r.time?' '+r.time:''}</span>
-      <span class="t">${esc(r.title)}${r.note?`<span class="m" style="display:block;font-weight:500">${esc(r.note)}</span>`:''}</span>
+      <span class="t">${esc(r.title)}<span class="m" style="display:block;font-weight:500">${fmtDate(r.date)} ${reminderDayWeek(r.date)}${r.note?' · '+esc(r.note):''}</span></span>
       <button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}')">Tamamla</button>
     </div>`;}).join('');
   return `
@@ -2519,11 +2519,17 @@ function reminderChip(r){
   return `<button class="bill-chip ${r.done?'paid':'rem'}" onclick="toggleReminderDone('${r.id}')"
     title="${esc(r.title)} — ${r.done?'işareti kaldırmak':'tamamlandı işaretlemek'} için tıkla">🔔 ${r.time?r.time+' ':''}${esc(r.title)}${r.done?' ✓':''}</button>`;
 }
+/* Hatırlatma tarihi: gün adı ve hafta numarası ile (0. hafta = 21 Eylül 2026 Pazartesi) */
+function reminderDayWeek(ds){
+  const wd = WD_LONG[(new Date(ds+'T12:00').getDay()+6)%7];
+  const n = weekNo(ds);
+  return wd + (n!=null ? ` · ${n}. hafta` : ' · numarasız hafta');
+}
 function reminderWhen(r){
   if(!r.date) return 'Tarihsiz';
   const t = today();
-  const base = r.date===t ? 'Bugün' : fmtDate(r.date);
-  return base + (r.time ? ' · '+r.time : '');
+  const rel = r.date===t ? 'Bugün' : r.date===shiftDate(t,1) ? 'Yarın' : '';  // 'Gecikti' etiketi listede ayrıca yazılır
+  return (rel ? rel+' · ' : '') + fmtDate(r.date) + ' ' + reminderDayWeek(r.date) + (r.time ? ' · '+r.time : '');
 }
 function viewNotes(){
   const t = today();
