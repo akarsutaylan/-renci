@@ -361,13 +361,43 @@ body.sm .main::before{
 .bill-chip.wo{background:var(--green-soft);color:var(--green)}
 .bill-chip.hw{background:var(--amber-soft);color:var(--amber)}
 .bill-chip.exam{background:var(--rose-soft);color:var(--rose)}
+.bill-chip.rem{background:var(--blue-soft);color:var(--blue)}
+.rem-alert{border-radius:14px;padding:14px 16px;margin-bottom:18px;border:1.5px solid var(--amber);background:var(--amber-soft);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--amber) 14%,transparent);animation:remPulse 2.2s ease-in-out 3}
+.rem-alert.urgent{border-color:var(--red);background:var(--red-soft);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 14%,transparent)}
+@keyframes remPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
+.rem-alert h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--amber)}
+.rem-alert.urgent h3{color:var(--red)}
+.rem-alert-list{display:flex;flex-direction:column;gap:6px}
+.rem-alert-row{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.rem-alert-row .when{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--card);border:1px solid var(--line);white-space:nowrap}
+.rem-alert-row .when.today{color:var(--amber);border-color:var(--amber)}
+.rem-alert-row .when.late{color:var(--red);border-color:var(--red)}
+.rem-alert-row .when.tomorrow{color:var(--blue);border-color:var(--blue)}
+.rem-alert-row .t{font-weight:600;flex:1;min-width:120px}
+.rem-alert-row .m{color:var(--muted);font-size:.8rem}
+.memo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.memo{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--field-bg);display:flex;flex-direction:column;gap:6px;min-height:120px}
+.memo.pinned{border-color:var(--violet);box-shadow:0 0 0 2px var(--violet-soft)}
+.memo h4{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.memo p{font-size:.86rem;white-space:pre-wrap;line-height:1.45;flex:1;color:var(--text)}
+.memo .memo-foot{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px}
+.rem-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--field-bg)}
+.rem-item.done .t{opacity:.55;text-decoration:line-through}
+.rem-item.late{border-color:var(--red)}
+.rem-item input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.rem-item .t{font-weight:600;font-size:.92rem}
+.rem-item .m{font-size:.8rem;color:var(--muted);margin-top:2px}
 .cal-block.personal{cursor:pointer;box-shadow:none;opacity:.94;border:1.5px dashed rgba(255,255,255,.55)}
 .cal-block.personal:hover{opacity:1}
 .cal-block.personal:hover .cal-x{opacity:1}
 .cal-block.personal.wodone{opacity:.55}
 
 /* ---------- Yayın / paylaşım ---------- */
-body.sm #pubBtn{display:none}
+body.sm #cloudBtn{display:none}
+.sidebar-foot button.cloud-ok svg{color:var(--green)}
+.sidebar-foot button.cloud-err svg{color:var(--red)}
+.hw-by-student{font-size:.7rem;color:var(--muted);white-space:nowrap;margin-left:6px}
 .share-box{background:var(--field-bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
 .share-box .lbl{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .share-box .val{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86rem;word-break:break-all;line-height:1.45}
@@ -377,6 +407,23 @@ body.sm #pubBtn{display:none}
 .pub-status{font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:10px}
 .pub-log{font-size:.8rem;line-height:1.6;max-height:160px;overflow-y:auto;margin-top:10px;padding:8px 12px;background:var(--field-bg);border-radius:10px;border:1px solid var(--line)}
 .hint-text{font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:5px}
+.panel h3 svg,.btn svg,a.icon-btn svg{width:16px;height:16px;flex-shrink:0}
+a.icon-btn{text-decoration:none}
+.share-row a.btn-ghost{text-decoration:none}
+
+/* ---------- Potansiyel kazanç şeridi ---------- */
+.pot-strip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px}
+.pot-box{flex:0 0 auto;min-width:150px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field-bg)}
+.pot-box b{display:block;font-size:.8rem}
+.pot-box .r{display:block;font-size:.72rem;color:var(--muted);margin-top:1px}
+.pot-box .v{display:block;font-size:.95rem;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums}
+.pot-box.cur{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.wk-group{margin-bottom:14px}
+.wk-group:last-child{margin-bottom:0}
+.wk-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--field-bg);border-bottom:1px solid var(--line);font-size:.82rem}
+.wk-head b{font-size:.86rem}
+.wk-head .days{color:var(--muted)}
+.wk-head .tot{font-weight:700;font-variant-numeric:tabular-nums;margin-left:auto}
 
 /* ---------- Toast ---------- */
 #toast{
@@ -401,6 +448,9 @@ body.sm #pubBtn{display:none}
   .main{padding:20px 16px 50px}
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="app">
@@ -419,9 +469,9 @@ body.sm #pubBtn{display:none}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <span id="themeLabel">Koyu Tema</span>
       </button>
-      <button id="pubBtn" onclick="openPublishForm()" title="Öğrenci sayfalarını GitHub Pages'e yayınla">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span>Yayınla</span>
+      <button id="cloudBtn" onclick="openCloudForm()" title="Bulut bağlantısı (öğrenci sayfaları)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        <span id="cloudLabel">Bulut</span>
       </button>
       <button onclick="exportData()" title="Verileri yedekle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -461,8 +511,11 @@ function load(){
   try{
     const d = JSON.parse(localStorage.getItem(KEY));
     if(d && Array.isArray(d.students)){
-      d.notes = d.notes || []; d.schedule = d.schedule || []; d.bills = d.bills || [];
-      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || [];
+      d.schedule = d.schedule || []; d.bills = d.bills || [];
+      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || [];
+      // Eski "Notlar" bölümü kaldırıldı: notlar artık GitHub deposundan okunur; eski kayıtlar ve tarayıcı dosya deposu temizlenir
+      if(d.notes){ delete d.notes; try{ indexedDB.deleteDatabase('ogrenciTakipDosyalar'); }catch(e){} }
+      d.students.forEach(x=>{ delete x.driveFolder; });
       // Eski haftalık şablon bloklarını gerçek ders kayıtlarına dönüştür (tek seferlik)
       if(d.schedule.length){
         const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay()+6)%7));
@@ -480,21 +533,51 @@ function load(){
       }
       // Saati olmayan eski derslere varsayılan saat ata
       d.lessons.forEach(l=>{ if(l.start==null) l.start = 18*60; });
+      // Ödeme tarihi: derse bağlı eski ödeme kayıtlarından türet
+      d.lessons.forEach(l=>{ if(l.paid && !l.paidAt){ const pm = (d.payments||[]).find(p=>p.lessonId===l.id); l.paidAt = pm ? pm.date : l.date; } });
       return d;
     }
   }catch(e){}
-  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], notes:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[]};
+  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[]};
 }
-function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+const PANEL_AT_KEY = 'ogrenciTakipPanelAt';
+let _panelAt = +localStorage.getItem(PANEL_AT_KEY) || 0;
+if(!_panelAt && state.students.length){ _panelAt = 1; localStorage.setItem(PANEL_AT_KEY, '1'); } // eski veri: ilk girişte buluta yazılsın
+function save(){
+  _panelAt = Date.now(); localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
+  localStorage.setItem(KEY, JSON.stringify(state));
+  if(typeof scheduleSync==='function'){ scheduleSync(); watchTicks(); }
+}
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* ================= YARDIMCILAR ================= */
 const fmtTL = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n||0);
 const fmtTLd = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(n||0);
 const fmtDate = d => d ? new Date(d+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'}) : '—';
-const today = () => new Date().toISOString().slice(0,10);
+const localDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const today = () => localDate(new Date());
 const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const byDateDesc = (a,b) => (b.date||'').localeCompare(a.date||'');
+/* Göreli zaman: "az önce", "3 saat önce", "dün", "5 gün önce", sonrası tarih */
+function fmtAgo(ts){
+  if(!ts) return '';
+  const diff = Date.now() - ts, m = Math.floor(diff/60000), h = Math.floor(m/60), d = Math.floor(h/24);
+  if(m < 1) return 'az önce';
+  if(m < 60) return `${m} dk önce`;
+  if(h < 24) return `${h} saat önce`;
+  if(d === 1) return 'dün';
+  if(d < 14) return `${d} gün önce`;
+  return new Date(ts).toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+}
+/* Öğrencinin sayfasına son girişi (öğrenci sayfası açılınca tik belgesine yazılır) */
+function lastSeenHtml(s){
+  const ts = +s.lastSeen || 0;
+  if(!ts) return '<span style="color:var(--muted);font-weight:500">hiç girmedi</span>';
+  const days = (Date.now()-ts)/86400000;
+  const col = days < 3 ? 'var(--green)' : days < 7 ? 'var(--amber)' : 'var(--red)';
+  const full = new Date(ts).toLocaleString('tr-TR',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+  return `<span style="color:${col}" title="${esc(full)}">${fmtAgo(ts)}</span>`;
+}
 
 function student(id){ return state.students.find(s=>s.id===id); }
 function studentName(id){ const s=student(id); return s ? s.name : 'Silinmiş öğrenci'; }
@@ -511,12 +594,46 @@ function subjectChip(name){
   const s = SUBJECTS.find(x=>x.n===name) || {bg:'var(--accent-soft)',fg:'var(--accent)'};
   return `<span class="chip" style="background:${s.bg};color:${s.fg}">${esc(name)}</span>`;
 }
-const isBillable = l => l.status !== 'ertelendi'; // ertelenen ders tahakkuk etmez
-function totalFees(sid){ return state.lessons.filter(l=>l.sid===sid && isBillable(l)).reduce((t,l)=>t+(+l.fee||0),0); }
-function totalPaid(sid){ return state.payments.filter(p=>p.sid===sid).reduce((t,p)=>t+(+p.amount||0),0); }
-function totalHours(sid){ return state.lessons.filter(l=>l.sid===sid && isBillable(l)).reduce((t,l)=>t+(+l.hours||0),0); }
-function debt(sid){ return totalFees(sid) - totalPaid(sid); } // >0 ise öğrenci borçlu
-function debtBadge(v){
+/* Ders sayımı: ertelenmiş (eski kayıt) dersler hiçbir hesaba girmez */
+const isActive   = l => l.status !== 'ertelendi' && !!l.date;
+const isBillable = l => isActive(l) && l.date <= today();   // işlenmiş ders
+const isPlanned  = l => isActive(l) && l.date > today();    // ileri tarihli ders
+const sumFee = list => list.reduce((t,l)=>t+(+l.fee||0),0);
+const forSid = (list, sid) => sid ? list.filter(x=>x.sid===sid) : list;
+
+/* Hafta numaralandırma: 21 Eylül 2026 Pazartesi = 0. hafta */
+const WEEK_ANCHOR = '2026-09-21';
+function mondayOf(ds){ const d = new Date(ds+'T12:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localDate(d); }
+function weekNo(ds){ const n = Math.round((new Date(mondayOf(ds)+'T12:00') - new Date(WEEK_ANCHOR+'T12:00')) / 6048e5); return n >= 0 ? n : null; }
+function weekRangeLabel(mon){
+  const a = new Date(mon+'T12:00'), b = new Date(shiftDate(mon,6)+'T12:00');
+  const m = d => d.toLocaleDateString('tr-TR',{month:'short'});
+  return a.getMonth()===b.getMonth() ? `${a.getDate()}–${b.getDate()} ${m(a)}` : `${a.getDate()} ${m(a)} – ${b.getDate()} ${m(b)}`;
+}
+function weekTitle(mon){ const n = weekNo(mon); return (n!=null ? `${n}. hafta · ` : '') + weekRangeLabel(mon); }
+function weekRange(){ const mon = mondayOf(today()); return [mon, shiftDate(mon,6)]; }
+const inWeek = ds => { const [a,b] = weekRange(); return ds >= a && ds <= b; };
+
+/* Öğrenci (sid) ya da tüm öğrenciler (sid=null) için tutarlar */
+function unpaidLessons(sid){ return forSid(state.lessons, sid).filter(l=>isBillable(l) && !l.paid).sort((a,b)=>a.date.localeCompare(b.date)); }
+function unpaidTotal(sid){ return sumFee(unpaidLessons(sid)); }
+function weekLessons(sid){ return forSid(state.lessons, sid).filter(l=>isActive(l) && inWeek(l.date)); }
+function weekExpected(sid){ return sumFee(weekLessons(sid)); }
+function weekCollected(sid){ return sumFee(forSid(state.lessons, sid).filter(l=>l.paid && l.paidAt && inWeek(l.paidAt))); }
+function collectedInMonth(sid, ym){ return sumFee(forSid(state.lessons, sid).filter(l=>l.paid && (l.paidAt||'').startsWith(ym))); }
+function plannedLessons(sid){ return forSid(state.lessons, sid).filter(isPlanned); }
+function totalHours(sid){ return forSid(state.lessons, sid).filter(isBillable).reduce((t,l)=>t+(+l.hours||0),0); }
+function debt(sid){ return unpaidTotal(sid); } // >0 ise ödenmemiş ders var
+/* Haftalık potansiyel: yalnızca girilmiş dersler, bu hafta ve sonrası */
+function potentialWeeks(sid){
+  const cur = mondayOf(today()); const map = {};
+  forSid(state.lessons, sid).filter(l=>isActive(l) && mondayOf(l.date) >= cur).forEach(l=>{
+    const m = mondayOf(l.date); const w = map[m] = map[m] || {mon:m, count:0, fee:0};
+    w.count++; w.fee += +l.fee||0;
+  });
+  return Object.values(map).sort((a,b)=>a.mon.localeCompare(b.mon));
+}
+function debtBadge(v){ // v = ödenmemiş toplam
   if(v > 0)  return `<span class="chip badge-neg">${fmtTL(v)} borç</span>`;
   if(v < 0)  return `<span class="chip badge-pos">${fmtTL(-v)} avans</span>`;
   return `<span class="chip badge-zero">Ödendi</span>`;
@@ -544,11 +661,11 @@ const ICONS = {
   payments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
   homework:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   exams:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-  notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
   schedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
   bills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>',
   myschedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12.5V17c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.5"/></svg>',
   workout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><line x1="6.5" y1="12" x2="17.5" y2="12"/></svg>',
+  notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>',
   reading:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
 };
 const VIEWS = [
@@ -559,11 +676,11 @@ const VIEWS = [
   {id:'payments',  label:'Ödemeler'},
   {id:'homework',  label:'Ödevler'},
   {id:'exams',     label:'Denemeler'},
-  {id:'notes',     label:'Notlar'},
   {id:'myschedule',label:'Ders Programım', personal:true},
   {id:'workout',   label:'Spor Programım', personal:true},
   {id:'reading',   label:'Okuma Listem',   personal:true},
   {id:'bills',     label:'Ödeme Planım',   personal:true},
+  {id:'notes',     label:'Hatırlatma & Notlar', personal:true},
 ];
 /* Kişisel bölümler: Öğrenci Modu açıkken menüde ve içerikte hiç oluşturulmaz */
 const PERSONAL_VIEWS = VIEWS.filter(v=>v.personal).map(v=>v.id);
@@ -616,12 +733,12 @@ function render(){
   else if(route.view==='payments')  main.innerHTML = viewPayments();
   else if(route.view==='homework')  main.innerHTML = viewHomework();
   else if(route.view==='exams')     main.innerHTML = viewExams();
-  else if(route.view==='notes')     main.innerHTML = viewNotes();
   else if(route.view==='schedule')  main.innerHTML = viewSchedule();
   else if(route.view==='bills')     main.innerHTML = viewBills();
   else if(route.view==='myschedule')main.innerHTML = viewMySchedule();
   else if(route.view==='workout')   main.innerHTML = viewWorkout();
   else if(route.view==='reading')   main.innerHTML = viewReading();
+  else if(route.view==='notes')     main.innerHTML = viewNotes();
 }
 
 /* ================= GENEL BAKIŞ ================= */
@@ -629,7 +746,7 @@ function viewDashboard(){
   const now = new Date(), ym = now.toISOString().slice(0,7);
   const monthLessons = state.lessons.filter(l=>(l.date||'').startsWith(ym) && isBillable(l));
   const monthHours = monthLessons.reduce((t,l)=>t+(+l.hours||0),0);
-  const monthIncome = state.payments.filter(p=>(p.date||'').startsWith(ym)).reduce((t,p)=>t+(+p.amount||0),0);
+  const monthIncome = collectedInMonth(null, ym);
   const totalDebt = state.students.reduce((t,s)=>t+Math.max(0,debt(s.id)),0);
   const pendingHw = state.homeworks.filter(h=>h.status==='bekliyor');
   const monthName = now.toLocaleDateString('tr-TR',{month:'long'});
@@ -659,12 +776,12 @@ function viewDashboard(){
     </div>` : `
     <div class="card stat">
       <div class="label">${monthName} Tahsilat</div><div class="value">${fmtTL(monthIncome)}</div>
-      <div class="hint">bu ay alınan ödeme</div>
+      <div class="hint">bu ay ödemesi alınan dersler</div>
       <div class="stat-ico" style="background:var(--green-soft);color:var(--green)">${ICONS.payments}</div>
     </div>
     <div class="card stat">
-      <div class="label">Toplam Alacak</div><div class="value" style="color:${totalDebt>0?'var(--red)':'var(--green)'}">${fmtTL(totalDebt)}</div>
-      <div class="hint">bekleyen bakiye</div>
+      <div class="label">Toplam Ödenmemiş</div><div class="value" style="color:${totalDebt>0?'var(--red)':'var(--green)'}">${fmtTL(totalDebt)}</div>
+      <div class="hint">${unpaidLessons(null).length} ders ödeme bekliyor</div>
       <div class="stat-ico" style="background:var(--red-soft);color:var(--red)">${ICONS.exams}</div>
     </div>`}
   </div>`;
@@ -672,21 +789,20 @@ function viewDashboard(){
   const postponed = state.lessons.filter(l=>l.status==='ertelendi').sort(byDateDesc);
   const telafiPanel = postponed.length ? `
   <div class="card panel telafi-panel">
-    <h3>⏳ Telafi Bekleyen Dersler <span class="chip hw-bekliyor">${postponed.length} ders</span></h3>
+    <h3>⏳ Tarih Bekleyen Eski Ertelemeler <span class="chip hw-bekliyor">${postponed.length} ders</span></h3>
     <div class="table-wrap"><table><tbody>
     ${postponed.map(l=>`<tr>
       <td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>
       <td>${subjectChip(l.subject)}</td>
       <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${fmtDate(l.date)} · ${l.hours} sa</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="openLessonForm('${l.id}')">Yeniden Planla</button>
-        <button class="btn btn-primary btn-sm" onclick="toggleLessonPostponed('${l.id}')">Telafi Edildi ✓</button>
+        <button class="btn btn-primary btn-sm" onclick="openRescheduleForm('${l.id}')">Telafi · Yeni Tarih</button>
       </td>
     </tr>`).join('')}
     </tbody></table></div>
-    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">Dersi yeni tarihine taşı (takvimde sürükle ya da "Yeniden Planla"), ders yapılınca "Telafi Edildi" ile işaretle${studentMode?'':' — ücret o zaman tahakkuk eder'}.</p>
+    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">Bu dersler eski "ertelendi" kaydı taşıyor. Yeni tarih verince normal ders olarak takvime ve haftalık potansiyele geçer.</p>
   </div>` : '';
-  const recentLessons = [...state.lessons].sort(byDateDesc).slice(0,6);
+  const recentLessons = state.lessons.filter(l=>(l.date||'') <= today()).sort(byDateDesc).slice(0,6);
   const lessonsPanel = `
   <div class="card panel">
     <h3>Son Dersler <button class="more" onclick="go('lessons')">Tümü →</button></h3>
@@ -715,11 +831,11 @@ function viewDashboard(){
   const balances = state.students.map(s=>({s, d:debt(s.id)})).sort((a,b)=>b.d-a.d);
   const balancePanel = studentMode ? '' : `
   <div class="card panel">
-    <h3>Bakiye Durumu</h3>
+    <h3>Ödenmemiş Dersler <span class="chip badge-zero" title="Yalnızca işlenmiş dersler sayılır">bugüne kadar</span></h3>
     ${balances.length ? `<div class="table-wrap"><table><tbody>
       ${balances.map(({s,d})=>`<tr onclick="go('studentDetail','${s.id}')" style="cursor:pointer">
         <td class="student-cell">${avatarHtml(s.id,'sm')}${esc(s.name)}</td>
-        <td class="num" style="color:var(--muted)">${totalHours(s.id)} sa</td>
+        <td style="color:var(--muted);font-size:.82rem;white-space:nowrap">bu hafta ${fmtTL(weekExpected(s.id))}${weekCollected(s.id)?` · <span style="color:var(--green)">alınan ${fmtTL(weekCollected(s.id))}</span>`:''}</td>
         <td style="text-align:right">${debtBadge(d)}</td>
       </tr>`).join('')}
     </tbody></table></div>` : emptyState('👥','Öğrenci yok','Öğrenciler sekmesinden ilk öğrencini ekle.')}
@@ -738,18 +854,35 @@ function viewDashboard(){
     </tbody></table></div>` : emptyState('📈','Henüz deneme yok','Deneme sonuçlarını Denemeler sekmesinden gir.')}
   </div>`;
 
+  const recentStudies = [...(state.studies||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.at||0)-(a.at||0)).slice(0,6);
+  const studiesPanel = recentStudies.length ? `
+  <div class="card panel" style="margin-top:18px">
+    <h3>📖 Öğrencilerin Son Çalışmaları</h3>
+    <div class="table-wrap"><table><tbody>
+      ${recentStudies.map(x=>`<tr onclick="go('studentDetail','${x.sid}'); setSubtab('calismalar')" style="cursor:pointer">
+        <td class="student-cell">${avatarHtml(x.sid,'sm')}${esc(studentName(x.sid))}</td>
+        <td>${subjectChip(x.subject)}</td>
+        <td class="num">${x.hours ? (+x.hours).toLocaleString('tr-TR')+' sa' : ''}</td>
+        <td style="color:var(--muted);font-size:.85rem;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.topic||'')}</td>
+        <td style="color:var(--muted);font-size:.82rem;white-space:nowrap">${fmtDate(x.date)}</td>
+      </tr>`).join('')}
+    </tbody></table></div>
+  </div>` : '';
+
   return `
   <div class="topbar">
     <div><h1>Genel Bakış</h1><div class="sub">${now.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'})}</div></div>
     <button class="btn btn-primary" onclick="openLessonForm()">＋ Ders Ekle</button>
   </div>
+  ${dashboardReminderAlert()}
   ${stats}
   ${dashboardPersonalPanel()}
   ${dashboardBillsPanel(ym, now.getDate())}
   ${telafiPanel}
   <div class="grid-2">${lessonsPanel}${hwPanel}</div>
   <div style="height:18px"></div>
-  <div class="grid-2">${balancePanel}${examsPanel}</div>`;
+  <div class="grid-2">${balancePanel}${examsPanel}</div>
+  ${studiesPanel}`;
 }
 
 /* ================= ÖĞRENCİLER ================= */
@@ -770,8 +903,10 @@ function viewStudents(){
         <div>Ders saati<b>${totalHours(s.id)} sa</b></div>
         ${studentMode ? `<div>Bekleyen ödev<b>${state.homeworks.filter(h=>h.sid===s.id&&h.status==='bekliyor').length}</b></div>`
           : `<div>Saat ücreti<b>${fmtTL(s.rate)}</b></div>
-        <div>Toplam ödenen<b>${fmtTL(totalPaid(s.id))}</b></div>`}
+        <div>Ödenmemiş<b style="color:${d>0?'var(--red)':'var(--green)'}">${fmtTL(d)}${d>0?` · ${unpaidLessons(s.id).length} ders`:''}</b></div>`}
+        ${!studentMode && plannedLessons(s.id).length ? `<div>Planlı<b>${plannedLessons(s.id).length} ders · ${fmtTL(sumFee(plannedLessons(s.id)))}</b></div>` : ''}
         <div>Son deneme<b>${lastExamNet(s.id)}</b></div>
+        <div>Son giriş<b>${lastSeenHtml(s)}</b></div>
       </div>
     </div>`;
   }).join('');
@@ -796,23 +931,25 @@ function viewStudentDetail(){
   const d = debt(s.id);
   const tabs = [
     {id:'dersler',  label:'Dersler'},
-    {id:'odemeler', label:'Ödemeler'},
     {id:'odevler',  label:'Ödevler'},
     {id:'denemeler',label:'Denemeler'},
+    {id:'calismalar',label:'Çalışmalar'},
+    {id:'notlar',   label:'Notlar'},
   ].filter(t=>!(studentMode && t.id==='odemeler'));
   let body = '';
   if(route.subtab==='dersler'){
     const list = state.lessons.filter(l=>l.sid===s.id).sort(byDateDesc);
     body = `<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openLessonForm(null,'${s.id}')">＋ Ders Ekle</button></div>
       <div class="card">${lessonsTable(list,false)}</div>`;
-  } else if(route.subtab==='odemeler'){
-    const list = state.payments.filter(p=>p.sid===s.id).sort(byDateDesc);
-    body = `<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openPaymentForm(null,'${s.id}')">＋ Ödeme Ekle</button></div>
-      <div class="card">${paymentsTable(list,false)}</div>`;
   } else if(route.subtab==='odevler'){
     const list = state.homeworks.filter(h=>h.sid===s.id).sort(byHwOrder);
     body = `<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openHomeworkForm(null,'${s.id}')">＋ Ödev Ekle</button></div>
       <div class="card">${homeworkTable(list,false)}</div>`;
+  } else if(route.subtab==='calismalar'){
+    const list = (state.studies||[]).filter(x=>x.sid===s.id).sort(byDateDesc);
+    body = `${studyWeekSummary(s.id)}<div class="card">${studiesTable(list,false)}</div>`;
+  } else if(route.subtab==='notlar'){
+    body = studentNotesTab(s);
   } else {
     const ders = route.filter.ders || '';
     let list = state.exams.filter(e=>e.sid===s.id).sort(byDateDesc);
@@ -832,7 +969,7 @@ function viewStudentDetail(){
     <div class="avatar" style="background:${avatarColor(s.id)}">${esc(initials(s.name))}</div>
     <div>
       <h2>${esc(s.name)}</h2>
-      <div class="sub">${esc(s.grade||'')}${s.phone?' · '+esc(s.phone):''}${studentMode?'':' · Saat ücreti '+fmtTL(s.rate)}</div>
+      <div class="sub">${esc(s.grade||'')}${s.phone?' · '+esc(s.phone):''}${studentMode?'':' · Saat ücreti '+fmtTL(s.rate)} · Son giriş: ${lastSeenHtml(s)}</div>
     </div>
     <div class="spacer"></div>
     ${studentMode?'':`<button class="btn btn-ghost btn-sm" onclick="openShareForm('${s.id}')">🔗 Öğrenci Sayfası</button>`}
@@ -845,10 +982,10 @@ function viewStudentDetail(){
     <div class="card stat"><div class="label">Deneme</div><div class="value">${state.exams.filter(e=>e.sid===s.id).length}</div><div class="hint">kayıtlı deneme</div></div>
     <div class="card stat"><div class="label">Bekleyen Ödev</div><div class="value">${state.homeworks.filter(h=>h.sid===s.id&&h.status==='bekliyor').length}</div><div class="hint">teslim bekliyor</div></div>
     <div class="card stat"><div class="label">Son Deneme</div><div class="value">${lastExamNet(s.id)}</div><div class="hint">en güncel sonuç</div></div>` : `
-    <div class="card stat"><div class="label">Tahakkuk</div><div class="value">${fmtTL(totalFees(s.id))}</div><div class="hint">toplam ders ücreti</div></div>
-    <div class="card stat"><div class="label">Ödenen</div><div class="value">${fmtTL(totalPaid(s.id))}</div><div class="hint">alınan ödemeler</div></div>
-    <div class="card stat"><div class="label">Bakiye</div><div class="value" style="color:${d>0?'var(--red)':'var(--green)'}">${fmtTL(Math.abs(d))}</div><div class="hint">${d>0?'öğrenci borçlu':d<0?'avans mevcut':'hesap kapalı'}</div></div>`}
+    <div class="card stat"><div class="label">Bu Hafta</div><div class="value">${fmtTL(weekExpected(s.id))}</div><div class="hint">${weekLessons(s.id).length} ders · ${fmtTL(weekCollected(s.id))} alındı</div></div>
+    <div class="card stat"><div class="label">Ödenmemiş</div><div class="value" style="color:${d>0?'var(--red)':'var(--green)'}">${fmtTL(d)}</div><div class="hint">${d>0?`${unpaidLessons(s.id).length} ders · en eskisi ${fmtDate(unpaidLessons(s.id)[0].date)}`:'ödeme bekleyen ders yok'}</div></div>`}
   </div>
+  ${studentMode ? '' : potentialStrip(s.id) + unpaidPanel(s.id, false)}
   ${s.note?`<div class="card panel" style="margin-bottom:4px"><h3>Not</h3><p style="font-size:.9rem;color:var(--muted)">${esc(s.note)}</p></div>`:''}
   <div class="subtabs">${tabs.map(t=>`<button class="${route.subtab===t.id?'active':''}" onclick="setSubtab('${t.id}')">${t.label}</button>`).join('')}</div>
   ${body}`;
@@ -862,37 +999,60 @@ function lessonsTable(list, showStudent=true){
   <tbody>${list.map(l=>`<tr>
     <td style="white-space:nowrap">${fmtDate(l.date)}${l.start!=null?`<span class="row-note">${fmtClock(l.start)}</span>`:''}</td>
     ${showStudent?`<td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>`:''}
-    <td style="white-space:nowrap">${subjectChip(l.subject)}${l.status==='ertelendi'?' <span class="chip hw-bekliyor">⏳ Ertelendi</span>':''}</td>
+    <td style="white-space:nowrap">${subjectChip(l.subject)}${l.status==='ertelendi'?' <span class="chip hw-bekliyor">⏳ Ertelendi</span>':isPlanned(l)?' <span class="chip badge-zero" title="Ders günü gelince tahakkuk eder">Planlı</span>':''}</td>
     <td class="num">${l.hours} sa</td>
     ${studentMode?'':`<td class="num"${l.status==='ertelendi'?' style="text-decoration:line-through;opacity:.55"':''}>${fmtTL(l.fee)}</td>
     <td>${l.status==='ertelendi'
       ? '<span style="color:var(--muted);font-size:.8rem">tahakkuk yok</span>'
       : l.paid
       ? `<button class="pay-btn pay-yes" onclick="toggleLessonPaid('${l.id}')" title="Ödemeyi geri almak için tıkla">Ödendi ✓</button>`
+      : isPlanned(l)
+      ? `<button class="pay-btn" style="background:var(--field-bg);color:var(--muted)" onclick="toggleLessonPaid('${l.id}')" title="Henüz tahakkuk etmedi; istersen peşin ödeme al">Peşin Al</button>`
       : `<button class="pay-btn pay-no" onclick="toggleLessonPaid('${l.id}')" title="Ders ücretini ödeme olarak kaydet">₺ Ödeme Al</button>`}</td>`}
     <td style="color:var(--muted);font-size:.85rem">${esc(l.topic||'')}</td>
     <td style="text-align:right;white-space:nowrap">
-      <button class="icon-btn" ${l.status==='ertelendi'?'style="color:var(--amber)"':''} onclick="toggleLessonPostponed('${l.id}')" title="${l.status==='ertelendi'?'Telafi edildi olarak işaretle':'Dersi ertele'}">${SVG_CLOCK}</button>
+      <button class="icon-btn" ${l.status==='ertelendi'?'style="color:var(--amber)"':''} onclick="openRescheduleForm('${l.id}')" title="Telafi · dersi yeni tarihe taşı">${SVG_CLOCK}</button>
       <button class="icon-btn" onclick="openLessonForm('${l.id}')" title="Düzenle">${SVG_EDIT}</button>
       <button class="icon-btn danger" onclick="delItem('lessons','${l.id}')" title="Sil">${SVG_DEL}</button>
     </td>
   </tr>`).join('')}</tbody></table></div>`;
 }
-function paymentsTable(list, showStudent=true){
-  if(!list.length) return emptyState('💳','Ödeme kaydı yok','Alınan ödemeleri buraya işle; bakiye otomatik güncellenir.');
-  return `<div class="table-wrap"><table>
-  <thead><tr><th>Tarih</th>${showStudent?'<th>Öğrenci</th>':''}<th>Tutar</th><th>Yöntem</th><th>Not</th><th></th></tr></thead>
-  <tbody>${list.map(p=>`<tr>
-    <td style="white-space:nowrap">${fmtDate(p.date)}</td>
-    ${showStudent?`<td class="student-cell">${avatarHtml(p.sid,'sm')}${esc(studentName(p.sid))}</td>`:''}
-    <td class="num" style="color:var(--green)">${fmtTL(p.amount)}</td>
-    <td style="color:var(--muted);font-size:.85rem">${esc(p.method||'')}</td>
-    <td style="color:var(--muted);font-size:.85rem">${esc(p.note||'')}</td>
-    <td style="text-align:right;white-space:nowrap">
-      <button class="icon-btn" onclick="openPaymentForm('${p.id}')" title="Düzenle">${SVG_EDIT}</button>
-      <button class="icon-btn danger" onclick="delItem('payments','${p.id}')" title="Sil">${SVG_DEL}</button>
-    </td>
-  </tr>`).join('')}</tbody></table></div>`;
+/* Potansiyel kazanç şeridi: bu hafta ve sonrası, yalnızca girilmiş dersler */
+function potentialStrip(sid){
+  const weeks = potentialWeeks(sid); if(!weeks.length) return '';
+  const cur = mondayOf(today());
+  return `<div class="card panel" style="margin-bottom:18px">
+    <h3>Potansiyel Kazanç <span class="chip badge-zero">${weeks.length} hafta · ${fmtTL(weeks.reduce((t,w)=>t+w.fee,0))}</span></h3>
+    <div class="pot-strip">${weeks.map(w=>{ const n = weekNo(w.mon); return `<div class="pot-box ${w.mon===cur?'cur':''}">
+      ${n!=null ? `<b>${n}. hafta</b><span class="r">${weekRangeLabel(w.mon)}</span>` : `<b>${weekRangeLabel(w.mon)}</b><span class="r">numarasız</span>`}
+      <span class="v">${w.count} ders · ${fmtTL(w.fee)}</span></div>`; }).join('')}</div>
+  </div>`;
+}
+/* Ödenmemiş dersler: haftaya göre gruplu, en yeni hafta üstte */
+function unpaidPanel(sid, showStudent){
+  const list = unpaidLessons(sid);
+  const groups = {};
+  list.forEach(l=>{ const m = mondayOf(l.date); (groups[m] = groups[m] || []).push(l); });
+  const weeks = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const dayLbl = ds => new Date(ds+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',weekday:'short'}).replace(/\s+/,' ');
+  const body = weeks.length ? weeks.map(mon=>{
+    const ls = groups[mon].sort((a,b)=>a.date.localeCompare(b.date) || (a.start||0)-(b.start||0));
+    const days = [...new Set(ls.map(l=>l.date))].map(dayLbl).join(', ');
+    return `<div class="wk-group">
+      <div class="wk-head"><b>${weekTitle(mon)}</b><span class="days">${days}</span><span class="tot">${fmtTL(sumFee(ls))}</span></div>
+      <div class="table-wrap"><table><tbody>${ls.map(l=>`<tr>
+        <td style="white-space:nowrap">${fmtDate(l.date)}${l.start!=null?`<span class="row-note">${fmtClock(l.start)}</span>`:''}</td>
+        ${showStudent?`<td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>`:''}
+        <td>${subjectChip(l.subject)}</td>
+        <td class="num" style="color:var(--muted)">${l.hours} sa</td>
+        <td class="num">${fmtTL(l.fee)}</td>
+        <td style="text-align:right"><button class="pay-btn pay-no" onclick="toggleLessonPaid('${l.id}')">₺ Ödeme Al</button></td>
+      </tr>`).join('')}</tbody></table></div>
+    </div>`; }).join('') : emptyState('✅','Ödeme bekleyen ders yok','İşlenen tüm derslerin ödemesi alınmış.');
+  return `<div class="card panel" style="margin-bottom:18px;padding-bottom:${weeks.length?'8px':'20px'}">
+    <h3>Ödenmemiş Dersler ${list.length?`<span class="chip badge-neg">${list.length} ders · ${fmtTL(sumFee(list))}</span>`:''}</h3>
+    ${body}
+  </div>`;
 }
 const HW_ORDER = {bekliyor:0, eksik:1, yapildi:2};
 const byHwOrder = (a,b) => (HW_ORDER[a.status]-HW_ORDER[b.status]) || (a.due||'').localeCompare(b.due||'');
@@ -910,7 +1070,7 @@ function homeworkTable(list, showStudent=true){
         <option value="bekliyor" ${h.status==='bekliyor'?'selected':''}>Bekliyor</option>
         <option value="yapildi" ${h.status==='yapildi'?'selected':''}>Yapıldı ✓</option>
         <option value="eksik" ${h.status==='eksik'?'selected':''}>Eksik</option>
-      </select>
+      </select>${h.byStudent?'<span class="hw-by-student" title="Öğrenci kendi sayfasından işaretledi">👤 öğrenci</span>':''}
     </td>
     <td style="text-align:right;white-space:nowrap">
       <button class="icon-btn" onclick="openHomeworkForm('${h.id}')" title="Düzenle">${SVG_EDIT}</button>
@@ -926,7 +1086,7 @@ function examsTable(list, showStudent=true){
     <td style="white-space:nowrap">${fmtDate(e.date)}</td>
     ${showStudent?`<td class="student-cell">${avatarHtml(e.sid,'sm')}${esc(studentName(e.sid))}</td>`:''}
     <td style="font-size:.88rem">${esc(e.name||'')}</td>
-    <td style="white-space:nowrap">${examKindLabel(e)}</td>
+    <td style="white-space:nowrap">${examKindLabel(e)}${e.byStudent?'<span class="hw-by-student" title="Öğrenci kendi sayfasından girdi">👤 öğrenci</span>':''}</td>
     <td class="num">${(+e.net).toLocaleString('tr-TR')}${e.kind==='brans'?' <span style="color:var(--muted);font-weight:400">/ 40</span>':''}
       ${e.nets?`<span class="row-note">${netBreakdown(e)}</span>`:''}
       ${e.kind==='brans'&&e.sure?`<span class="row-note">⏱ ${e.sure} dk</span>`:''}
@@ -937,6 +1097,29 @@ function examsTable(list, showStudent=true){
       <button class="icon-btn danger" onclick="delItem('exams','${e.id}')" title="Sil">${SVG_DEL}</button>
     </td>
   </tr>`).join('')}</tbody></table></div>`;
+}
+function studiesTable(list, showStudent=true){
+  if(!list.length) return emptyState('📖','Çalışma kaydı yok','Öğrenci kendi sayfasındaki "Çalışmalarım" sekmesinden girdikçe burada görünür.');
+  return `<div class="table-wrap"><table>
+  <thead><tr><th>Tarih</th>${showStudent?'<th>Öğrenci</th>':''}<th>Ders</th><th>Süre</th><th>Ne çalıştı</th><th></th></tr></thead>
+  <tbody>${list.map(x=>`<tr>
+    <td style="white-space:nowrap">${fmtDate(x.date)}</td>
+    ${showStudent?`<td class="student-cell">${avatarHtml(x.sid,'sm')}${esc(studentName(x.sid))}</td>`:''}
+    <td>${subjectChip(x.subject)}</td>
+    <td class="num">${x.hours ? (+x.hours).toLocaleString('tr-TR')+' sa' : '<span style="color:var(--muted);font-weight:400">—</span>'}</td>
+    <td style="font-size:.88rem;white-space:pre-line">${esc(x.topic||'')}</td>
+    <td style="text-align:right;white-space:nowrap"><button class="icon-btn danger" onclick="delItem('studies','${x.id}')" title="Sil">${SVG_DEL}</button></td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+function studyWeekSummary(sid){
+  const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay()+6)%7));
+  const from = `${mon.getFullYear()}-${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`;
+  const wk = (state.studies||[]).filter(x=>x.sid===sid && x.date >= from);
+  if(!wk.length) return '';
+  const bySub = {}; let tot = 0;
+  wk.forEach(x=>{ const h = +x.hours||0; tot += h; bySub[x.subject] = (bySub[x.subject]||0) + h; });
+  const chips = Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${esc(k)} · ${v.toLocaleString('tr-TR')} sa</span>`).join(' ');
+  return `<div class="card panel" style="margin-bottom:16px"><h3>Bu Hafta <span class="chip badge-zero">${wk.length} kayıt · ${tot.toLocaleString('tr-TR')} sa</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div></div>`;
 }
 const SVG_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>';
 const SVG_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
@@ -967,16 +1150,19 @@ function viewLessons(){
   <div class="card">${lessonsTable(list,true)}</div>`;
 }
 function viewPayments(){
-  let list = [...state.payments].sort(byDateDesc);
-  if(route.filter.sid) list = list.filter(p=>p.sid===route.filter.sid);
-  const tot = list.reduce((t,p)=>t+(+p.amount||0),0);
+  const exp = weekExpected(null), col = weekCollected(null), unpaid = unpaidTotal(null);
+  const [wa, wb] = weekRange();
   return `
   <div class="topbar">
-    <div><h1>Ödemeler</h1><div class="sub">${list.length} kayıt · toplam ${fmtTL(tot)}</div></div>
-    <button class="btn btn-primary" onclick="openPaymentForm()">＋ Ödeme Ekle</button>
+    <div><h1>Ödemeler</h1><div class="sub">${weekTitle(wa)} · ödeme işareti yalnızca ders satırındaki "Ödeme Al" ile konur</div></div>
   </div>
-  ${filterBar()}
-  <div class="card">${paymentsTable(list,true)}</div>`;
+  <div class="stat-grid">
+    <div class="card stat"><div class="label">Bu Hafta Beklenen</div><div class="value">${fmtTL(exp)}</div><div class="hint">${weekLessons(null).length} ders · ${fmtDate(wa)} – ${fmtDate(wb)}</div></div>
+    <div class="card stat"><div class="label">Bu Hafta Alınan</div><div class="value" style="color:var(--green)">${fmtTL(col)}</div><div class="hint">bu hafta ödemesi alınan dersler</div></div>
+    <div class="card stat"><div class="label">Toplam Ödenmemiş</div><div class="value" style="color:${unpaid>0?'var(--red)':'var(--green)'}">${fmtTL(unpaid)}</div><div class="hint">${unpaidLessons(null).length} ders · ${state.students.filter(s=>unpaidTotal(s.id)>0).length} öğrenci</div></div>
+  </div>
+  ${potentialStrip(null)}
+  ${unpaidPanel(null, true)}`;
 }
 function viewHomework(){
   let list = [...state.homeworks].sort(byHwOrder);
@@ -1063,6 +1249,7 @@ function deleteStudent(id){
   state.payments = state.payments.filter(x=>x.sid!==id);
   state.homeworks = state.homeworks.filter(x=>x.sid!==id);
   state.exams = state.exams.filter(x=>x.sid!==id);
+  state.studies = (state.studies||[]).filter(x=>x.sid!==id);
   save(); toast('Öğrenci silindi'); go('students');
 }
 
@@ -1107,36 +1294,6 @@ function saveLesson(id){
   save(); closeModal(); render();
 }
 
-function openPaymentForm(id, sid){
-  if(!needStudent()) return;
-  const p = id ? state.payments.find(x=>x.id===id) : {};
-  const selSid = p.sid || sid || route.filter.sid || state.students[0].id;
-  const s = student(selSid);
-  openModal(`
-  <h3>${id?'Ödemeyi Düzenle':'Ödeme Ekle'}</h3>
-  <div class="form-grid">
-    <div class="field full"><label>Öğrenci</label><select id="f_sid">${studentOptions(selSid)}</select></div>
-    <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${p.date||today()}"></div>
-    <div class="field"><label>Tutar (₺)</label><input id="f_amount" type="number" min="0" step="any" value="${p.amount??(s?Math.max(0,debt(s.id)):'')}" placeholder="0"></div>
-    <div class="field"><label>Yöntem</label><select id="f_method">
-      ${['Nakit','Havale / EFT','Kredi Kartı','Diğer'].map(m=>`<option ${p.method===m?'selected':''}>${m}</option>`).join('')}
-    </select></div>
-    <div class="field"><label>Not</label><input id="f_pnote" value="${esc(p.note||'')}" placeholder="Örn. Mayıs ayı"></div>
-  </div>
-  <div class="modal-actions">
-    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
-    <button class="btn btn-primary" onclick="savePayment('${id||''}')">Kaydet</button>
-  </div>`);
-}
-function savePayment(id){
-  const amount = parseFloat(fv('f_amount'));
-  if(isNaN(amount) || amount<=0){ toast('Geçerli bir tutar gir'); return; }
-  const data = {sid:fv('f_sid'), date:fv('f_date')||today(), amount, method:fv('f_method'), note:fv('f_pnote')};
-  if(id){ Object.assign(state.payments.find(x=>x.id===id), data); toast('Ödeme güncellendi'); }
-  else { state.payments.push({id:uid(), ...data}); toast('Ödeme eklendi'); }
-  save(); closeModal(); render();
-}
-
 function openHomeworkForm(id, sid){
   if(!needStudent()) return;
   const h = id ? state.homeworks.find(x=>x.id===id) : {};
@@ -1162,14 +1319,14 @@ function openHomeworkForm(id, sid){
 function saveHomework(id){
   const desc = fv('f_desc');
   if(!desc){ toast('Ödev açıklaması gerekli'); return; }
-  const data = {sid:fv('f_sid'), subject:fv('f_subject'), due:fv('f_due'), desc, status:fv('f_status')};
+  const data = {sid:fv('f_sid'), subject:fv('f_subject'), due:fv('f_due'), desc, status:fv('f_status'), updatedAt:Date.now(), byStudent:false};
   if(id){ Object.assign(state.homeworks.find(x=>x.id===id), data); toast('Ödev güncellendi'); }
   else { state.homeworks.push({id:uid(), ...data}); toast('Ödev eklendi'); }
   save(); closeModal(); render();
 }
 function setHwStatus(id, status){
   const h = state.homeworks.find(x=>x.id===id);
-  if(h){ h.status = status; save(); render(); toast('Ödev durumu güncellendi'); }
+  if(h){ h.status = status; h.updatedAt = Date.now(); h.byStudent = false; save(); render(); toast('Ödev durumu güncellendi'); }
 }
 
 /* Genel deneme ders/soru yapısı */
@@ -1236,7 +1393,7 @@ function renderExamFields(){
 }
 function saveExam(id){
   const kind = fv('f_kind');
-  const base = {sid:fv('f_sid'), date:fv('f_date')||today(), name:fv('f_ename'), note:fv('f_enote'), kind};
+  const base = {sid:fv('f_sid'), date:fv('f_date')||today(), name:fv('f_ename'), note:fv('f_enote'), kind, updatedAt:Date.now()};
   let data;
   if(kind==='brans'){
     const sub = fv('f_bsub');
@@ -1289,23 +1446,36 @@ function delItem(coll, id){
       if(l) l.paid = false;
     }
   }
+  if(coll==='exams'){ const e = state.exams.find(x=>x.id===id); if(e && e.srcId) removeStudentInput(e.sid, 'exams', e.srcId); }
+  if(coll==='studies'){ const x = (state.studies||[]).find(y=>y.id===id); if(x) removeStudentInput(x.sid, 'studies', x.id); }
   state[coll] = state[coll].filter(x=>x.id!==id);
   save(); render(); toast('Kayıt silindi');
 }
 
-/* Ders erteleme / telafi */
-function toggleLessonPostponed(id){
-  const l = state.lessons.find(x=>x.id===id);
-  if(!l) return;
-  if(l.status==='ertelendi'){
-    delete l.status;
-    toast('Telafi edildi olarak işaretlendi' + (studentMode ? '' : ' — ücret tahakkuk etti'));
-  } else {
-    if(l.paid){ toast('Ödemesi alınmış ders ertelenemez — önce ödemeyi geri al'); return; }
-    l.status = 'ertelendi';
-    toast('Ders ertelendi — telafi hatırlatması Genel Bakış\'a eklendi');
-  }
-  save(); render();
+/* Telafi: dersi yeni tarihe taşı (ayrı bir durum yok, tarih değişikliğidir) */
+function openRescheduleForm(id){
+  const l = state.lessons.find(x=>x.id===id); if(!l) return;
+  if(l.paid){ toast('Ödemesi alınmış ders taşınamaz — önce ödemeyi geri al'); return; }
+  openModal(`
+  <h3>Telafi · Yeni Tarih</h3>
+  <p class="hint-text" style="margin:-8px 0 14px">${esc(studentName(l.sid))} · ${esc(l.subject)} · ${fmtDate(l.date)}${l.start!=null?' '+fmtClock(l.start):''}. Ders seçtiğin tarihe taşınır; o haftanın potansiyeline geçer.</p>
+  <div class="form-grid">
+    <div class="field"><label>Yeni Tarih</label><input id="r_date" type="date" value="${shiftDate(l.date, 7)}"></div>
+    <div class="field"><label>Saat</label><input id="r_start" type="time" value="${l.start!=null?fmtClock(l.start):'18:00'}" step="1800"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveReschedule('${id}')">Taşı</button>
+  </div>`);
+}
+function saveReschedule(id){
+  const l = state.lessons.find(x=>x.id===id); if(!l) return;
+  const date = fv('r_date'); if(!date){ toast('Tarih gerekli'); return; }
+  const stv = fv('r_start');
+  if(/^\d{1,2}:\d{2}/.test(stv)) l.start = (+stv.slice(0,stv.indexOf(':')))*60 + +stv.slice(stv.indexOf(':')+1, stv.indexOf(':')+3);
+  const old = l.date; l.date = date; delete l.status;
+  save(); closeModal(); render();
+  toast(`Ders ${fmtDate(old)} → ${fmtDate(date)} tarihine taşındı`);
 }
 function shiftDate(ds, days){
   const d = new Date(ds + 'T12:00'); d.setDate(d.getDate() + days);
@@ -1334,18 +1504,18 @@ function copyPrevWeek(){
 function toggleLessonPaid(id){
   const l = state.lessons.find(x=>x.id===id);
   if(!l) return;
-  if(l.status==='ertelendi'){ toast('Ertelenen ders için ödeme alınamaz'); return; }
+  if(l.status==='ertelendi'){ toast('Bu ders önce yeni tarihe taşınmalı'); return; }
   if(l.paid){
-    if(!confirm('Bu dersin ödemesi geri alınsın mı? Bağlı ödeme kaydı da silinecek.')) return;
+    if(!confirm('Bu dersin ödemesi geri alınsın mı?')) return;
     state.payments = state.payments.filter(p=>p.lessonId!==id);
-    l.paid = false;
+    l.paid = false; delete l.paidAt;
     toast('Ödeme geri alındı');
   } else {
     state.payments.push({
       id: uid(), sid: l.sid, date: today(), amount: +l.fee||0, method: 'Nakit',
       note: `Ders ödemesi · ${l.subject} (${fmtDate(l.date)})`, lessonId: id
     });
-    l.paid = true;
+    l.paid = true; l.paidAt = today();
     toast(fmtTL(l.fee) + ' ödeme kaydedildi');
   }
   save(); render();
@@ -1432,7 +1602,7 @@ function importData(ev){
       const d = JSON.parse(reader.result);
       if(!d || !Array.isArray(d.students)) throw 0;
       if(!confirm('Mevcut veriler yedekteki verilerle değiştirilecek. Devam edilsin mi?')) return;
-      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], notes:d.notes||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[]};
+      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[]};
       save(); go('dashboard'); toast('Yedek geri yüklendi');
     }catch(e){ toast('Geçersiz yedek dosyası'); }
   };
@@ -1440,159 +1610,50 @@ function importData(ev){
   ev.target.value = '';
 }
 
-/* ================= NOTLAR (DERS MATERYALLERİ) ================= */
-const NOTE_SUBJECTS = ['Matematik','Fizik','Kimya'];
-const NOTES_DB = 'ogrenciTakipDosyalar';
-function idb(){
-  return new Promise((res,rej)=>{
-    const r = indexedDB.open(NOTES_DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('files');
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
+/* ================= ÖĞRENCİ NOTLARI (GitHub Pages deposundan okunur) =================
+   Panelde not kaydı tutulmaz. PDF'ler öğrenci sayfasıyla aynı depoda
+   /notlar/<ogrenci-slug>/<ders>/<seviye>/<dosya>.pdf yolunda durur; öğrenci sayfası bunları
+   GitHub API'den listeler. Burada yalnızca slug ve beklenen klasör yolları gösterilir. */
+const NOTE_DERS = ['fizik','kimya','matematik'], NOTE_SEVIYE = ['tyt','ayt'];
+const SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+/* Öğrenci adı → klasör adı: küçük harf, Türkçe karakterler sadeleşmiş, boşluklar "-" (ogrenci.html ile birebir aynı) */
+function studentSlug(name){
+  const map = {'ç':'c','ğ':'g','ı':'i','ö':'o','ş':'s','ü':'u','Ç':'c','Ğ':'g','İ':'i','I':'i','Ö':'o','Ş':'s','Ü':'u'};
+  return String(name||'').trim().replace(/[çğıöşüÇĞİIÖŞÜ]/g, c=>map[c]).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
-async function idbPut(key, blob){
-  const db = await idb();
-  return new Promise((res,rej)=>{
-    const tx = db.transaction('files','readwrite');
-    tx.objectStore('files').put(blob, key);
-    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-  });
+/* Öğrenci sayfası adresi github.io ise depo bilgisini türet */
+function notesRepo(){
+  const m = siteUrl().match(/^https?:\/\/([\w-]+)\.github\.io(?:\/([^\/?#]+))?/i);
+  return m ? {user:m[1], repo:m[2] || `${m[1]}.github.io`} : null;
 }
-async function idbGet(key){
-  const db = await idb();
-  return new Promise((res,rej)=>{
-    const rq = db.transaction('files').objectStore('files').get(key);
-    rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error);
-  });
-}
-async function idbDel(key){
-  const db = await idb();
-  return new Promise((res,rej)=>{
-    const tx = db.transaction('files','readwrite');
-    tx.objectStore('files').delete(key);
-    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-  });
-}
-function fmtSize(b){
-  if(!b) return '';
-  if(b < 1024*1024) return (b/1024).toFixed(0)+' KB';
-  return (b/1024/1024).toFixed(1)+' MB';
-}
-const SVG_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-const SVG_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
-
-function viewNotes(){
-  let list = [...state.notes].sort(byDateDesc);
-  if(route.filter.subject) list = list.filter(n=>n.subject===route.filter.subject);
+function studentNotesTab(s){
+  const slug = studentSlug(s.name), repo = notesRepo();
+  const base = `notlar/${slug}`;
+  const gh = repo ? `https://github.com/${repo.user}/${repo.repo}` : '';
+  const rows = NOTE_DERS.flatMap(d=>NOTE_SEVIYE.map(v=>{
+    const p = `${base}/${d}/${v}/`;
+    return `<tr>
+      <td style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84rem">${esc(p)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="copyText(${JSON.stringify(p)})">Kopyala</button>
+        ${gh ? `<a class="btn btn-ghost btn-sm" href="${esc(`${gh}/upload/main/${p.replace(/\/$/,'')}`)}" target="_blank" rel="noopener">${SVG_OPEN} GitHub'a Yükle</a>` : ''}
+      </td></tr>`;
+  })).join('');
   return `
-  <div class="topbar">
-    <div><h1>Notlar</h1><div class="sub">${list.length} materyal · dosyalar bu tarayıcıda saklanır</div></div>
-    <button class="btn btn-primary" onclick="openNoteForm()">＋ Not Yükle</button>
+  <div class="card panel" style="margin-bottom:16px">
+    <h3>Not klasörü ${gh ? `<a class="btn btn-ghost btn-sm" href="${esc(`${gh}/tree/main/${base}`)}" target="_blank" rel="noopener">${SVG_OPEN} GitHub'da Aç</a>` : ''}</h3>
+    <p style="font-size:.88rem;color:var(--muted);line-height:1.55;margin-bottom:12px">Notlar panelde tutulmaz; öğrenci sayfasının bulunduğu GitHub deposuna PDF olarak yüklenir. ${esc(s.name.split(' ')[0])}'in sayfası aşağıdaki klasörleri okur ve dosyaları ders / seviye sekmelerinde listeler. Klasörleri ilk dosyayı yüklerken oluşturursun.</p>
+    <div class="share-box"><div class="lbl">Öğrenci klasörü (slug)</div><div class="val">${esc(base)}/</div>
+      <div class="share-row"><button class="btn btn-ghost btn-sm" onclick="copyText(${JSON.stringify(base+'/')})">Kopyala</button></div></div>
+    <div class="share-box"><div class="lbl">Dosya adı biçimi</div><div class="val">YYYY-AA-GG Başlık.pdf</div>
+      <div class="hint-text">Örn. <b>2026-03-12 Vektörler.pdf</b>. Tarih isteğe bağlıdır; tarihsiz dosya (örn. <b>Formül Kartı.pdf</b>) yalnızca başlığıyla, listenin altında görünür. Yalnızca .pdf dosyaları listelenir.</div></div>
+    ${gh ? '' : `<div class="hint-text" style="color:var(--amber)">Öğrenci sayfası adresi bir github.io adresi değil; GitHub bağlantıları bu yüzden gösterilmiyor. Bulut penceresinden adresi <b>https://KULLANICI.github.io/DEPO</b> biçiminde gir.</div>`}
   </div>
-  <div class="toolbar">
-    <select onchange="setFilter('subject',this.value)">
-      <option value="">Tüm dersler</option>
-      ${NOTE_SUBJECTS.map(s=>`<option ${route.filter.subject===s?'selected':''}>${s}</option>`).join('')}
-    </select>
-  </div>
-  <div class="card">${notesTable(list)}</div>`;
-}
-function notesTable(list){
-  if(!list.length) return emptyState('📂','Henüz not yüklenmedi','"Not Yükle" ile PDF, fotoğraf veya belge ekle; ders bazında filtreleyip tek tıkla indir veya paylaş.');
-  return `<div class="table-wrap"><table>
-  <thead><tr><th>Tarih</th><th>Ders</th><th>Başlık</th><th>Dosya / Bağlantı</th><th></th></tr></thead>
-  <tbody>${list.map(n=>`<tr>
-    <td style="white-space:nowrap">${fmtDate(n.date)}</td>
-    <td>${subjectChip(n.subject)}</td>
-    <td style="font-size:.9rem;font-weight:600">${esc(n.title)}${n.desc?`<span class="row-note">${esc(n.desc)}</span>`:''}</td>
-    <td style="font-size:.85rem;color:var(--muted)">
-      ${n.hasFile ? `📄 ${esc(n.fileName||'')} <span style="opacity:.7">(${fmtSize(n.fileSize)})</span>` : ''}
-      ${n.link ? `${n.hasFile?'<br>':''}🔗 <a href="${esc(n.link)}" target="_blank" style="color:var(--accent)">Bağlantı</a>` : ''}
-      ${!n.hasFile && !n.link ? '—' : ''}
-    </td>
-    <td style="text-align:right;white-space:nowrap">
-      ${n.hasFile?`<button class="icon-btn" onclick="downloadNote('${n.id}')" title="İndir">${SVG_DOWN}</button>`:''}
-      <button class="icon-btn" onclick="shareNote('${n.id}')" title="Paylaş">${SVG_SHARE}</button>
-      <button class="icon-btn" onclick="openNoteForm('${n.id}')" title="Düzenle">${SVG_EDIT}</button>
-      <button class="icon-btn danger" onclick="delNote('${n.id}')" title="Sil">${SVG_DEL}</button>
-    </td>
-  </tr>`).join('')}</tbody></table></div>`;
-}
-function openNoteForm(id){
-  const n = id ? state.notes.find(x=>x.id===id) : {};
-  openModal(`
-  <h3>${id?'Notu Düzenle':'Not Yükle'}</h3>
-  <div class="form-grid">
-    <div class="field"><label>Ders</label><select id="f_subject">
-      ${NOTE_SUBJECTS.map(s=>`<option ${n.subject===s?'selected':''}>${s}</option>`).join('')}
-    </select></div>
-    <div class="field"><label>Tarih</label><input id="f_date" type="date" value="${n.date||today()}"></div>
-    <div class="field full"><label>Başlık *</label><input id="f_title" value="${esc(n.title||'')}" placeholder="Örn. Türev alma kuralları özeti"></div>
-    <div class="field full"><label>Açıklama</label><input id="f_ndesc" value="${esc(n.desc||'')}" placeholder="Kısa açıklama (isteğe bağlı)"></div>
-    <div class="field full"><label>Dosya ${n.hasFile?`<span style="color:var(--green)">· mevcut: ${esc(n.fileName||'')}</span>`:''}</label>
-      <input id="f_file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.txt">
-    </div>
-    <div class="field full"><label>Bağlantı (Google Drive vb., isteğe bağlı)</label><input id="f_link" value="${esc(n.link||'')}" placeholder="https://..."></div>
-  </div>
-  <div class="modal-actions">
-    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
-    <button class="btn btn-primary" onclick="saveNote('${id||''}')">Kaydet</button>
-  </div>`);
-}
-async function saveNote(id){
-  const title = fv('f_title');
-  if(!title){ toast('Başlık gerekli'); return; }
-  const fileEl = document.getElementById('f_file');
-  const file = fileEl && fileEl.files && fileEl.files[0];
-  if(file && file.size > 30*1024*1024){ toast('Dosya çok büyük (en fazla 30 MB)'); return; }
-  let n = id ? state.notes.find(x=>x.id===id) : null;
-  const data = {subject:fv('f_subject'), date:fv('f_date')||today(), title, desc:fv('f_ndesc'), link:fv('f_link')};
-  if(n) Object.assign(n, data);
-  else { n = {id:uid(), hasFile:false, ...data}; state.notes.push(n); }
-  if(file){
-    try{
-      await idbPut(n.id, file);
-      n.hasFile = true; n.fileName = file.name; n.fileType = file.type; n.fileSize = file.size;
-    }catch(e){ toast('Dosya kaydedilemedi: '+e); }
-  }
-  save(); closeModal(); render(); toast(id?'Not güncellendi':'Not eklendi');
-}
-async function downloadNote(id){
-  const n = state.notes.find(x=>x.id===id);
-  if(!n || !n.hasFile) return;
-  const blob = await idbGet(id).catch(()=>null);
-  if(!blob){ toast('Dosya bulunamadı'); return; }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = n.fileName || 'not';
-  a.click(); URL.revokeObjectURL(a.href);
-}
-async function shareNote(id){
-  const n = state.notes.find(x=>x.id===id);
-  if(!n) return;
-  if(n.hasFile){
-    const blob = await idbGet(id).catch(()=>null);
-    if(blob && navigator.canShare){
-      const f = new File([blob], n.fileName||'not', {type:blob.type||n.fileType||''});
-      if(navigator.canShare({files:[f]})){
-        try{ await navigator.share({files:[f], title:n.title}); return; }
-        catch(e){ if(e.name==='AbortError') return; }
-      }
-    }
-  }
-  if(n.link && navigator.clipboard){
-    await navigator.clipboard.writeText(n.link).catch(()=>{});
-    toast('Bağlantı panoya kopyalandı — WhatsApp\'a yapıştırabilirsin');
-    return;
-  }
-  toast('Bu cihazda doğrudan paylaşım desteklenmiyor — dosyayı indirip WhatsApp/e-posta ile gönder');
-}
-async function delNote(id){
-  if(!confirm('Bu not ve ekli dosyası silinsin mi?')) return;
-  await idbDel(id).catch(()=>{});
-  state.notes = state.notes.filter(x=>x.id!==id);
-  save(); render(); toast('Not silindi');
+  <div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Beklenen klasör yolları</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table></div></div>`;
 }
 
 /* ================= HAFTALIK TAKVİM (ders kayıtlarıyla ortak) ================= */
@@ -1631,7 +1692,7 @@ function calBlockHtml(l){
   return `<div class="cal-block${pp?' postponed':''}" data-id="${l.id}" style="top:${calY(l.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${avatarColor(l.sid)}"
     onpointerdown="calMoveStart(event,'${l.id}')" ondblclick="openLessonForm('${l.id}')" title="Düzenlemek için çift tıkla">
     <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="delItem('lessons','${l.id}')" title="Dersi sil">×</button>
-    <button class="cal-x" style="right:22px" onpointerdown="event.stopPropagation()" onclick="toggleLessonPostponed('${l.id}')" title="${pp?'Telafi edildi olarak işaretle':'Dersi ertele'}">⏳</button>
+    <button class="cal-x" style="right:22px" onpointerdown="event.stopPropagation()" onclick="openRescheduleForm('${l.id}')" title="Telafi · yeni tarihe taşı">⏳</button>
     <b>${esc(s.name)}</b>
     <span class="cal-hours">${fmtClock(l.start)}–${fmtClock(l.start+dur)}</span>
     <span class="cal-hours">${pp ? '⏳ Ertelendi' : esc(l.subject)+(studentMode?'':' · '+fmtTL(l.fee)+(l.paid?' ✓':''))}</span>
@@ -1681,13 +1742,15 @@ function viewSchedule(){
   const totF = wl.filter(isBillable).reduce((a,l)=>a+(+l.fee||0),0);
   const rangeLabel = fmtDate(dates[0]) + ' – ' + fmtDate(dates[6]);
   const todayStr = today();
+  const wn = weekNo(dates[0]), cwn = weekNo(todayStr);
   return `
   <div class="topbar">
-    <div><h1>Haftalık Takvim</h1><div class="sub">${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat${studentMode?'':' · '+fmtTL(totF)}</div></div>
+    <div><h1>${wn!=null ? `${wn}. Hafta` : 'Haftalık Takvim'}${dates[0]===mondayOf(todayStr)?' <span class="chip badge-zero" style="vertical-align:middle">bu hafta</span>':''}</h1>
+      <div class="sub">${wn==null?'Numarasız hafta · ':''}${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat${studentMode?'':' · '+fmtTL(totF)}</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">⧉ Geçen Haftayı Kopyala</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(-1)">‹ Önceki</button>
-      <button class="btn ${calWeekOff===0?'btn-primary':'btn-ghost'} btn-sm" onclick="calShiftWeek(0)">Bu Hafta</button>
+      <button class="btn ${calWeekOff===0?'btn-primary':'btn-ghost'} btn-sm" onclick="calShiftWeek(0)">Bu Hafta${cwn!=null?` · ${cwn}`:''}</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(1)">Sonraki ›</button>
     </div>
   </div>
@@ -2066,6 +2129,7 @@ function calAgendaForDate(ds){
   const chips = [];
   if(!studentMode){
     calDueForDate(ds).forEach(it=>chips.push(calDueChip(it, ds)));
+    state.reminders.filter(r=>r.date===ds).forEach(r=>chips.push(reminderChip(r)));
     const di = (new Date(ds+'T12:00').getDay()+6)%7;
     state.workouts.filter(w=>w.day===di && w.time==null).forEach(w=>{
       const done = (w.doneDates||[]).includes(ds);
@@ -2368,6 +2432,150 @@ function saveBook(id){
   save(); closeModal(); render();
 }
 
+/* ---------- HATIRLATMA & NOTLAR (kişisel — öğrenci modunda gizli) ---------- */
+/* Genel Bakış üst uyarısı: geciken, bugünkü ve yarınki açık hatırlatmalar. Öğrenci Modunda hiç oluşturulmaz. */
+function dashboardReminderAlert(){
+  if(studentMode) return '';
+  const t = today();
+  const tm = new Date(); tm.setDate(tm.getDate()+1);
+  const tomorrow = localDate(tm);
+  const list = state.reminders.filter(r=>!r.done && r.date && r.date<=tomorrow)
+    .sort((a,b)=>a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''));
+  if(!list.length) return '';
+  const urgent = list.some(r=>r.date<=t);
+  const nToday = list.filter(r=>r.date===t).length, nLate = list.filter(r=>r.date<t).length, nTom = list.length-nToday-nLate;
+  const parts = [];
+  if(nLate) parts.push(`${nLate} gecikmiş`); if(nToday) parts.push(`${nToday} bugün`); if(nTom) parts.push(`${nTom} yarın`);
+  const rows = list.map(r=>{
+    const k = r.date<t ? 'late' : r.date===t ? 'today' : 'tomorrow';
+    const lbl = k==='late' ? 'Gecikti · '+fmtDate(r.date) : k==='today' ? 'Bugün' : 'Yarın';
+    return `<div class="rem-alert-row">
+      <span class="when ${k}">${lbl}${r.time?' '+r.time:''}</span>
+      <span class="t">${esc(r.title)}${r.note?`<span class="m" style="display:block;font-weight:500">${esc(r.note)}</span>`:''}</span>
+      <button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}')">Tamamla</button>
+    </div>`;}).join('');
+  return `
+  <div class="rem-alert ${urgent?'urgent':''}" role="alert">
+    <h3>🔔 Hatırlatma uyarısı <span style="font-weight:600;opacity:.8">· ${parts.join(', ')}</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="go('notes')">Tümü →</button></h3>
+    <div class="rem-alert-list">${rows}</div>
+  </div>`;
+}
+function reminderChip(r){
+  return `<button class="bill-chip ${r.done?'paid':'rem'}" onclick="toggleReminderDone('${r.id}')"
+    title="${esc(r.title)} — ${r.done?'işareti kaldırmak':'tamamlandı işaretlemek'} için tıkla">🔔 ${r.time?r.time+' ':''}${esc(r.title)}${r.done?' ✓':''}</button>`;
+}
+function reminderWhen(r){
+  if(!r.date) return 'Tarihsiz';
+  const t = today();
+  const base = r.date===t ? 'Bugün' : fmtDate(r.date);
+  return base + (r.time ? ' · '+r.time : '');
+}
+function viewNotes(){
+  const t = today();
+  const rems = [...state.reminders].sort((a,b)=>{
+    if(a.done!==b.done) return a.done?1:-1;
+    return (a.date||'9999').localeCompare(b.date||'9999') || (a.time||'').localeCompare(b.time||'');
+  });
+  const open = state.reminders.filter(r=>!r.done).length;
+  const remList = !rems.length
+    ? emptyState('🔔','Hatırlatma yok','Kendine hatırlatmalar ekle; tarihli olanlar Takvim şeridinde ve Genel Bakış\'ta görünür.')
+    : rems.map(r=>{
+      const late = !r.done && r.date && r.date < t;
+      return `<div class="rem-item ${r.done?'done':''} ${late?'late':''}">
+        <input type="checkbox" ${r.done?'checked':''} onchange="toggleReminderDone('${r.id}')" title="Tamamlandı">
+        <div style="flex:1;min-width:0">
+          <div class="t">${esc(r.title)}</div>
+          <div class="m" ${late?'style="color:var(--red)"':''}>${late?'⚠️ Gecikti · ':''}${reminderWhen(r)}${r.note?' · '+esc(r.note):''}</div>
+        </div>
+        <button class="icon-btn" onclick="openReminderForm('${r.id}')" title="Düzenle">${SVG_EDIT}</button>
+        <button class="icon-btn danger" onclick="delItem('reminders','${r.id}')" title="Sil">${SVG_DEL}</button>
+      </div>`;}).join('');
+  const memos = [...state.memos].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0) || (b.updatedAt||0)-(a.updatedAt||0));
+  const memoGrid = !memos.length
+    ? emptyState('📝','Henüz not yok','Aklına gelenleri, ders fikirlerini, yapılacakları buraya yaz.')
+    : `<div class="memo-grid">${memos.map(m=>`
+      <div class="memo ${m.pinned?'pinned':''}" ondblclick="openMemoForm('${m.id}')" title="Düzenlemek için çift tıkla">
+        <h4>${m.pinned?'📌 ':''}${esc(m.title||'Not')}</h4>
+        <p>${esc(m.text||'')}</p>
+        <div class="memo-foot">
+          <span>${m.updatedAt?new Date(m.updatedAt).toLocaleDateString('tr-TR',{day:'numeric',month:'short'}):''}</span>
+          <span style="white-space:nowrap">
+            <button class="icon-btn" onclick="toggleMemoPin('${m.id}')" title="${m.pinned?'Sabitlemeyi kaldır':'Sabitle'}">📌</button>
+            <button class="icon-btn" onclick="openMemoForm('${m.id}')" title="Düzenle">${SVG_EDIT}</button>
+            <button class="icon-btn danger" onclick="delItem('memos','${m.id}')" title="Sil">${SVG_DEL}</button>
+          </span>
+        </div>
+      </div>`).join('')}</div>`;
+  return `
+  <div class="topbar">
+    <div><h1>Hatırlatma & Notlar</h1><div class="sub">${open} açık hatırlatma · ${state.memos.length} not</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="openMemoForm()">＋ Not</button>
+      <button class="btn btn-primary" onclick="openReminderForm()">＋ Hatırlatma</button>
+    </div>
+  </div>
+  <div class="card panel"><h3>🔔 Hatırlatmalar</h3>${remList}</div>
+  <div class="card panel"><h3>📝 Notlarım</h3>${memoGrid}</div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Bu bölüm Öğrenci Modu açıkken görünmez. Veriler yalnızca bu cihazda tutulur, buluta gönderilmez.</p>`;
+}
+function toggleReminderDone(id){
+  const r = state.reminders.find(x=>x.id===id); if(!r) return;
+  r.done = !r.done;
+  toast(r.done ? 'Hatırlatma tamamlandı ✓' : 'Hatırlatma yeniden açıldı');
+  save(); render();
+}
+function openReminderForm(id){
+  const r = id ? state.reminders.find(x=>x.id===id) : {date: today()};
+  openModal(`
+  <h3>${id?'Hatırlatmayı Düzenle':'Yeni Hatırlatma'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Başlık *</label><input id="f_rmtitle" value="${esc(r.title||'')}" placeholder="Örn. Ayşe'nin velisini ara"></div>
+    <div class="field"><label>Tarih</label><input id="f_rmdate" type="date" value="${r.date||''}"></div>
+    <div class="field"><label>Saat</label><input id="f_rmtime" type="time" value="${r.time||''}"></div>
+    <div class="field full"><label>Not</label><input id="f_rmnote" value="${esc(r.note||'')}" placeholder="isteğe bağlı"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveReminder('${id||''}')">Kaydet</button>
+  </div>`);
+  setTimeout(()=>{ const el=document.getElementById('f_rmtitle'); if(el) el.focus(); }, 50);
+}
+function saveReminder(id){
+  const title = fv('f_rmtitle');
+  if(!title){ toast('Başlık gerekli'); return; }
+  const data = {title, date:fv('f_rmdate')||null, time:fv('f_rmtime')||null, note:fv('f_rmnote')};
+  if(id){ Object.assign(state.reminders.find(x=>x.id===id), data); toast('Hatırlatma güncellendi'); }
+  else { state.reminders.push({id:uid(), done:false, ...data}); toast('Hatırlatma eklendi'); }
+  save(); closeModal(); render();
+}
+function toggleMemoPin(id){
+  const m = state.memos.find(x=>x.id===id); if(!m) return;
+  m.pinned = !m.pinned; save(); render();
+}
+function openMemoForm(id){
+  const m = id ? state.memos.find(x=>x.id===id) : {};
+  openModal(`
+  <h3>${id?'Notu Düzenle':'Yeni Not'}</h3>
+  <div class="form-grid">
+    <div class="field full"><label>Başlık</label><input id="f_mmtitle" value="${esc(m.title||'')}" placeholder="Örn. Haftaya yapılacaklar"></div>
+    <div class="field full"><label>Not</label><textarea id="f_mmtext" rows="7" style="width:100%;resize:vertical;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field-bg);color:var(--text)" placeholder="Yazmaya başla...">${esc(m.text||'')}</textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveMemo('${id||''}')">Kaydet</button>
+  </div>`);
+  setTimeout(()=>{ const el=document.getElementById(id?'f_mmtext':'f_mmtitle'); if(el) el.focus(); }, 50);
+}
+function saveMemo(id){
+  const title = fv('f_mmtitle'), text = fv('f_mmtext');
+  if(!title && !text){ toast('Boş not kaydedilemez'); return; }
+  const data = {title, text, updatedAt: Date.now()};
+  if(id){ Object.assign(state.memos.find(x=>x.id===id), data); toast('Not güncellendi'); }
+  else { state.memos.push({id:uid(), pinned:false, ...data}); toast('Not eklendi'); }
+  save(); closeModal(); render();
+}
+
 /* ---------- GENEL BAKIŞ: KİŞİSEL PANEL ---------- */
 function dashboardPersonalPanel(){
   if(studentMode) return '';
@@ -2375,8 +2583,15 @@ function dashboardPersonalPanel(){
   const classes = state.myClasses.filter(c=>c.day===ti).sort((a,b)=>a.start-b.start);
   const wos = state.workouts.filter(w=>w.day===ti);
   const reading = state.books.filter(b=>b.status==='okunuyor');
-  if(!classes.length && !wos.length && !reading.length) return '';
+  const rems = state.reminders.filter(r=>!r.done && r.date && r.date<=today()).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  if(!classes.length && !wos.length && !reading.length && !rems.length) return '';
   const rows = [
+    ...rems.map(r=>`<tr>
+      <td style="width:36px">🔔</td>
+      <td style="font-weight:600">${esc(r.title)}${r.note?`<span class="row-note">${esc(r.note)}</span>`:''}</td>
+      <td style="color:${r.date<today()?'var(--red)':'var(--muted)'};font-size:.85rem;white-space:nowrap">${r.date<today()?'Gecikti · '+fmtDate(r.date):(r.time?r.time:'Bugün')}</td>
+      <td style="text-align:right"><button class="pay-btn pay-no" onclick="toggleReminderDone('${r.id}')">Tamamla</button></td>
+    </tr>`),
     ...classes.map(c=>`<tr>
       <td style="width:36px">🎓</td>
       <td style="font-weight:600">${esc(c.code)}${c.name?`<span class="row-note">${esc(c.name)}</span>`:''}</td>
@@ -2407,26 +2622,46 @@ function dashboardPersonalPanel(){
   </div>`;
 }
 
-/* ================= ÖĞRENCİ SAYFASI YAYINI (GitHub Pages) ================= */
-/* Her öğrenci için ödev/deneme/ders verisi, öğrencinin erişim koduyla şifrelenip
-   GitHub deposuna data/<id>.json olarak yazılır. Öğrenci ogrenci.html?o=<id>
-   adresinden kodunu girerek kendi verisini tarayıcısında çözer. Sunucu gerekmez. */
-const PUB_KEY = 'ogrenciTakipYayin';
-let pub = loadPub();
-function loadPub(){ try{ return JSON.parse(localStorage.getItem(PUB_KEY)) || {}; }catch(e){ return {}; } }
-function savePub(){ localStorage.setItem(PUB_KEY, JSON.stringify(pub)); }
-function pubReady(){ return !!(pub.user && pub.repo && pub.token); }
-function pubSiteUrl(){
-  const u = (pub.site || (pub.user && pub.repo ? `https://${pub.user}.github.io/${pub.repo}` : '')).trim();
-  return u.replace(/\/+$/,'');
+/* ================= BULUT SENKRON (Firebase Firestore) ================= */
+/* Her öğrencinin ödev/deneme/ders verisi, öğrencinin erişim koduyla şifrelenip
+   Firestore'da pages/<id> belgesine yazılır. Panel her kayıtta bunu otomatik yapar.
+   Öğrenci ogrenci.html?o=<id> adresinden kodunu girer, veriyi kendi cihazında çözer.
+   Öğrencinin attığı "tamamladım" tikleri ticks/<gizli-id> belgesine yazılır ve
+   panel bunları canlı dinleyip ödev durumuna işler. */
+const FB_DEFAULT_CONFIG = {
+  apiKey: "AIzaSyAxe1WkM7_70B_Ywon0fepX6NZCGWEX7gg",
+  authDomain: "ogrenci-takip-42ff6.firebaseapp.com",
+  projectId: "ogrenci-takip-42ff6",
+  storageBucket: "ogrenci-takip-42ff6.firebasestorage.app",
+  messagingSenderId: "991799943147",
+  appId: "1:991799943147:web:ad03ceafe0afafab4303ae"
+};
+const CLOUD_KEY = 'ogrenciTakipBulut';
+let cloud = loadCloud();
+function loadCloud(){
+  let c = {};
+  try{ c = JSON.parse(localStorage.getItem(CLOUD_KEY)) || {}; }catch(e){}
+  c.synced = c.synced || {};
+  // Eski GitHub yayın ayarlarından site adresini devral, token'ı sil
+  try{
+    const old = JSON.parse(localStorage.getItem('ogrenciTakipYayin'));
+    if(old){
+      if(!c.site) c.site = old.site || (old.user && old.repo ? `https://${old.user}.github.io/${old.repo}` : '');
+      localStorage.removeItem('ogrenciTakipYayin');
+    }
+  }catch(e){}
+  return c;
 }
+function saveCloud(){ localStorage.setItem(CLOUD_KEY, JSON.stringify(cloud)); }
+function cloudConfig(){ return cloud.config || FB_DEFAULT_CONFIG; }
+function siteUrl(){ return (cloud.site||'').trim().replace(/\/+$/,''); }
 function genCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const a = crypto.getRandomValues(new Uint8Array(6));
   return Array.from(a, b => chars[b % chars.length]).join('');
 }
 function studentCode(s){ if(!s.code){ s.code = genCode(); save(); } return s.code; }
-function studentLink(s){ return pubSiteUrl() ? `${pubSiteUrl()}/ogrenci.html?o=${s.id}` : ''; }
+function studentLink(s){ return siteUrl() ? `${siteUrl()}/ogrenci.html?o=${s.id}` : ''; }
 
 /* --- Şifreleme (WebCrypto: PBKDF2 + AES-GCM) --- */
 const _te = new TextEncoder();
@@ -2435,11 +2670,15 @@ function bufToB64(buf){
   for(let i=0;i<u.length;i+=0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i+0x8000));
   return btoa(s);
 }
+const _keyCache = {};
 async function deriveKey(code, salt){
+  const ck = code.trim().toUpperCase() + '|' + salt;
+  if(_keyCache[ck]) return _keyCache[ck];
   const base = await crypto.subtle.importKey('raw', _te.encode(code.trim().toUpperCase()), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
+  const key = await crypto.subtle.deriveKey(
     {name:'PBKDF2', salt:_te.encode(salt), iterations:120000, hash:'SHA-256'},
     base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+  _keyCache[ck] = key; return key;
 }
 async function encryptPayload(obj, code, salt){
   const key = await deriveKey(code, salt);
@@ -2447,101 +2686,338 @@ async function encryptPayload(obj, code, salt){
   const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, _te.encode(JSON.stringify(obj)));
   return {v:1, iv:bufToB64(iv), data:bufToB64(ct)};
 }
+async function sha256hex(str){
+  const h = await crypto.subtle.digest('SHA-256', _te.encode(str));
+  return Array.from(new Uint8Array(h), b=>b.toString(16).padStart(2,'0')).join('');
+}
+/* Öğrencinin tik belgesi: yol yalnızca kodu bilenin hesaplayabileceği bir özet */
+async function tickId(s){ return sha256hex(`tick:${s.id}:${studentCode(s).trim().toUpperCase()}`); }
 
-/* Öğrenciye gösterilecek veri: ücret, telefon, öğretmen notu dahil edilmez */
+/* Öğrenciye gösterilecek veri: ücret, telefon, öğretmen notu dahil edilmez; ders notları depodan okunur, buraya girmez */
 function studentPayload(s){
   return {
-    v:1, publishedAt:new Date().toISOString(),
+    v:2,
     student:{name:s.name, grade:s.grade||''},
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||''})),
-    homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({subject:h.subject, desc:h.desc, due:h.due, status:h.status})),
-    exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets})),
+    homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, status:h.status, updatedAt:h.updatedAt||0})),
+    exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent})),
   };
 }
 
-/* --- GitHub Contents API --- */
-async function ghFetch(path, opts={}){
-  const r = await fetch(`https://api.github.com/repos/${pub.user}/${pub.repo}/contents/${path}`, {
-    ...opts,
-    headers:{ 'Authorization':`Bearer ${pub.token}`, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28', ...(opts.headers||{}) }
-  });
-  return r;
+/* --- Firebase bağlantısı --- */
+const fb = {db:null, auth:null, user:null, error:'', status:'off'}; // off | signedout | syncing | ok | error
+function cloudAvailable(){ return typeof firebase !== 'undefined' && !!cloudConfig().projectId; }
+function cloudInit(){
+  if(!cloudAvailable()){ fb.status = 'off'; fb.error = 'Firebase kütüphanesi yüklenemedi (internet?)'; updateCloudBadge(); return; }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(cloudConfig());
+    fb.db = firebase.firestore();
+    fb.auth = firebase.auth();
+    fb.auth.onAuthStateChanged(u => {
+      fb.user = u;
+      fb.status = u ? 'ok' : 'signedout';
+      updateCloudBadge();
+      if(u){ watchPanel(); scheduleSync(true); watchTicks(); }
+      else { stopTicks(); stopPanel(); }
+    });
+  }catch(e){ fb.status = 'error'; fb.error = e.message; updateCloudBadge(); }
 }
-async function ghPutFile(path, contentStr, message){
-  const branch = pub.branch || 'main';
-  let sha;
-  const g = await ghFetch(`${path}?ref=${encodeURIComponent(branch)}`);
-  if(g.status === 200) sha = (await g.json()).sha;
-  else if(g.status !== 404){ throw new Error(await ghErr(g)); }
-  const body = {message, content:bufToB64(_te.encode(contentStr)), branch};
-  if(sha) body.sha = sha;
-  const r = await ghFetch(path, {method:'PUT', body:JSON.stringify(body)});
-  if(!r.ok) throw new Error(await ghErr(r));
+async function cloudSignIn(email, pass){
+  if(!fb.auth) cloudInit();
+  if(!fb.auth) throw new Error(fb.error || 'Firebase hazır değil');
+  await fb.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+  await fb.auth.signInWithEmailAndPassword(email, pass);
 }
-async function ghErr(r){
-  let msg = `HTTP ${r.status}`;
-  try{ const j = await r.json(); if(j.message) msg += ' · ' + j.message; }catch(e){}
-  if(r.status===401) msg += ' — token geçersiz veya süresi dolmuş';
-  if(r.status===404) msg += ' — depo bulunamadı ya da token bu depoya yetkili değil';
-  return msg;
+function cloudSignOut(){ if(fb.auth) fb.auth.signOut(); }
+function cloudErrText(e){
+  const c = (e && e.code) || '';
+  if(c.includes('invalid-credential') || c.includes('wrong-password') || c.includes('user-not-found')) return 'E-posta ya da şifre hatalı (Firebase → Authentication → Users içinde bu kullanıcı olmalı)';
+  if(c.includes('operation-not-allowed')) return 'Firebase → Authentication → Sign-in method → Email/Password açık değil';
+  if(c.includes('permission-denied')) return 'Firestore kuralları yazmaya izin vermiyor — Bulut penceresinden kuralları kopyalayıp Firestore → Rules\'a yapıştır';
+  if(c.includes('network')) return 'İnternet bağlantısı yok';
+  return (e && (e.message || String(e))) || 'Bilinmeyen hata';
 }
 
-async function publishStudents(ids){
-  if(!pubReady()){ toast('Önce GitHub bilgilerini gir'); openPublishForm(); return; }
-  const list = state.students.filter(s=>!ids || ids.includes(s.id));
-  const log = document.getElementById('pubLog');
-  const say = (m, ok=true) => { if(log){ log.innerHTML += `<div style="color:${ok?'inherit':'var(--red)'}">${esc(m)}</div>`; log.scrollTop = log.scrollHeight; } };
-  const btns = document.querySelectorAll('.pub-action'); btns.forEach(b=>b.disabled=true);
-  let okCount = 0;
-  for(const s of list){
-    try{
-      const payload = await encryptPayload(studentPayload(s), studentCode(s), s.id);
-      await ghPutFile(`data/${s.id}.json`, JSON.stringify(payload), `Öğrenci sayfası güncellendi: ${s.name}`);
-      say(`✓ ${s.name}`); okCount++;
-    }catch(e){ say(`✗ ${s.name}: ${e.message}`, false); }
+/* --- Otomatik senkron: her save() sonrası değişen öğrenciler yazılır --- */
+let _syncTimer = null, _syncing = false, _syncAgain = false;
+function scheduleSync(now){
+  if(!fb.user) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncNow, now ? 150 : 1200);
+}
+async function syncNow(){
+  if(!fb.user || !fb.db) return;
+  if(_syncing){ _syncAgain = true; return; }
+  _syncing = true; fb.status = 'syncing'; updateCloudBadge();
+  try{
+    for(const s of state.students){
+      const body = studentPayload(s);
+      const h = await sha256hex(JSON.stringify(body) + '|' + studentCode(s));
+      if(cloud.synced[s.id] === h) continue;
+      const pkg = await encryptPayload({...body, publishedAt:new Date().toISOString()}, studentCode(s), s.id);
+      await fb.db.collection('pages').doc(s.id).set({...pkg, updatedAt: Date.now()});
+      cloud.synced[s.id] = h; saveCloud();
+    }
+    // Silinen öğrencilerin belgelerini kaldır
+    for(const id of Object.keys(cloud.synced)){
+      if(state.students.some(s=>s.id===id)) continue;
+      try{ await fb.db.collection('pages').doc(id).delete(); }catch(e){}
+      delete cloud.synced[id]; saveCloud();
+    }
+    await pushPanel();
+    cloud.lastSync = Date.now(); saveCloud();
+    fb.status = 'ok'; fb.error = '';
+  }catch(e){
+    fb.status = 'error'; fb.error = cloudErrText(e);
+  }finally{
+    _syncing = false; updateCloudBadge();
+    if(_syncAgain){ _syncAgain = false; scheduleSync(); }
   }
-  btns.forEach(b=>b.disabled=false);
-  if(okCount){ pub.lastPublish = new Date().toISOString(); savePub(); }
-  toast(okCount===list.length ? `${okCount} öğrenci yayınlandı` : `${okCount}/${list.length} öğrenci yayınlandı — hatalara bak`);
-  const st = document.getElementById('pubStatus'); if(st) st.innerHTML = pubStatusText();
 }
-function pubStatusText(){
-  return pub.lastPublish
-    ? `Son yayın: ${new Date(pub.lastPublish).toLocaleString('tr-TR')}<br>Site: <a href="${esc(pubSiteUrl())}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(pubSiteUrl())}</a>`
-    : 'Henüz yayınlanmadı. Değişikliklerin öğrencilere ulaşması için her seferinde "Tümünü Yayınla"ya bas.';
+/* Yeniden tam gönderim (ör. kurallar düzeltildikten sonra) */
+function resyncAll(){ cloud.synced = {}; saveCloud(); scheduleSync(true); toast('Tüm öğrenciler yeniden gönderiliyor'); }
+
+/* --- Öğrenci tiklerini canlı dinle --- */
+const _tickUnsubs = {};
+/* ---------- PANEL SENKRONU: tüm panel verisi panel/<uid> belgesinde, yalnızca öğretmen hesabı okur/yazar.
+   Telefon ve bilgisayar aynı hesapla girince aynı veriyi görür; son kaydeden kazanır. ---------- */
+let _panelUnsub = null, _panelSeen = false;
+function panelRef(){ return fb.db.collection('panel').doc(fb.user.uid); }
+async function pushPanel(){
+  if(!fb.user || !fb.db || !_panelSeen) return;            // uzak kopyayı görmeden yazma (boş cihaz veriyi ezmesin)
+  if(!_panelAt || _panelAt <= (cloud.panelPushed||0)) return;
+  const data = JSON.stringify(state);
+  if(data.length > 950000){ fb.error = 'Panel verisi bulut sınırını aştı (1 MB)'; return; }
+  const at = _panelAt;
+  await panelRef().set({data, updatedAt: at, device: navigator.userAgent.slice(0,60)});
+  cloud.panelPushed = at; saveCloud();
+}
+function watchPanel(){
+  stopPanel();
+  if(!fb.user || !fb.db) return;
+  _panelSeen = false;
+  _panelUnsub = panelRef().onSnapshot(doc=>{
+    _panelSeen = true;
+    const r = doc.exists ? doc.data() : null;
+    if(!r || !r.data){ scheduleSync(true); return; }        // bulutta panel yok: yerel veriyi gönder
+    if(r.updatedAt > _panelAt){
+      try{
+        const d = JSON.parse(r.data);
+        if(!d || !Array.isArray(d.students)) return;
+        const modal = document.getElementById('modalBackdrop');
+        if(modal && modal.classList.contains('open')) return; // form açıkken ezme; sonraki değişiklikte gelir
+        localStorage.setItem(KEY, r.data);
+        state = load();
+        _panelAt = r.updatedAt; localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
+        cloud.panelPushed = r.updatedAt; saveCloud();
+        render(); toast('Panel verisi buluttan güncellendi');
+      }catch(e){}
+    } else if(_panelAt > r.updatedAt){ scheduleSync(true); } // yerel daha yeni: gönder
+    else if(cloud.panelPushed !== r.updatedAt){ cloud.panelPushed = r.updatedAt; saveCloud(); }
+  }, err=>{ fb.error = 'Panel senkronu: ' + err.message; fb.status='error'; updateCloudBadge(); });
+}
+function stopPanel(){ if(_panelUnsub){ _panelUnsub(); _panelUnsub = null; } _panelSeen = false; }
+
+async function watchTicks(){
+  if(!fb.user || !fb.db) return;
+  for(const s of state.students){
+    if(_tickUnsubs[s.id]) continue;
+    _tickUnsubs[s.id] = () => {}; // aynı anda iki kez abone olmayı önle
+    const tid = await tickId(s);
+    _tickUnsubs[s.id] = fb.db.collection('ticks').doc(tid).onSnapshot(
+      snap => applyTicks(s.id, snap.exists ? snap.data() : null),
+      err => { /* izin hatası vb. — sessiz geç */ });
+  }
+  for(const id of Object.keys(_tickUnsubs)){
+    if(!state.students.some(s=>s.id===id)){ _tickUnsubs[id](); delete _tickUnsubs[id]; }
+  }
+}
+function stopTicks(){ for(const id of Object.keys(_tickUnsubs)){ _tickUnsubs[id](); delete _tickUnsubs[id]; } }
+function applyTicks(sid, data){
+  if(!data) return;
+  let changed = 0, msg = '';
+  const s = student(sid); const first = s ? s.name.split(' ')[0] : 'Öğrenci';
+  // 0) Son giriş: öğrenci sayfası açılınca seenAt yazar (eski kurallarda yalnızca updatedAt güncellenir)
+  const seen = +data.seenAt || +data.updatedAt || 0;
+  if(s && seen > (+s.lastSeen||0)){ s.lastSeen = seen; changed++; }
+  // 1) Ödev tikleri
+  for(const [hwId, t] of Object.entries(data.hw||{})){
+    const h = state.homeworks.find(x=>x.id===hwId && x.sid===sid);
+    if(!h || !t || !t.status) continue;
+    if((+t.at||0) > (+h.updatedAt||0) && h.status !== t.status){
+      h.status = t.status; h.updatedAt = +t.at; h.byStudent = true; changed++;
+      msg = `${first} ödev durumunu güncelledi: ${h.desc}`;
+    }
+  }
+  // 2) Öğrencinin girdiği denemeler (kaynak: öğrenci; öğretmen düzenlerse öğretmen kazanır)
+  const ex = data.exams || {};
+  for(const [srcId, e] of Object.entries(ex)){
+    if(!e || !e.date) continue;
+    const clean = sanitizeStudentExam(e); if(!clean) continue;
+    let cur = state.exams.find(x=>x.srcId===srcId && x.sid===sid);
+    if(!cur){ state.exams.push({id:uid(), sid, srcId, byStudent:true, updatedAt:+e.at||0, ...clean}); changed++; msg = `${first} deneme sonucu girdi: ${clean.name || clean.type}`; }
+    else if((+e.at||0) > (+cur.updatedAt||0)){ Object.assign(cur, clean, {updatedAt:+e.at, byStudent:true}); changed++; msg = `${first} bir deneme sonucunu düzenledi`; }
+  }
+  const before = state.exams.length;
+  state.exams = state.exams.filter(x=>!(x.sid===sid && x.srcId && !ex[x.srcId]));
+  if(state.exams.length !== before) changed++;
+  // 3) Çalışma kayıtları
+  const st = data.studies || {};
+  state.studies = state.studies || [];
+  for(const [id, x] of Object.entries(st)){
+    if(!x || !x.date || !x.subject) continue;
+    const clean = {date:String(x.date).slice(0,10), subject:String(x.subject).slice(0,40), hours:Math.max(0, Math.min(24, +x.hours||0)), topic:String(x.topic||'').slice(0,600), at:+x.at||0};
+    let cur = state.studies.find(y=>y.id===id);
+    if(!cur){ state.studies.push({id, sid, ...clean}); changed++; msg = `${first} çalışma kaydı ekledi: ${clean.subject}`; }
+    else if(clean.at > (+cur.at||0)){ Object.assign(cur, clean); changed++; }
+  }
+  const b2 = state.studies.length;
+  state.studies = state.studies.filter(y=>!(y.sid===sid && !st[y.id]));
+  if(state.studies.length !== b2) changed++;
+
+  if(changed){ save(); render(); if(msg) toast(msg); }
+}
+function sanitizeStudentExam(e){
+  const num = v => { const n = parseFloat(v); return isNaN(n) ? null : Math.round(n*100)/100; };
+  const base = {date:String(e.date).slice(0,10), name:String(e.name||'').slice(0,80), note:String(e.note||'').slice(0,300)};
+  if(e.kind==='brans'){
+    const net = num(e.net); if(net==null || net<0 || net>BRANS_MAX) return null;
+    return {...base, kind:'brans', type:'Branş', bransSubject:String(e.bransSubject||'Matematik').slice(0,20), net, sure:num(e.sure), nets:null};
+  }
+  const type = GENEL_NETS[e.type] ? e.type : 'TYT';
+  const nets = {}; let tot = 0, any = false;
+  for(const [sub, max] of GENEL_NETS[type]){
+    const v = e.nets && num(e.nets[sub]); if(v==null) continue;
+    if(v<0 || v>max) return null;
+    nets[sub] = v; tot += v; any = true;
+  }
+  if(!any) return null;
+  return {...base, kind:'genel', type, nets, net:Math.round(tot*100)/100, sure:null, bransSubject:null};
+}
+/* Öğretmen bir öğrenci girdisini silince öğrencinin bulut belgesinden de kaldır */
+async function removeStudentInput(sid, field, id){
+  try{
+    const s = student(sid); if(!s || !fb.db) return;
+    const tid = await tickId(s);
+    await fb.db.collection('ticks').doc(tid).update({[`${field}.${id}`]: firebase.firestore.FieldValue.delete(), updatedAt: Date.now()});
+  }catch(e){}
 }
 
-/* --- Yayın ayarları --- */
-function openPublishForm(){
+/* --- Sidebar rozeti --- */
+function updateCloudBadge(){
+  const l = document.getElementById('cloudLabel'), b = document.getElementById('cloudBtn');
+  if(!l) return;
+  const txt = {off:'Bulut: kapalı', signedout:'Bulut: giriş yap', syncing:'Bulut: gönderiliyor…', ok:'Bulut: senkron ✓', error:'Bulut: hata'}[fb.status] || 'Bulut';
+  l.textContent = txt;
+  b.classList.toggle('cloud-ok', fb.status==='ok');
+  b.classList.toggle('cloud-err', fb.status==='error' || fb.status==='signedout');
+  b.title = fb.error || txt;
+}
+
+/* --- Firestore güvenlik kuralları (e-posta doldurulmuş) --- */
+function rulesText(email){
+  return `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isTeacher() {
+      return request.auth != null && request.auth.token.email == "${email}";
+    }
+    // Şifreli öğrenci sayfaları: adresi bilen okur, yalnızca öğretmen yazar
+    match /pages/{sid} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isTeacher();
+    }
+    // Öğrenci tikleri: gizli adresi (kodu) bilen okur/yazar
+    match /ticks/{tid} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if request.resource.data.keys().hasOnly(['hw', 'exams', 'studies', 'seenAt', 'updatedAt'])
+        && (!('seenAt' in request.resource.data) || request.resource.data.seenAt is number)
+        && (!('hw' in request.resource.data) || (request.resource.data.hw is map && request.resource.data.hw.size() <= 500))
+        && (!('exams' in request.resource.data) || (request.resource.data.exams is map && request.resource.data.exams.size() <= 300))
+        && (!('studies' in request.resource.data) || (request.resource.data.studies is map && request.resource.data.studies.size() <= 2000));
+      allow delete: if isTeacher();
+    }
+    // Panel verisi (öğrenciler, dersler, ücretler, kişisel notlar): yalnızca öğretmen hesabı, kendi belgesi
+    match /panel/{uid} {
+      allow read, write: if isTeacher() && request.auth.uid == uid;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}`;
+}
+
+/* --- Bulut ayarları penceresi --- */
+function openCloudForm(){
+  const cfg = cloudConfig();
+  const signed = !!fb.user;
   openModal(`
-  <h3>Öğrenci Sayfalarını Yayınla</h3>
-  <p class="hint-text" style="margin:-8px 0 14px">Veriler GitHub deponuza şifreli olarak yazılır ve GitHub Pages üzerinden sunulur. Sunucu ya da hesap gerekmez; her öğrenci kendi kodunu girerek sadece kendi sayfasını görür.</p>
+  <h3>Bulut Bağlantısı</h3>
+  <p class="hint-text" style="margin:-8px 0 14px">Panel her kayıtta öğrenci verilerini şifreleyip Firebase'e gönderir; öğrenciler sayfalarında anında görür, attıkları tikler burada anında görünür. "Yayınla" adımı yoktur.</p>
   <div class="form-grid">
-    <div class="field"><label>GitHub Kullanıcı Adı</label><input id="p_user" value="${esc(pub.user||'')}" placeholder="örn. ahmethoca"></div>
-    <div class="field"><label>Depo Adı</label><input id="p_repo" value="${esc(pub.repo||'')}" placeholder="örn. ogrenci-takip"></div>
-    <div class="field"><label>Branch</label><input id="p_branch" value="${esc(pub.branch||'main')}"></div>
-    <div class="field"><label>Site Adresi (isteğe bağlı)</label><input id="p_site" value="${esc(pub.site||'')}" placeholder="boşsa kullanici.github.io/depo"></div>
-    <div class="field full"><label>GitHub Token (Contents: Read & Write)</label><input id="p_token" type="password" value="${esc(pub.token||'')}" placeholder="github_pat_…">
-      <div class="hint-text">GitHub → Settings → Developer settings → Fine-grained tokens → sadece bu depo, "Contents" izni Read and write. Token yalnızca bu tarayıcıda saklanır.</div></div>
+    <div class="field full"><label>Firebase Proje</label>
+      <input value="${esc(cfg.projectId||'')}" disabled>
+      <details style="margin-top:6px"><summary class="hint-text" style="cursor:pointer">Ayar bloğunu değiştir</summary>
+        <textarea id="c_cfg" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... }" style="margin-top:6px;min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:.78rem"></textarea>
+      </details>
+    </div>
+    <div class="field"><label>Öğretmen E-postası</label><input id="c_email" type="email" value="${esc(cloud.email||'')}" placeholder="Firebase → Authentication → Users" ${signed?'disabled':''}></div>
+    <div class="field"><label>Şifre</label><input id="c_pass" type="password" placeholder="${signed?'giriş yapıldı':'Firebase\'de belirlediğin şifre'}" ${signed?'disabled':''}></div>
+    <div class="field full"><label>Öğrenci Sayfası Adresi</label><input id="c_site" value="${esc(cloud.site||'')}" placeholder="https://kullanici.github.io/depo">
+      <div class="hint-text">ogrenci.html dosyasının GitHub Pages'te durduğu klasör. Öğrenci bağlantıları buna göre oluşur.</div></div>
   </div>
-  <div class="pub-status" id="pubStatus">${pubStatusText()}</div>
-  <div class="pub-log" id="pubLog" style="display:none"></div>
+  <div class="pub-status" id="cloudStatus">${cloudStatusText()}</div>
+  <div class="share-row" style="margin-top:12px">
+    <button class="btn btn-ghost btn-sm" onclick="copyRules()">Firestore Kurallarını Kopyala</button>
+    ${signed ? `<button class="btn btn-ghost btn-sm" onclick="resyncAll()">Tümünü Yeniden Gönder</button>
+    <button class="btn btn-ghost btn-sm" onclick="cloudSignOut(); closeModal(); toast('Çıkış yapıldı')">Çıkış Yap</button>` : ''}
+  </div>
+  <div class="hint-text" style="margin-top:8px">Kurallar: Firebase → Firestore Database → <b>Rules</b> sekmesi → içeriği sil, kopyaladığını yapıştır → <b>Publish</b>. Kuralda e-posta olarak yukarıdaki adres kullanılır.</div>
   <div class="modal-actions">
     <button class="btn btn-ghost" onclick="closeModal()">Kapat</button>
-    <button class="btn btn-ghost pub-action" onclick="savePublishForm()">Kaydet</button>
-    <button class="btn btn-primary pub-action" onclick="savePublishForm() && publishAllFromForm()">Tümünü Yayınla</button>
+    <button class="btn btn-primary" onclick="saveCloudForm()">${signed ? 'Kaydet' : 'Kaydet ve Bağlan'}</button>
   </div>`);
 }
-function savePublishForm(){
-  pub.user = fv('p_user'); pub.repo = fv('p_repo'); pub.branch = fv('p_branch') || 'main';
-  pub.site = fv('p_site'); pub.token = fv('p_token');
-  savePub();
-  if(!pubReady()){ toast('Kullanıcı adı, depo ve token gerekli'); return false; }
-  toast('Yayın ayarları kaydedildi'); return true;
+function cloudStatusText(){
+  const n = Object.keys(cloud.synced).length;
+  let s = fb.user ? `Giriş: <b>${esc(fb.user.email)}</b><br>` : 'Giriş yapılmadı. E-posta ve şifreyle bağlan.<br>';
+  if(cloud.lastSync) s += `Son senkron: ${new Date(cloud.lastSync).toLocaleString('tr-TR')} · ${n} öğrenci bulutta<br>`;
+  if(fb.error) s += `<span style="color:var(--red)">${esc(fb.error)}</span>`;
+  return s;
 }
-function publishAllFromForm(){
-  const log = document.getElementById('pubLog'); if(log){ log.style.display='block'; log.innerHTML=''; }
-  publishStudents(null);
+function parseConfigBlock(txt){
+  const out = {}; const re = /(apiKey|authDomain|projectId|storageBucket|messagingSenderId|appId)\s*[:=]\s*["']([^"']+)["']/g;
+  let m; while((m = re.exec(txt))) out[m[1]] = m[2];
+  return (out.apiKey && out.projectId && out.appId) ? out : null;
+}
+async function saveCloudForm(){
+  const cfgTxt = fv('c_cfg');
+  if(cfgTxt){
+    const c = parseConfigBlock(cfgTxt);
+    if(!c){ toast('Ayar bloğu okunamadı: apiKey, projectId ve appId olmalı'); return; }
+    if(c.projectId !== cloudConfig().projectId){ cloud.config = c; cloud.synced = {}; saveCloud(); toast('Yeni proje kaydedildi — sayfayı yenile'); return; }
+    cloud.config = c;
+  }
+  cloud.site = fv('c_site'); saveCloud();
+  if(fb.user){ closeModal(); toast('Kaydedildi'); return; }
+  const email = fv('c_email'), pass = fv('c_pass');
+  if(!email || !pass){ toast('E-posta ve şifre gerekli'); return; }
+  cloud.email = email; saveCloud();
+  const st = document.getElementById('cloudStatus'); if(st) st.innerHTML = 'Bağlanılıyor…';
+  try{
+    await cloudSignIn(email, pass);
+    closeModal(); toast('Buluta bağlanıldı — veriler gönderiliyor');
+  }catch(e){
+    fb.error = cloudErrText(e); fb.status = 'error'; updateCloudBadge();
+    if(st) st.innerHTML = cloudStatusText();
+  }
+}
+function copyRules(){
+  const email = fv('c_email') || cloud.email || (fb.user && fb.user.email) || 'SENIN@EPOSTAN.com';
+  copyText(rulesText(email));
 }
 
 /* --- Öğrenciyle paylaşım --- */
@@ -2549,7 +3025,7 @@ function openShareForm(id){
   const s = student(id); if(!s) return;
   const code = studentCode(s);
   const link = studentLink(s);
-  const msg = `Merhaba ${s.name.split(' ')[0]}, ödevlerini, deneme sonuçlarını ve ders programını buradan görebilirsin:\n${link}\nErişim kodun: ${code}`;
+  const msg = `Merhaba ${s.name.split(' ')[0]}, ödevlerini, ders notlarını, deneme sonuçlarını ve ders programını buradan görebilirsin:\n${link}\nErişim kodun: ${code}`;
   openModal(`
   <h3>${esc(s.name)} · Öğrenci Sayfası</h3>
   ${link ? `<div class="share-box"><div class="lbl">Bağlantı</div><div class="val">${esc(link)}</div>
@@ -2557,32 +3033,29 @@ function openShareForm(id){
       <button class="btn btn-ghost btn-sm" onclick="copyText(${JSON.stringify(link)})">Kopyala</button>
       <a class="btn btn-ghost btn-sm" href="${esc(link)}" target="_blank" rel="noopener">Aç</a>
     </div></div>`
-  : `<div class="share-box"><div class="lbl">Bağlantı</div><div class="hint-text">Önce "Yayınla" menüsünden GitHub bilgilerini gir; bağlantı otomatik oluşur.</div></div>`}
+  : `<div class="share-box"><div class="lbl">Bağlantı</div><div class="hint-text">Önce "Bulut" penceresinde öğrenci sayfası adresini gir; bağlantı otomatik oluşur.</div></div>`}
   <div class="share-box"><div class="lbl">Erişim Kodu</div><div class="val code">${esc(code)}</div>
     <div class="share-row">
       <button class="btn btn-ghost btn-sm" onclick="copyText('${esc(code)}')">Kopyala</button>
       <button class="btn btn-ghost btn-sm" onclick="regenCode('${s.id}')">Yeni Kod Üret</button>
     </div>
-    <div class="hint-text">Kodu değiştirirsen öğrencinin sayfasını yeniden yayınlaman gerekir.</div>
+    <div class="hint-text">Kod değişirse öğrencinin sayfası yeni kodla açılır; eski kod çalışmaz.</div>
   </div>
   <div class="share-row">
     <button class="btn btn-ghost btn-sm" onclick="copyText(${JSON.stringify(msg)})">Mesajı Kopyala</button>
     <a class="btn btn-ghost btn-sm" href="https://wa.me/${esc((s.phone||'').replace(/\D/g,'').replace(/^0/,'90'))}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp ile Gönder</a>
   </div>
-  <div class="pub-log" id="pubLog" style="display:none"></div>
+  <div class="pub-status">${fb.user ? 'Bulut bağlı: değişiklikler otomatik gönderilir.' : '<span style="color:var(--red)">Bulut bağlı değil — öğrenci güncel veriyi göremez. Sol menüden "Bulut"a tıkla.</span>'}</div>
   <div class="modal-actions">
     <button class="btn btn-ghost" onclick="closeModal()">Kapat</button>
-    <button class="btn btn-primary pub-action" onclick="publishOne('${s.id}')">Bu Öğrenciyi Yayınla</button>
   </div>`);
 }
 function regenCode(id){
   const s = student(id); if(!s) return;
-  if(!confirm('Yeni kod üretilsin mi? Eski kod artık çalışmaz; sayfayı yeniden yayınlamalısın.')) return;
-  s.code = genCode(); save(); openShareForm(id); toast('Yeni kod üretildi');
-}
-function publishOne(id){
-  const log = document.getElementById('pubLog'); if(log){ log.style.display='block'; log.innerHTML=''; }
-  publishStudents([id]);
+  if(!confirm('Yeni kod üretilsin mi? Eski kod artık çalışmaz; öğrenciye yeni kodu göndermelisin.')) return;
+  // Eski tik belgesini bırak; yeni kodla yeni belge oluşur
+  if(_tickUnsubs[id]){ _tickUnsubs[id](); delete _tickUnsubs[id]; }
+  s.code = genCode(); save(); watchTicks(); openShareForm(id); toast('Yeni kod üretildi');
 }
 function copyText(t){
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
@@ -2608,6 +3081,7 @@ applyTheme(localStorage.getItem(THEME_KEY) || 'light');
 studentMode = localStorage.getItem(SM_KEY) === '1';
 applyStudentMode();
 render();
+cloudInit();
 </script>
 </body>
 </html>
