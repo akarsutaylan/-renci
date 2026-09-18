@@ -278,6 +278,7 @@ async function unlock(code, remember=true){
 async function startLive(){
   if(unsubPage) unsubPage(); if(unsubTicks) unsubTicks();
   tid = await sha256hex(`tick:${sid}:${myCode}`);
+  markSeen();
   unsubPage = getDb().collection('pages').doc(sid).onSnapshot(async snap => {
     if(!snap.exists) return;
     try{ data = await decryptPayload(snap.data(), myCode, sid); if(document.querySelector('.hero')) render(); }catch(e){}
@@ -288,6 +289,16 @@ async function startLive(){
     if(document.querySelector('.hero')) render();
   }, ()=>{});
 }
+/* Son giriş: öğretmen panelinde "Son giriş" olarak görünür. Kurallar seenAt'i tanımıyorsa yalnızca updatedAt yazılır. */
+let _seenAt = 0;
+async function markSeen(){
+  if(!tid || Date.now() - _seenAt < 30*60*1000) return;
+  _seenAt = Date.now();
+  const now = Date.now();
+  try{ await getDb().collection('ticks').doc(tid).set({seenAt:now, updatedAt:now}, {merge:true}); }
+  catch(e){ try{ await getDb().collection('ticks').doc(tid).set({updatedAt:now}, {merge:true}); }catch(e2){} }
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && data) markSeen(); });
 /* Ödevin görünen durumu: öğrencinin tiki öğretmenin son düzenlemesinden yeniyse tik geçerli */
 function hwStatus(h){
   const t = ticks[h.id];
