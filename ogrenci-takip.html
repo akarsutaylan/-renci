@@ -642,8 +642,18 @@ function load(){
   try{
     const d = JSON.parse(localStorage.getItem(KEY));
     if(d && Array.isArray(d.students)){
+      d.lessons = d.lessons || []; d.payments = d.payments || []; d.homeworks = d.homeworks || []; d.exams = d.exams || [];
       d.schedule = d.schedule || []; d.bills = d.bills || [];
-      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || [];
+      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || []; d.myCourses = d.myCourses || [];
+      // Eski ders blokları: aynı koddan tek bir "ders" tanımı üret ve blokları ona bağla
+      d.myClasses.forEach(b=>{
+        if(b.cid) return;
+        const kod = (b.code||'').trim() || 'Ders';
+        let k = d.myCourses.find(x=>x.code===kod);
+        if(!k){ k = {id:'c'+Math.random().toString(36).slice(2,9), code:kod, name:b.name||'', room:b.room||'', dur:+b.dur||60}; d.myCourses.push(k); }
+        b.cid = k.id; delete b.code; delete b.name;
+        if(b.room === k.room) delete b.room;
+      });
       // Eski "Notlar" bölümü kaldırıldı: notlar artık GitHub deposundan okunur; eski kayıtlar ve tarayıcı dosya deposu temizlenir
       if(d.notes){ delete d.notes; try{ indexedDB.deleteDatabase('ogrenciTakipDosyalar'); }catch(e){} }
       d.students.forEach(x=>{ delete x.driveFolder; });
@@ -669,11 +679,11 @@ function load(){
       return d;
     }
   }catch(e){}
-  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[]};
+  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[], myCourses:[]};
 }
 const PANEL_AT_KEY = 'ogrenciTakipPanelAt';
 let _panelAt = +localStorage.getItem(PANEL_AT_KEY) || 0;
-function stateCount(d){ d = d || state; return ['students','lessons','payments','homeworks','exams','bills','workouts','books','myClasses','subs','studies','reminders','memos']
+function stateCount(d){ d = d || state; return ['students','lessons','payments','homeworks','exams','bills','workouts','books','myClasses','myCourses','subs','studies','reminders','memos']
   .reduce((t,k)=>t + ((d[k]||[]).length), 0); }
 if(!_panelAt && stateCount()){ _panelAt = 1; localStorage.setItem(PANEL_AT_KEY, '1'); } // eski veri: ilk girişte buluta yazılsın
 function save(){
@@ -1349,7 +1359,10 @@ function openModal(html){
   document.getElementById('modalBox').innerHTML = html;
   document.getElementById('modalBackdrop').classList.add('open');
 }
-function closeModal(){ document.getElementById('modalBackdrop').classList.remove('open'); }
+function closeModal(){
+  document.getElementById('modalBackdrop').classList.remove('open');
+  if(typeof flushPanelPending === 'function') flushPanelPending();
+}
 document.getElementById('modalBackdrop').addEventListener('click', e=>{
   if(e.target.id==='modalBackdrop') closeModal();
 });
@@ -1745,7 +1758,7 @@ function importData(ev){
       const d = JSON.parse(reader.result);
       if(!d || !Array.isArray(d.students)) throw 0;
       if(!confirm('Mevcut veriler yedekteki verilerle değiştirilecek. Devam edilsin mi?')) return;
-      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[], currHidden:d.currHidden||[], currExtra:d.currExtra||[]};
+      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[], currHidden:d.currHidden||[], currExtra:d.currExtra||[], myCourses:d.myCourses||[]};
       save(); go('dashboard'); toast('Yedek geri yüklendi');
     }catch(e){ toast('Geçersiz yedek dosyası'); }
   };
@@ -1855,10 +1868,11 @@ function calPersonalBlocks(di, date){
   if(studentMode) return '';
   const cls = state.myClasses.filter(c=>c.day===di).map(c=>{
     const dur = +c.dur||60;
-    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(c.code)}"
-      onclick="openMyClassForm('${c.id}')" title="Üniversite dersin — düzenlemek için tıkla">
-      <b>🎓 ${esc(c.code)}</b>
-      <span class="cal-hours">${fmtClock(c.start)}–${fmtClock(c.start+dur)}${c.room?' · '+esc(c.room):''}</span>
+    const oda = mcRoom(c);
+    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))}"
+      onclick="openMyBlockForm('${c.id}')" title="Üniversite dersin — düzenlemek için tıkla">
+      <b>🎓 ${esc(mcCode(c))}</b>
+      <span class="cal-hours">${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''}</span>
     </div>`;
   }).join('');
   const wos = state.workouts.filter(w=>w.day===di && w.time!=null).map(w=>{
@@ -2313,6 +2327,13 @@ function mcColor(code){
   for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
+/* --- Ders tanımı ve blok yardımcıları --- */
+function mcCourse(c){ return (state.myCourses||[]).find(x=>x.id===c.cid) || null; }
+function mcCode(c){ const k = mcCourse(c); return k ? k.code : (c.code||''); }
+function mcName(c){ const k = mcCourse(c); return k ? (k.name||'') : (c.name||''); }
+function mcRoom(c){ const k = mcCourse(c); return c.room || (k ? (k.room||'') : ''); }
+function mcCourseHours(cid){ return state.myClasses.filter(b=>b.cid===cid).reduce((t,b)=>t+(+b.dur||0),0)/60; }
+
 function viewMySchedule(){
   const ti = todayIdx();
   const totalH = state.myClasses.reduce((t,c)=>t+(+c.dur||0),0)/60;
@@ -2322,72 +2343,205 @@ function viewMySchedule(){
   let times = '';
   for(let m=MC_START; m<=MC_END; m+=60) times += `<div class="cal-time" style="top:${mcY(m)}px">${fmtClock(m)}</div>`;
   const colH = mcY(MC_END);
+  const kurslar = state.myCourses || [];
   return `
   <div class="topbar">
-    <div><h1>Ders Programım</h1><div class="sub">${state.myClasses.length} ders bloğu · haftada ${totalH.toLocaleString('tr-TR')} saat</div></div>
-    <button class="btn btn-primary" onclick="openMyClassForm()">＋ Ders Ekle</button>
+    <div><h1>Ders Programım</h1><div class="sub">${kurslar.length} ders · ${state.myClasses.length} blok · haftada ${totalH.toLocaleString('tr-TR')} saat</div></div>
+    <button class="btn btn-primary" onclick="openMyCourseForm()">＋ Ders Tanımla</button>
   </div>
-  <div class="card cal-card">
-    <div class="cal-grid">
-      <div></div>
-      ${CAL_DAYS.map((d,di)=>`<div class="cal-dayhead" ${di===ti?'style="color:var(--accent)"':''}>${d}</div>`).join('')}
-      <div class="cal-timecol" style="height:${colH}px">${times}</div>
-      ${CAL_DAYS.map((d,di)=>`
-      <div class="cal-col" style="height:${colH}px;cursor:copy" onclick="mcColClick(event, ${di})">
-        ${lines}
-        ${state.myClasses.filter(c=>c.day===di).map(c=>`
-        <div class="cal-block" style="top:${mcY(c.start)}px;height:${(+c.dur||60)/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(c.code)};cursor:pointer"
-          onclick="event.stopPropagation();openMyClassForm('${c.id}')"
-          title="${esc(c.code)} · ${fmtClock(c.start)}–${fmtClock(c.start+(+c.dur||60))}${c.room?' · '+esc(c.room):''}">
-          <b>${esc(c.code)}</b>
-          <span class="cal-hours">${fmtClock(c.start)}${c.room?' · '+esc(c.room):''}</span>
-        </div>`).join('')}
-      </div>`).join('')}
+  <div class="cal-layout">
+    <div class="card cal-card">
+      <div class="cal-grid">
+        <div></div>
+        ${CAL_DAYS.map((d,di)=>`<div class="cal-dayhead" ${di===ti?'style="color:var(--accent)"':''}>${d}</div>`).join('')}
+        <div class="cal-timecol" style="height:${colH}px">${times}</div>
+        ${CAL_DAYS.map((d,di)=>`
+        <div class="cal-col mc-col" data-day="${di}" style="height:${colH}px;cursor:copy"
+          ondragover="event.preventDefault()" ondrop="mcDrop(event,${di})" onclick="mcColClick(event,${di})">${lines}${mcColInner(di)}</div>`).join('')}
+      </div>
+    </div>
+    <div class="cal-side card">
+      <h3>Derslerim</h3>
+      <div class="hint">Bir dersi takvime sürükleyip bırak: o gün ve saate blok oluşur. Bloğu taşı, alt kenarından uzat, düzenlemek için çift tıkla. Aynı dersi haftada birkaç kez bırakabilirsin. Telefonda sürükleme yerine takvimde boş bir alana dokun.</div>
+      ${kurslar.length ? kurslar.map(k=>`
+      <div class="cal-chip" draggable="true" ondragstart="mcChipDrag(event,'${k.id}')" style="border-left:4px solid ${mcColor(k.code)}">
+        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(k.code)}${k.name?`<span style="display:block;font-weight:500;font-size:.72rem;color:var(--muted)">${esc(k.name)}</span>`:''}</span>
+        <span style="display:flex;align-items:center;gap:4px;white-space:nowrap">${mcCourseHours(k.id).toLocaleString('tr-TR')} sa
+          <button class="icon-btn" draggable="false" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation();openMyCourseForm('${k.id}')" title="Dersi düzenle">${SVG_EDIT}</button>
+        </span>
+      </div>`).join('') : '<p style="font-size:.82rem;color:var(--muted)">Önce "Ders Tanımla" ile üniversite derslerini ekle, sonra takvime sürükle.</p>'}
     </div>
   </div>
-  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Boş bir alana tıklayarak o gün ve saate ders ekle, bloğa tıklayarak düzenle. Derslerin Haftalık Takvim'de de 🎓 bloğu olarak görünür. Bu bölüm Öğrenci Modu açıkken görünmez.</p>`;
+  <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Derslerin Haftalık Takvim'de de 🎓 bloğu olarak görünür. Bu bölüm Öğrenci Modu açıkken görünmez.</p>`;
 }
+function mcColInner(di){
+  return state.myClasses.filter(c=>c.day===di).map(c=>{
+    const dur = +c.dur||60, oda = mcRoom(c);
+    return `<div class="cal-block" data-id="${c.id}" style="top:${mcY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))}"
+      onpointerdown="mcMoveStart(event,'${c.id}')" ondblclick="openMyBlockForm('${c.id}')" title="${esc(mcCode(c))} · ${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''} — düzenlemek için çift tıkla">
+      <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="mcDelBlock('${c.id}')" title="Bu bloğu sil">×</button>
+      <b>${esc(mcCode(c))}</b>
+      <span class="cal-hours">${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''}</span>
+      <div class="cal-resize" onpointerdown="mcResizeStart(event,'${c.id}')"></div>
+    </div>`;
+  }).join('');
+}
+function mcRefresh(){
+  let lines = '';
+  for(let m=MC_START+CAL_SLOT; m<MC_END; m+=CAL_SLOT)
+    lines += `<div class="cal-line${m%60?' half':''}" style="top:${mcY(m)}px"></div>`;
+  document.querySelectorAll('.mc-col').forEach(c=>{ c.innerHTML = lines + mcColInner(+c.dataset.day); });
+}
+/* --- Sürükle bırak --- */
+function mcChipDrag(ev, cid){ ev.dataTransfer.setData('text/plain', cid); }
+function mcDrop(ev, di){
+  ev.preventDefault();
+  const cid = ev.dataTransfer.getData('text/plain');
+  const k = (state.myCourses||[]).find(x=>x.id===cid); if(!k) return;
+  const rect = ev.currentTarget.getBoundingClientRect();
+  const dur = +k.dur || 60;
+  let start = MC_START + Math.floor((ev.clientY - rect.top) / CAL_SLOT_H) * CAL_SLOT;
+  start = Math.max(MC_START, Math.min(MC_END - dur, start));
+  state.myClasses.push({id:uid(), cid, day:di, start, dur});
+  save(); render();
+  toast(`${k.code} · ${WD_LONG[di]} ${fmtClock(start)} eklendi`);
+}
+let mcDrag = null, _mcJustDragged = false;
+/* Boş alana tıklama: telefonda ve sürüklemek istemediğinde blok ekler */
 function mcColClick(ev, di){
+  if(_mcJustDragged) return;
+  if(ev.target.closest && ev.target.closest('.cal-block')) return;
+  if(!(state.myCourses||[]).length){ openMyCourseForm(); return; }
   const rect = ev.currentTarget.getBoundingClientRect();
   let start = MC_START + Math.floor((ev.clientY - rect.top) / CAL_SLOT_H) * CAL_SLOT;
   start = Math.max(MC_START, Math.min(MC_END - 60, start));
-  openMyClassForm(null, di, start);
+  openMyBlockForm(null, di, start);
+}
+function mcMoveStart(ev, id){
+  ev.preventDefault();
+  const b = state.myClasses.find(x=>x.id===id); if(!b) return;
+  mcDrag = {mode:'move', id, y0:ev.clientY, orig:{start:b.start, day:b.day, dur:+b.dur||60}};
+  document.addEventListener('pointermove', mcPointerMove);
+  document.addEventListener('pointerup', mcPointerUp);
+}
+function mcResizeStart(ev, id){
+  ev.preventDefault(); ev.stopPropagation();
+  const b = state.myClasses.find(x=>x.id===id); if(!b) return;
+  mcDrag = {mode:'resize', id, y0:ev.clientY, orig:{start:b.start, day:b.day, dur:+b.dur||60}};
+  document.addEventListener('pointermove', mcPointerMove);
+  document.addEventListener('pointerup', mcPointerUp);
+}
+function mcPointerMove(ev){
+  if(!mcDrag) return;
+  const b = state.myClasses.find(x=>x.id===mcDrag.id); if(!b) return;
+  const dSlot = Math.round((ev.clientY - mcDrag.y0) / CAL_SLOT_H);
+  if(mcDrag.mode==='resize'){
+    b.dur = Math.max(CAL_SLOT, Math.min(MC_END - b.start, mcDrag.orig.dur + dSlot*CAL_SLOT));
+  } else {
+    const ns = mcDrag.orig.start + dSlot*CAL_SLOT;
+    b.start = Math.max(MC_START, Math.min(MC_END - (+b.dur||60), ns));
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const col = el && el.closest ? el.closest('.mc-col') : null;
+    if(col) b.day = +col.dataset.day;
+  }
+  mcRefresh();
+}
+function mcPointerUp(){
+  document.removeEventListener('pointermove', mcPointerMove);
+  document.removeEventListener('pointerup', mcPointerUp);
+  if(mcDrag){ mcDrag = null; _mcJustDragged = true; setTimeout(()=>{ _mcJustDragged = false; }, 250); save(); render(); }
+}
+function mcDelBlock(id){
+  const b = state.myClasses.find(x=>x.id===id); if(!b) return;
+  state.myClasses = state.myClasses.filter(x=>x.id!==id);
+  save(); render(); toast('Blok kaldırıldı');
 }
 function mcTimeOptions(sel){
   let o = '';
   for(let m=MC_START; m<=MC_END-30; m+=30) o += `<option value="${m}" ${m===sel?'selected':''}>${fmtClock(m)}</option>`;
   return o;
 }
-function openMyClassForm(id, day, start){
-  const c = id ? state.myClasses.find(x=>x.id===id) : {day:day??todayIdx(), start:start??9*60, dur:60};
+/* --- Ders tanımı (sağdaki liste) --- */
+function openMyCourseForm(id){
+  const k = id ? (state.myCourses||[]).find(x=>x.id===id) : {dur:60};
+  const blok = id ? state.myClasses.filter(b=>b.cid===id).length : 0;
   openModal(`
-  <h3>${id?'Dersi Düzenle':'Ders Programına Ekle'}</h3>
+  <h3>${id?'Dersi Düzenle':'Ders Tanımla'}</h3>
+  <p class="hint-text" style="margin:-8px 0 14px">${id?`Bu ders takvimde ${blok} blok olarak duruyor. Buradaki değişiklik hepsine yansır.`:'Dersi tanımladıktan sonra sağdaki listeden takvime sürükleyerek saatlerini yerleştir.'}</p>
   <div class="form-grid">
-    <div class="field"><label>Ders Kodu *</label><input id="f_mcode" value="${esc(c.code||'')}" placeholder="Örn. CHEM 220"></div>
-    <div class="field"><label>Derslik</label><input id="f_mroom" value="${esc(c.room||'')}" placeholder="Örn. D-201"></div>
-    <div class="field full"><label>Ders Adı</label><input id="f_mname" value="${esc(c.name||'')}" placeholder="Örn. Analitik Kimya"></div>
-    <div class="field"><label>Gün</label>${daySelect('f_mday', +c.day||0)}</div>
-    <div class="field"><label>Başlangıç</label><select id="f_mstart">${mcTimeOptions(+c.start||9*60)}</select></div>
-    <div class="field"><label>Süre (dk)</label><input id="f_mdur" type="number" min="30" max="300" step="5" value="${c.dur??60}"></div>
+    <div class="field"><label>Ders Kodu *</label><input id="f_kcode" value="${esc(k.code||'')}" placeholder="Örn. CHEM 220"></div>
+    <div class="field"><label>Derslik</label><input id="f_kroom" value="${esc(k.room||'')}" placeholder="Örn. D-201"></div>
+    <div class="field full"><label>Ders Adı</label><input id="f_kname" value="${esc(k.name||'')}" placeholder="Örn. Analitik Kimya"></div>
+    <div class="field full"><label>Varsayılan Süre (dk)</label><input id="f_kdur" type="number" min="30" max="300" step="5" value="${k.dur??60}">
+      <div class="hint-text">Takvime sürüklediğinde blok bu uzunlukta oluşur; sonra kenarından uzatabilirsin.</div></div>
   </div>
   <div class="modal-actions">
-    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="closeModal();delItem('myClasses','${id}')">Sil</button>`:''}
+    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="delMyCourse('${id}')">Sil</button>`:''}
     <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
-    <button class="btn btn-primary" onclick="saveMyClass('${id||''}')">Kaydet</button>
+    <button class="btn btn-primary" onclick="saveMyCourse('${id||''}')">Kaydet</button>
   </div>`);
+  setTimeout(()=>{ const el=document.getElementById('f_kcode'); if(el) el.focus(); }, 50);
 }
-function saveMyClass(id){
-  const code = fv('f_mcode');
+function saveMyCourse(id){
+  const code = fv('f_kcode');
   if(!code){ toast('Ders kodu gerekli'); return; }
-  const start = +fv('f_mstart');
-  let dur = parseInt(fv('f_mdur'));
+  let dur = parseInt(fv('f_kdur'));
   if(isNaN(dur) || dur<30){ toast('Süre en az 30 dk olmalı'); return; }
-  dur = Math.min(dur, MC_END - start);
-  const data = {code, name:fv('f_mname'), room:fv('f_mroom'), day:+fv('f_mday'), start, dur};
-  if(id){ Object.assign(state.myClasses.find(x=>x.id===id), data); toast('Ders güncellendi'); }
-  else { state.myClasses.push({id:uid(), ...data}); toast('Ders programına eklendi'); }
+  const data = {code, name:fv('f_kname'), room:fv('f_kroom'), dur};
+  state.myCourses = state.myCourses || [];
+  if(id){ Object.assign(state.myCourses.find(x=>x.id===id), data); toast('Ders güncellendi'); }
+  else { state.myCourses.push({id:uid(), ...data}); toast('Ders tanımlandı — şimdi takvime sürükle'); }
   save(); closeModal(); render();
 }
+function delMyCourse(id){
+  const blok = state.myClasses.filter(b=>b.cid===id).length;
+  if(!confirm(blok ? `Bu ders ve takvimdeki ${blok} bloğu silinecek. Devam edilsin mi?` : 'Bu ders silinsin mi?')) return;
+  state.myCourses = (state.myCourses||[]).filter(x=>x.id!==id);
+  state.myClasses = state.myClasses.filter(b=>b.cid!==id);
+  save(); closeModal(); render(); toast('Ders silindi');
+}
+/* --- Tek bir bloğun ayarları --- */
+function openMyBlockForm(id, day, start){
+  const kurslar = state.myCourses || [];
+  if(!kurslar.length){ openMyCourseForm(); return; }
+  const b = id ? state.myClasses.find(x=>x.id===id)
+              : {cid:kurslar[0].id, day:day??todayIdx(), start:start??9*60, dur:+kurslar[0].dur||60};
+  if(!b) return;
+  openModal(`
+  <h3>${id?'Ders Bloğu':'Ders Bloğu Ekle'}</h3>
+  <p class="hint-text" style="margin:-8px 0 14px">Bu yalnızca bu bloğu ilgilendirir. Ders adı ve kodu için sağdaki listeden dersi düzenle.</p>
+  <div class="form-grid">
+    <div class="field full"><label>Ders</label><select id="f_bcid">
+      ${kurslar.map(k=>`<option value="${k.id}" ${k.id===b.cid?'selected':''}>${esc(k.code)}${k.name?' · '+esc(k.name):''}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>Gün</label>${daySelect('f_bday', +b.day||0)}</div>
+    <div class="field"><label>Başlangıç</label><select id="f_bstart">${mcTimeOptions(+b.start||9*60)}</select></div>
+    <div class="field"><label>Süre (dk)</label><input id="f_bdur" type="number" min="30" max="300" step="5" value="${b.dur??60}"></div>
+    <div class="field"><label>Derslik</label><input id="f_broom" value="${esc(b.room||'')}" placeholder="${esc((mcCourse(b)||{}).room||'dersin dersliği')}"></div>
+  </div>
+  <div class="modal-actions">
+    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="closeModal();mcDelBlock('${id}')">Bloğu Sil</button>`:''}
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="saveMyBlock('${id||''}')">Kaydet</button>
+  </div>`);
+}
+function saveMyBlock(id){
+  const start = +fv('f_bstart');
+  let dur = parseInt(fv('f_bdur'));
+  if(isNaN(dur) || dur<30){ toast('Süre en az 30 dk olmalı'); return; }
+  dur = Math.min(dur, MC_END - start);
+  const data = {cid:fv('f_bcid'), day:+fv('f_bday'), start, dur, room:fv('f_broom')||null};
+  if(id){
+    const b = state.myClasses.find(x=>x.id===id); if(!b) return;
+    Object.assign(b, {...data, cid:data.cid||b.cid});
+    toast('Blok güncellendi');
+  } else {
+    state.myClasses.push({id:uid(), ...data});
+    toast('Blok eklendi');
+  }
+  save(); closeModal(); render();
+}
+
 
 /* ---------- SPOR PROGRAMIM ---------- */
 function viewWorkout(){
@@ -3186,8 +3340,8 @@ function dashboardPersonalPanel(){
     </tr>`),
     ...classes.map(c=>`<tr>
       <td style="width:36px">🎓</td>
-      <td style="font-weight:600">${esc(c.code)}${c.name?`<span class="row-note">${esc(c.name)}</span>`:''}</td>
-      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${fmtClock(c.start)}–${fmtClock(c.start+(+c.dur||60))}${c.room?' · '+esc(c.room):''}</td>
+      <td style="font-weight:600">${esc(mcCode(c))}${mcName(c)?`<span class="row-note">${esc(mcName(c))}</span>`:''}</td>
+      <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">${fmtClock(c.start)}–${fmtClock(c.start+(+c.dur||60))}${mcRoom(c)?' · '+esc(mcRoom(c)):''}</td>
       <td style="text-align:right"><button class="btn btn-ghost btn-sm" onclick="go('myschedule')">Program →</button></td>
     </tr>`),
     ...wos.map(w=>{
@@ -3375,6 +3529,7 @@ const _tickUnsubs = {};
    Telefon ve bilgisayar aynı hesapla girince aynı veriyi görür; son kaydeden kazanır. ---------- */
 let _panelUnsub = null, _panelSeen = false, _panelRemoteCount = 0, _panelRemoteAt = 0;
 let _panelBytes = 0, _panelRaw = 0, _panelWarned = false;
+let _panelPending = null;   // form açıkken gelen güncelleme burada bekler, form kapanınca uygulanır
 /* Firestore belge sınırı 1.048.576 bayt; alan adları ve ek alanlar için pay bırakıyoruz. */
 const PANEL_LIMIT = 1000000;
 const canZip = () => typeof CompressionStream === 'function' && typeof DecompressionStream === 'function';
@@ -3443,22 +3598,36 @@ function watchPanel(){
     try{ _panelRemoteCount = r.count!=null ? r.count : stateCount(JSON.parse(json)); }catch(e){ _panelRemoteCount = 0; }
     panelSizeWarn();
     if(r.updatedAt > _panelAt){
-      try{
-        const d = JSON.parse(json);
-        if(!d || !Array.isArray(d.students)) return;
-        const modal = document.getElementById('modalBackdrop');
-        if(modal && modal.classList.contains('open')) return; // form açıkken ezme; sonraki değişiklikte gelir
-        localStorage.setItem(KEY, json);
-        state = load();
-        _panelAt = r.updatedAt; localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
-        cloud.panelPushed = r.updatedAt; saveCloud();
-        render(); toast('Panel verisi buluttan güncellendi');
-      }catch(e){}
+      const modal = document.getElementById('modalBackdrop');
+      const formAcik = modal && modal.classList.contains('open');
+      // Form açıkken yazmakta olduğun kaydı ezmemek için beklet — ama veriyi ASLA atma.
+      // Cihazda hiç kayıt yoksa (ilk bağlanış) beklemeden uygula.
+      if(formAcik && stateCount()){ _panelPending = {json, at:r.updatedAt}; return; }
+      applyPanelJson(json, r.updatedAt);
     } else if(_panelAt > r.updatedAt){ scheduleSync(true); }  // yerel daha yeni: gönder
     else if(cloud.panelPushed !== r.updatedAt){ cloud.panelPushed = r.updatedAt; saveCloud(); }
   }, err=>{ fb.error = 'Panel senkronu: ' + err.message; fb.status='error'; updateCloudBadge(); });
 }
-function stopPanel(){ if(_panelUnsub){ _panelUnsub(); _panelUnsub = null; } _panelSeen = false; }
+function applyPanelJson(json, at){
+  try{
+    const d = JSON.parse(json);
+    if(!d || !Array.isArray(d.students)) return false;
+    localStorage.setItem(KEY, json);
+    state = load();
+    _panelAt = at; localStorage.setItem(PANEL_AT_KEY, String(at));
+    cloud.panelPushed = at; saveCloud();
+    _panelPending = null;
+    render(); toast(`Panel verisi buluttan geldi · ${stateCount()} kayıt`);
+    return true;
+  }catch(e){ return false; }
+}
+/* Form kapandığında bekleyen bulut güncellemesi varsa uygula */
+function flushPanelPending(){
+  if(!_panelPending) return;
+  const {json, at} = _panelPending;
+  if(at > _panelAt) applyPanelJson(json, at); else _panelPending = null;
+}
+function stopPanel(){ if(_panelUnsub){ _panelUnsub(); _panelUnsub = null; } _panelSeen = false; _panelPending = null; }
 /* Bulut belgesi doluluk ölçeri */
 const fmtKB = b => b >= 1048576 ? (b/1048576).toFixed(2)+' MB' : Math.max(1,Math.round(b/1024))+' KB';
 function panelPct(){ return Math.min(100, Math.round(_panelBytes / PANEL_LIMIT * 100)); }
