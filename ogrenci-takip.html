@@ -436,6 +436,12 @@ body.sm .main::before{
 .rem-item input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer}
 .rem-item .t{font-weight:600;font-size:.92rem}
 .rem-item .m{font-size:.8rem;color:var(--muted);margin-top:2px}
+.cal-block.plan-block,.cal-block.plan-lesson{cursor:pointer;touch-action:auto;padding:3px 6px}
+.cal-block.plan-lesson{background:repeating-linear-gradient(135deg,var(--field-bg) 0 6px,var(--line) 6px 12px);color:var(--ink);border:1.5px solid var(--line-strong);box-shadow:none}
+.cal-block .plan-topic{display:block;opacity:.92;font-size:.66rem;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.plan-daynum{font-weight:500;color:var(--muted);margin-left:4px}
+.plan-summary{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px}
+.plan-lock-chip{background:var(--field-bg);border:1px solid var(--line-strong);color:var(--ink)}
 .cal-block.personal{cursor:pointer;box-shadow:none;opacity:.94;border:1.5px dashed rgba(255,255,255,.55)}
 .cal-block.personal:hover{opacity:1}
 .cal-block.personal:hover .cal-x{opacity:1}
@@ -644,7 +650,7 @@ function load(){
     if(d && Array.isArray(d.students)){
       d.lessons = d.lessons || []; d.payments = d.payments || []; d.homeworks = d.homeworks || []; d.exams = d.exams || [];
       d.schedule = d.schedule || []; d.bills = d.bills || [];
-      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || []; d.myCourses = d.myCourses || [];
+      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || []; d.myCourses = d.myCourses || []; d.plans = d.plans || [];
       // Eski ders blokları: aynı koddan tek bir "ders" tanımı üret ve blokları ona bağla
       d.myClasses.forEach(b=>{
         if(b.cid) return;
@@ -679,16 +685,23 @@ function load(){
       return d;
     }
   }catch(e){}
-  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[], myCourses:[]};
+  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[], myCourses:[], plans:[]};
 }
 const PANEL_AT_KEY = 'ogrenciTakipPanelAt';
 let _panelAt = +localStorage.getItem(PANEL_AT_KEY) || 0;
-function stateCount(d){ d = d || state; return ['students','lessons','payments','homeworks','exams','bills','workouts','books','myClasses','myCourses','subs','studies','reminders','memos']
+function stateCount(d){ d = d || state; return ['students','lessons','payments','homeworks','exams','bills','workouts','books','myClasses','myCourses','subs','studies','reminders','memos','plans']
   .reduce((t,k)=>t + ((d[k]||[]).length), 0); }
 if(!_panelAt && stateCount()){ _panelAt = 1; localStorage.setItem(PANEL_AT_KEY, '1'); } // eski veri: ilk girişte buluta yazılsın
+/* Bu cihazda buluta gönderilmemiş değişiklik var mı? (saat farkından bağımsız, cihaz içi bayrak) */
+const PANEL_DIRTY_KEY = 'ogrenciTakipPanelKirli';
+let _saveSeq = 0;
+function markPanelDirty(){ _saveSeq++; try{ localStorage.setItem(PANEL_DIRTY_KEY, '1'); }catch(e){} }
+function panelDirty(){ return localStorage.getItem(PANEL_DIRTY_KEY) === '1'; }
+function clearPanelDirty(){ try{ localStorage.setItem(PANEL_DIRTY_KEY, '0'); }catch(e){} }
 function save(){
   _panelAt = Date.now(); localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
   localStorage.setItem(KEY, JSON.stringify(state));
+  markPanelDirty();
   if(typeof scheduleSync==='function'){ scheduleSync(); watchTicks(); }
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1075,6 +1088,7 @@ function viewStudentDetail(){
   const d = debt(s.id);
   const tabs = [
     {id:'dersler',  label:'Dersler'},
+    {id:'program',  label:'Program'},
     {id:'odevler',  label:'Ödevler'},
     {id:'denemeler',label:'Denemeler'},
     {id:'mufredat', label:'Müfredat'},
@@ -1094,6 +1108,8 @@ function viewStudentDetail(){
   } else if(route.subtab==='calismalar'){
     const list = (state.studies||[]).filter(x=>x.sid===s.id).sort(byDateDesc);
     body = `${studyWeekSummary(s.id)}<div class="card">${studiesTable(list,false)}</div>`;
+  } else if(route.subtab==='program'){
+    body = studentProgramTab(s);
   } else if(route.subtab==='mufredat'){
     body = curriculumTab(s);
   } else if(route.subtab==='rapor'){
@@ -1403,6 +1419,7 @@ function deleteStudent(id){
   state.homeworks = state.homeworks.filter(x=>x.sid!==id);
   state.exams = state.exams.filter(x=>x.sid!==id);
   state.studies = (state.studies||[]).filter(x=>x.sid!==id);
+  state.plans = (state.plans||[]).filter(x=>x.sid!==id);
   save(); toast('Öğrenci silindi'); go('students');
 }
 
@@ -1758,7 +1775,7 @@ function importData(ev){
       const d = JSON.parse(reader.result);
       if(!d || !Array.isArray(d.students)) throw 0;
       if(!confirm('Mevcut veriler yedekteki verilerle değiştirilecek. Devam edilsin mi?')) return;
-      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[], currHidden:d.currHidden||[], currExtra:d.currExtra||[], myCourses:d.myCourses||[]};
+      state = {students:d.students||[], lessons:d.lessons||[], payments:d.payments||[], homeworks:d.homeworks||[], exams:d.exams||[], schedule:d.schedule||[], bills:d.bills||[], workouts:d.workouts||[], books:d.books||[], myClasses:d.myClasses||[], subs:d.subs||[], studies:d.studies||[], reminders:d.reminders||[], memos:d.memos||[], currHidden:d.currHidden||[], currExtra:d.currExtra||[], myCourses:d.myCourses||[], plans:d.plans||[]};
       save(); go('dashboard'); toast('Yedek geri yüklendi');
     }catch(e){ toast('Geçersiz yedek dosyası'); }
   };
@@ -2805,6 +2822,165 @@ function dashboardWarnPanel(){
   </div>`;
 }
 
+/* ================= ÖĞRENCİ PROGRAMI (haftalık çalışma planı) =================
+   state.plans: öğrenciye özel, her hafta tekrarlayan çalışma blokları {id, sid, day, start, dur, subject, topic, note}.
+   Senin ders kayıtların o haftanın programında KİLİTLİ blok olarak görünür (öğrenci değiştiremez).
+   Öğrenci kendi sayfasından blok ekler / düzenler / siler; girdileri tik belgesindeki "plan" alanından gelir
+   (anahtar = planKey). Kim en son değiştirdiyse onun hali geçerlidir. */
+const PLAN_SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe'];
+const PL_START = 6*60, PL_END = 24*60;
+const PLAN_DURS = [30,45,60,75,90,120,150,180,240];
+const plY = m => (m - PL_START) / CAL_SLOT * CAL_SLOT_H;
+const planKey = p => p.srcId || p.id;
+function plansOf(sid){ return (state.plans||[]).filter(p=>p.sid===sid); }
+function subjectColor(n){ const x = SUBJECTS.find(s=>s.n===n); return x ? x.fg : 'var(--accent)'; }
+function weekDates(off){
+  const d = new Date(); d.setDate(d.getDate() - ((d.getDay()+6)%7) + off*7);
+  return [...Array(7)].map((_,i)=>{ const x = new Date(d); x.setDate(d.getDate()+i); return localDate(x); });
+}
+const fmtDur = m => { const h = Math.floor(m/60), r = m%60; return h ? `${h} sa${r?' '+r+' dk':''}` : `${r} dk`; };
+/* Aynı gündeki çakışan blokları yan yana diz */
+function layoutLanes(items){
+  items.sort((a,b)=>a.start-b.start || b.end-a.end);
+  const out = []; let cluster = [], clusterEnd = -1;
+  const flush = () => {
+    const lanes = [];
+    cluster.forEach(it=>{ let i = lanes.findIndex(e=>e<=it.start); if(i<0){ i = lanes.length; lanes.push(0); } lanes[i] = it.end; it.lane = i; });
+    cluster.forEach(it=>{ it.lanes = lanes.length; out.push(it); });
+    cluster = [];
+  };
+  items.forEach(it=>{ if(cluster.length && it.start >= clusterEnd) flush(); cluster.push(it); clusterEnd = cluster.length===1 ? it.end : Math.max(clusterEnd, it.end); });
+  if(cluster.length) flush();
+  return out;
+}
+function setPlanWeek(n){ route.planWeek = n===0 ? 0 : (route.planWeek||0) + n; render(); }
+function studentProgramTab(s){
+  const off = route.planWeek || 0, days = weekDates(off), td = today();
+  const plans = plansOf(s.id);
+  const lessons = state.lessons.filter(l=>l.sid===s.id && isActive(l) && l.date>=days[0] && l.date<=days[6]);
+  let lines = '';
+  for(let m=PL_START+CAL_SLOT; m<PL_END; m+=CAL_SLOT) lines += `<div class="cal-line${m%60?' half':''}" style="top:${plY(m)}px"></div>`;
+  let times = '';
+  for(let m=PL_START; m<PL_END; m+=60) times += `<div class="cal-time" style="top:${plY(m)}px">${fmtClock(m)}</div>`;
+  const colH = plY(PL_END);
+  const cols = days.map((ds,di)=>{
+    const items = [
+      ...lessons.filter(l=>l.date===ds).map(l=>{ const st = l.start!=null ? +l.start : 18*60; return {kind:'lesson', l, start:st, end:st+Math.round((+l.hours||1)*60)}; }),
+      ...plans.filter(p=>+p.day===di).map(p=>({kind:'plan', p, start:+p.start, end:+p.start+(+p.dur||60)})),
+    ];
+    const blocks = layoutLanes(items).map(it=>{
+      const a = Math.max(PL_START, it.start), b = Math.min(PL_END, it.end);
+      const pos = `top:${plY(a)}px;height:${Math.max(18, (b-a)/CAL_SLOT*CAL_SLOT_H-2)}px;left:calc(${it.lane*100/it.lanes}% + 2px);width:calc(${100/it.lanes}% - 4px);right:auto`;
+      const saat = `${fmtClock(it.start)}–${fmtClock(it.end)}`;
+      if(it.kind==='lesson'){
+        const l = it.l;
+        return `<div class="cal-block plan-lesson" style="${pos}" onclick="event.stopPropagation();openLessonForm('${l.id}')"
+          title="Özel ders · ${esc(l.subject)} · ${saat}${l.topic?' · '+esc(l.topic):''} — öğrencinin programında kilitli; düzenlemek için tıkla">
+          <b>🔒 ${esc(l.subject)}</b><span class="cal-hours">${saat}</span>${l.topic?`<span class="plan-topic">${esc(l.topic)}</span>`:''}</div>`;
+      }
+      const p = it.p;
+      return `<div class="cal-block plan-block" style="${pos};background:${subjectColor(p.subject)}" onclick="event.stopPropagation();openPlanForm('${p.id}')"
+        title="${esc(p.subject)} · ${saat}${p.topic?' · '+esc(p.topic):''}${p.byStudent?' · öğrenci düzenledi':''}">
+        <b>${esc(p.subject)}${p.byStudent?' 👤':''}</b><span class="cal-hours">${saat}</span>${p.topic?`<span class="plan-topic">${esc(p.topic)}</span>`:''}</div>`;
+    }).join('');
+    return `<div class="cal-col plan-col" style="height:${colH}px;cursor:copy" onclick="planColClick(event,'${s.id}',${di})">${lines}${blocks}</div>`;
+  }).join('');
+  const heads = days.map((ds,di)=>`<div class="cal-dayhead" ${ds===td?'style="color:var(--accent)"':''}>${CAL_DAYS[di]}<span class="plan-daynum">${+ds.slice(8)}</span></div>`).join('');
+  const planMin = plans.reduce((t,p)=>t+(+p.dur||0),0);
+  const lesMin = lessons.reduce((t,l)=>t+Math.round((+l.hours||0)*60),0);
+  const bySub = {}; plans.forEach(p=>{ bySub[p.subject] = (bySub[p.subject]||0) + (+p.dur||0); });
+  const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
+  const range = `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
+  return `
+  <div class="toolbar">
+    <button class="btn btn-primary btn-sm" onclick="openPlanForm(null,'${s.id}')">＋ Çalışma Ekle</button>
+    <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(-1)">‹</button>
+    <button class="btn ${off===0?'btn-primary':'btn-ghost'} btn-sm" onclick="setPlanWeek(0)">Bu Hafta</button>
+    <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(1)">›</button>
+    <span style="font-size:.84rem;color:var(--muted)">${range}</span>
+  </div>
+  <div class="plan-summary">
+    <span class="chip badge-zero">Çalışma planı · haftada ${fmtDur(planMin)}</span>
+    <span class="chip plan-lock-chip">🔒 Seninle ders · bu hafta ${fmtDur(lesMin)}</span>
+    ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${fmtDur(v)}</span>`).join('')}
+  </div>
+  <div class="card cal-card">
+    <div class="cal-grid">
+      <div></div>${heads}
+      <div class="cal-timecol" style="height:${colH}px">${times}</div>
+      ${cols}
+    </div>
+  </div>
+  <p class="hint-text" style="margin-top:10px">Çalışma blokları her hafta tekrarlar; boş bir alana tıklayarak ekle, bloğa tıklayarak konusunu ve saatini düzenle. 🔒 taralı bloklar senin ders kayıtların: öğrencinin programında kilitli durur, burada tıklayınca ders kaydı açılır. 👤 işaretli blokları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür ve kendi çalışmalarını ekleyebilir.</p>`;
+}
+function planColClick(ev, sid, di){
+  if(ev.target.closest && ev.target.closest('.cal-block')) return;
+  const rect = ev.currentTarget.getBoundingClientRect();
+  let start = PL_START + Math.floor((ev.clientY - rect.top) / CAL_SLOT_H) * CAL_SLOT;
+  start = Math.max(PL_START, Math.min(PL_END - 60, start));
+  openPlanForm(null, sid, di, start);
+}
+function planTimeOptions(sel){
+  let o = '';
+  for(let m=PL_START; m<PL_END; m+=15) o += `<option value="${m}" ${m===sel?'selected':''}>${fmtClock(m)}</option>`;
+  if(sel!=null && (sel-PL_START)%15) o = `<option value="${sel}" selected>${fmtClock(sel)}</option>` + o;
+  return o;
+}
+function planDurOptions(sel){
+  const list = PLAN_DURS.includes(sel) ? PLAN_DURS : [...PLAN_DURS, sel].sort((a,b)=>a-b);
+  return list.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${fmtDur(m)}</option>`).join('');
+}
+function openPlanForm(id, sid, day, start){
+  const p = id ? (state.plans||[]).find(x=>x.id===id)
+               : {sid, day: day ?? todayIdx(), start: start ?? 17*60, dur:60, subject:PLAN_SUBJECTS[0], topic:'', note:''};
+  if(!p) return;
+  const s = student(p.sid); if(!s) return;
+  openModal(`
+  <h3>${id?'Program Bloğu':'Programa Çalışma Ekle'} <span style="font-weight:500;color:var(--muted)">· ${esc(s.name)}</span></h3>
+  ${p.byStudent?`<p class="hint-text" style="margin:-8px 0 12px">👤 Bu bloğu öğrenci ekledi ya da en son öğrenci düzenledi. Senin değişikliğin geçerli olur.</p>`:''}
+  <div class="form-grid">
+    <div class="field"><label>Ders</label><select id="f_psub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="field"><label>Gün</label>${daySelect('f_pday', +p.day||0)}</div>
+    <div class="field"><label>Başlangıç</label><select id="f_pstart">${planTimeOptions(+p.start)}</select></div>
+    <div class="field"><label>Süre</label><select id="f_pdur">${planDurOptions(+p.dur||60)}</select></div>
+    <div class="field full"><label>Konu</label><input id="f_ptopic" list="planTopics" value="${esc(p.topic||'')}" placeholder="Müfredattan seç ya da yaz · örn. Türev – zincir kuralı"><datalist id="planTopics"></datalist></div>
+    <div class="field full"><label>Ne yapılacak?</label><textarea id="f_pnote" placeholder="Örn. Derste çözdüğümüz 20 soruyu tekrar et, 3D yayınları test 4">${esc(p.note||'')}</textarea></div>
+  </div>
+  <div class="modal-actions">
+    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="delPlan('${id}')">Sil</button>`:''}
+    <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-primary" onclick="savePlan('${id||''}','${p.sid}')">Kaydet</button>
+  </div>`);
+  planTopicList();
+}
+function planTopicList(){
+  const dl = document.getElementById('planTopics'), sel = document.getElementById('f_psub');
+  if(dl && sel) dl.innerHTML = (CURRICULUM[sel.value] ? currTopics(sel.value) : []).map(c=>`<option value="${esc(c.t)}">`).join('');
+}
+function savePlan(id, sid){
+  const start = +fv('f_pstart');
+  const dur = Math.min(+fv('f_pdur') || 60, 24*60 - start);
+  const data = {day:+fv('f_pday'), start, dur, subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
+  state.plans = state.plans || [];
+  if(id){ const p = state.plans.find(x=>x.id===id); if(!p) return; Object.assign(p, data); }
+  else state.plans.push({id:uid(), sid, ...data});
+  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : `${WD_LONG[data.day]} ${fmtClock(start)} · ${data.subject} eklendi`);
+}
+function delPlan(id){
+  const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
+  if(!confirm('Bu çalışma bloğu öğrencinin programından da kaldırılsın mı?')) return;
+  state.plans = state.plans.filter(x=>x.id!==id);
+  removeStudentInput(p.sid, 'plan', planKey(p));
+  save(); closeModal(); render(); toast('Blok kaldırıldı');
+}
+/* Öğrencinin gönderdiği program bloğunu doğrula */
+function sanitizePlan(x){
+  const day = Math.round(+x.day), start = Math.round(+x.start), dur = Math.round(+x.dur);
+  if(!(day>=0 && day<=6) || !(start>=0 && start<24*60) || !(dur>=15 && dur<=600)) return null;
+  if(!PLAN_SUBJECTS.includes(x.subject)) return null;
+  return {day, start, dur:Math.min(dur, 24*60-start), subject:x.subject, topic:String(x.topic||'').slice(0,120), note:String(x.note||'').slice(0,300)};
+}
+
 /* ================= MÜFREDAT TAKİBİ =================
    Konu, derste işlendiyse otomatik (ders konusu müfredat adıyla eşleşince),
    değilse elle işaretlenir. İlerleme ikisinin birleşimidir. */
@@ -2812,6 +2988,8 @@ const keySlug = t => (t||'').toLowerCase()
   .replace(/ı/g,'i')
   .normalize('NFD').replace(/[\u0300-\u036f]/g,'')   // ayrık kodlanmış Türkçe harfleri de yakala
   .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+/* HTML özniteliği içine güvenli JS metin argümanı (kesme işaretli konu adları için: "Newton'un …") */
+const jsArg = v => esc(JSON.stringify(String(v)));
 function currKey(sub, t){ return keySlug(sub)+':'+keySlug(t); }
 function currTopics(sub){
   const extra = (state.currExtra||[]).filter(x=>x.sub===sub).map(x=>({t:x.t, e:+x.e||3, own:true}));
@@ -2914,7 +3092,7 @@ function curriculumTab(s){
     const k = currKey(sub, c.t), a = auto[k], m = man[k];
     const done = !!(a || m);
     return `<div class="curr-item ${done?'done':''}">
-      <input type="checkbox" ${m?'checked':''} onchange="toggleCurr('${s.id}','${esc(sub)}','${esc(c.t).replace(/'/g,"\\'")}')" title="Elle işaretle">
+      <input type="checkbox" ${m?'checked':''} onchange="toggleCurr(${jsArg(s.id)},${jsArg(sub)},${jsArg(c.t)})" title="Elle işaretle">
       <div style="flex:1;min-width:0">
         <div class="t">${esc(c.t)}</div>
         <div class="m">
@@ -2923,7 +3101,7 @@ function curriculumTab(s){
           ${m&&!a?`<span style="color:var(--muted)">elle işaretlendi · ${fmtDate(m)}</span>`:''}
         </div>
       </div>
-      <button class="icon-btn" onclick="hideCurrTopic('${esc(sub)}','${esc(c.t).replace(/'/g,"\\'")}')" title="Bu konuyu listeden gizle">✕</button>
+      <button class="icon-btn" onclick="hideCurrTopic(${jsArg(sub)},${jsArg(c.t)})" title="Bu konuyu listeden gizle">✕</button>
     </div>`;}).join('');
   return `
   <div class="card panel">
@@ -3447,6 +3625,8 @@ function studentPayload(s){
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
+    plans: plansOf(s.id).map(p=>({id:planKey(p), day:p.day, start:p.start, dur:p.dur, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
+    topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
   };
 }
 
@@ -3480,7 +3660,7 @@ function cloudErrText(e){
   if(c.includes('invalid-credential') || c.includes('wrong-password') || c.includes('user-not-found')) return 'E-posta ya da şifre hatalı (Firebase → Authentication → Users içinde bu kullanıcı olmalı)';
   if(c.includes('operation-not-allowed')) return 'Firebase → Authentication → Sign-in method → Email/Password açık değil';
   if(c.includes('permission-denied')) return 'Firestore kuralları yazmaya izin vermiyor — Bulut penceresinden kuralları kopyalayıp Firestore → Rules\'a yapıştır';
-  if(c.includes('network')) return 'İnternet bağlantısı yok';
+  if(c.includes('network') || c.includes('unavailable')) return 'İnternet bağlantısı yok — değişiklikler bu cihazda bekliyor, bağlantı gelince gönderilir';
   return (e && (e.message || String(e))) || 'Bilinmeyen hata';
 }
 
@@ -3554,61 +3734,194 @@ async function panelJson(r){
   return r.data || '';
 }
 function panelRef(){ return fb.db.collection('panel').doc(fb.user.uid); }
+/* ---------- Üç yönlü birleştirme ----------
+   base: bu cihazın buluttan son aldığı/gönderdiği kopya; local: bu cihaz; remote: bulut.
+   Yalnızca bir tarafta değişen alan o taraftan alınır. İki tarafta da değişen nesneler alan alan,
+   id'li listeler kayıt kayıt birleştirilir; böylece telefonda ödeme alırken bilgisayarda müfredat
+   işaretlemek birbirini silmez. Aynı alanı iki cihaz farklı değere çektiyse bu cihaz kazanır
+   (…At / lastSeen gibi zaman alanlarında büyük olan). */
+const _same = (a,b) => a === b || JSON.stringify(a) === JSON.stringify(b);
+const _isObj = x => x !== null && typeof x === 'object' && !Array.isArray(x);
+const _idList = a => Array.isArray(a) && a.every(x => _isObj(x) && x.id != null);
+function merge3(base, local, remote, key){
+  if(_same(local, remote)) return local;
+  if(base !== undefined && _same(local, base)) return remote;
+  if(base !== undefined && _same(remote, base)) return local;
+  if(_isObj(local) && _isObj(remote)){
+    const b = _isObj(base) ? base : {}, out = {};
+    for(const k of new Set([...Object.keys(remote), ...Object.keys(local)])){
+      const inL = k in local, inR = k in remote, inB = k in b;
+      if(inL && inR){ out[k] = merge3(inB ? b[k] : undefined, local[k], remote[k], k); continue; }
+      const v = inL ? local[k] : remote[k];
+      if(inB && _same(b[k], v)) continue;   // öbür cihaz sildi, bu taraf dokunmadı → silinir
+      out[k] = v;                            // yeni eklendi (ya da silinirken öbür tarafta değişti → korunur)
+    }
+    return out;
+  }
+  if(Array.isArray(local) && Array.isArray(remote)){
+    const b = Array.isArray(base) ? base : [];
+    if(_idList(local) && _idList(remote)){
+      const idx = a => new Map(a.filter(x => _isObj(x) && x.id != null).map(x => [String(x.id), x]));
+      const bm = idx(b), lm = idx(local), rm = idx(remote), out = [];
+      for(const id of [...rm.keys(), ...[...lm.keys()].filter(id => !rm.has(id))]){
+        const inL = lm.has(id), inR = rm.has(id), inB = bm.has(id);
+        if(inL && inR){ out.push(merge3(inB ? bm.get(id) : undefined, lm.get(id), rm.get(id))); continue; }
+        const v = inL ? lm.get(id) : rm.get(id);
+        if(inB && _same(bm.get(id), v)) continue;
+        out.push(v);
+      }
+      return out;
+    }
+    // id'siz listeler (gizlenen konular, eklenen müfredat konuları): küme olarak birleştir
+    const s = x => JSON.stringify(x), bs = new Set(b.map(s)), ls = new Set(local.map(s)), rs = new Set(remote.map(s));
+    const out = [], seen = new Set();
+    for(const x of remote){ const k = s(x); if(bs.has(k) && !ls.has(k)) continue; out.push(x); seen.add(k); }
+    for(const x of local){ const k = s(x); if(seen.has(k) || (bs.has(k) && !rs.has(k))) continue; out.push(x); seen.add(k); }
+    return out;
+  }
+  if(typeof local === 'number' && typeof remote === 'number' && /(At|Seen)$/.test(key || '')) return Math.max(local, remote);
+  return local;
+}
+const _clone = o => JSON.parse(JSON.stringify(o));
+
+/* Ortak kopya (base) IndexedDB'de durur; localStorage'ı ikiye katlamamak için */
+const SYNC_DB = 'ogrenciTakipSenkron';
+function _syncDb(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(SYNC_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function panelBaseGet(){
+  try{
+    const db = await _syncDb();
+    return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get('base'); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); });
+  }catch(e){ return null; }
+}
+async function panelBaseSet(json, at){
+  try{
+    const db = await _syncDb();
+    await new Promise(res => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({json, at}, 'base'); tx.oncomplete = res; tx.onerror = res; });
+  }catch(e){}
+}
+async function panelBaseObj(){ const b = await panelBaseGet(); try{ return b ? JSON.parse(b.json) : undefined; }catch(e){ return undefined; } }
+async function panelPayload(json){
+  const raw = new TextEncoder().encode(json).length;
+  if(canZip() && FBytes()){
+    const u8 = await deflateStr(json);
+    return {payload:{gz: FBytes().fromUint8Array(u8), enc:'deflate-raw'}, bytes:u8.length, raw};
+  }
+  return {payload:{data: json}, bytes: raw, raw};                 // eski tarayıcı: düz metin
+}
+function replaceLocalState(obj){ localStorage.setItem(KEY, JSON.stringify(obj)); state = load(); }
+const formOpen = () => { const m = document.getElementById('modalBackdrop'); return !!(m && m.classList.contains('open')); };
+
+let _panelWriting = 0;   // bu cihazın yazdığı sürüm; kendi yankımızı "başka cihaz" sanmamak için
 async function pushPanel(force){
   if(!fb.user || !fb.db) return;
   if(!force){
     if(!_panelSeen) return;                                // uzak kopyayı görmeden yazma
-    if(!_panelAt || _panelAt <= (cloud.panelPushed||0)) return;
+    if(!panelDirty()) return;                              // gönderilmemiş değişiklik yok
     if(!stateCount() && _panelRemoteCount > 0) return;      // boş cihaz, dolu bulut kopyasını ezmesin
   }
-  const json = JSON.stringify(state);
-  const raw = new TextEncoder().encode(json).length;
-  let payload, bytes;
-  if(canZip() && FBytes()){
-    const u8 = await deflateStr(json);
-    bytes = u8.length;
-    payload = {gz: FBytes().fromUint8Array(u8), enc: 'deflate-raw'};
-  } else {
-    bytes = raw; payload = {data: json};                   // eski tarayıcı: düz metin
-  }
-  if(bytes > PANEL_LIMIT){
-    fb.error = `Panel verisi bulut sınırını aştı (${fmtKB(bytes)} / ${fmtKB(PANEL_LIMIT)}). Eski kayıtları yedekleyip temizle.`;
+  const seq = _saveSeq, ref = panelRef();
+  let res = null;
+  // İşlem (transaction): okuduğumuz bulut sürümü yazana kadar değişirse Firestore baştan çalıştırır
+  await fb.db.runTransaction(async tx => {
+    res = null;
+    const snap = await tx.get(ref);
+    const r = snap.exists ? snap.data() : null;
+    const mine = _clone(state);
+    let obj = mine, merged = false, remoteJson = null;
+    if(!force && r && (r.data || r.gz) && r.updatedAt !== cloud.panelPushed){
+      // Bulut, bizim son gördüğümüzden farklı: başka cihaz yazmış → üzerine yazma, birleştir
+      if(formOpen()){ res = {deferred:true}; return; }      // form kapanınca birleştirilir
+      remoteJson = await panelJson(r);
+      const remote = JSON.parse(remoteJson);
+      obj = merge3(await panelBaseObj(), mine, remote);
+      merged = true;
+      if(_same(obj, remote)){ res = {noop:true, merged, mine, obj:remote, json:remoteJson, at:r.updatedAt}; return; }
+    }
+    const json = JSON.stringify(obj);
+    if(!force && !merged && r && r.updatedAt === cloud.panelPushed){
+      const b = await panelBaseGet();
+      if(b && b.json === json){ res = {noop:true, merged:false, mine, obj, json, at:r.updatedAt}; return; }  // gerçek değişiklik yok
+    }
+    const enc = await panelPayload(json);
+    if(enc.bytes > PANEL_LIMIT){ res = {tooBig: enc.bytes}; return; }
+    const at = Math.max(Date.now(), (r && r.updatedAt || 0) + 1);
+    _panelWriting = at;
+    tx.set(ref, {...enc.payload, raw:enc.raw, bytes:enc.bytes, count:stateCount(obj), updatedAt:at, device:navigator.userAgent.slice(0,60)});
+    res = {merged, mine, obj, json, at, bytes:enc.bytes, raw:enc.raw};
+  });
+  if(!res || res.deferred) return;
+  if(res.tooBig){
+    fb.error = `Panel verisi bulut sınırını aştı (${fmtKB(res.tooBig)} / ${fmtKB(PANEL_LIMIT)}). Eski kayıtları yedekleyip temizle.`;
     fb.status = 'error'; updateCloudBadge(); toast('Bulut sınırı aşıldı — veri gönderilemedi'); return;
   }
-  const at = force ? (_panelAt = Date.now()) : _panelAt;
-  if(force) localStorage.setItem(PANEL_AT_KEY, String(at));
-  await panelRef().set({...payload, raw, bytes, count: stateCount(), updatedAt: at, device: navigator.userAgent.slice(0,60)});
-  _panelBytes = bytes; _panelRaw = raw;
-  cloud.panelPushed = at; saveCloud();
-  panelSizeWarn();
+  const quiet = seq === _saveSeq;                          // gönderim sürerken yeni kayıt yapılmadıysa
+  if(res.merged){
+    // Birleşik sürümü bu cihaza da uygula; bu arada girilen yeni kayıtları koru
+    replaceLocalState(quiet ? res.obj : merge3(res.mine, _clone(state), res.obj));
+    render(); toast(res.noop ? `Panel verisi buluttan geldi · ${stateCount()} kayıt` : 'Diğer cihazdaki değişiklikler bu cihazdakilerle birleştirildi');
+  }
+  cloud.panelPushed = res.at; saveCloud();
+  await panelBaseSet(res.json, res.at);
+  if(quiet){ clearPanelDirty(); _panelAt = res.at; localStorage.setItem(PANEL_AT_KEY, String(res.at)); }
+  else scheduleSync();
+  if(res.bytes){ _panelBytes = res.bytes; _panelRaw = res.raw; panelSizeWarn(); }
 }
+let _panelQ = Promise.resolve();
 function watchPanel(){
   stopPanel();
   if(!fb.user || !fb.db) return;
+  // Eski sürümden geçiş: "kirli" bayrağı yoksa zaman damgasından türet
+  if(localStorage.getItem(PANEL_DIRTY_KEY) === null) localStorage.setItem(PANEL_DIRTY_KEY, _panelAt > (cloud.panelPushed||0) ? '1' : '0');
   _panelSeen = false;
-  _panelUnsub = panelRef().onSnapshot(async doc=>{
-    _panelSeen = true;
-    const r = doc.exists ? doc.data() : null;
-    if(!r || (!r.data && !r.gz)){ _panelRemoteCount = 0; _panelRemoteAt = 0; _panelBytes = 0; scheduleSync(true); return; } // bulutta panel yok
-    _panelRemoteAt = r.updatedAt || 0;
-    let json = '';
-    try{ json = await panelJson(r); }catch(e){ fb.error = e.message; fb.status='error'; updateCloudBadge(); return; }
-    _panelBytes = r.bytes || new TextEncoder().encode(json).length;
-    _panelRaw = r.raw || _panelBytes;
-    try{ _panelRemoteCount = r.count!=null ? r.count : stateCount(JSON.parse(json)); }catch(e){ _panelRemoteCount = 0; }
-    panelSizeWarn();
-    if(r.updatedAt > _panelAt){
-      const modal = document.getElementById('modalBackdrop');
-      const formAcik = modal && modal.classList.contains('open');
-      // Form açıkken yazmakta olduğun kaydı ezmemek için beklet — ama veriyi ASLA atma.
-      // Cihazda hiç kayıt yoksa (ilk bağlanış) beklemeden uygula.
-      if(formAcik && stateCount()){ _panelPending = {json, at:r.updatedAt}; return; }
-      applyPanelJson(json, r.updatedAt);
-    } else if(_panelAt > r.updatedAt){ scheduleSync(true); }  // yerel daha yeni: gönder
-    else if(cloud.panelPushed !== r.updatedAt){ cloud.panelPushed = r.updatedAt; saveCloud(); }
-  }, err=>{ fb.error = 'Panel senkronu: ' + err.message; fb.status='error'; updateCloudBadge(); });
+  _panelUnsub = panelRef().onSnapshot(
+    doc => { _panelQ = _panelQ.then(() => onPanelSnap(doc)).catch(() => {}); },
+    err => { fb.error = 'Panel senkronu: ' + err.message; fb.status='error'; updateCloudBadge(); });
 }
-function applyPanelJson(json, at){
+async function onPanelSnap(doc){
+  _panelSeen = true;
+  const r = doc.exists ? doc.data() : null;
+  if(!r || (!r.data && !r.gz)){ _panelRemoteCount = 0; _panelRemoteAt = 0; _panelBytes = 0; markPanelDirty(); scheduleSync(true); return; } // bulutta panel yok
+  _panelRemoteAt = r.updatedAt || 0;
+  let json = '';
+  try{ json = await panelJson(r); }catch(e){ fb.error = e.message; fb.status='error'; updateCloudBadge(); return; }
+  _panelBytes = r.bytes || new TextEncoder().encode(json).length;
+  _panelRaw = r.raw || _panelBytes;
+  try{ _panelRemoteCount = r.count!=null ? r.count : stateCount(JSON.parse(json)); }catch(e){ _panelRemoteCount = 0; }
+  panelSizeWarn();
+  // Elimizdeki sürüm ya da kendi yazdığımızın yankısı: yeni bir şey yok
+  if(r.updatedAt === cloud.panelPushed || r.updatedAt === _panelWriting){
+    if(panelDirty()) scheduleSync(true);
+    return;
+  }
+  // Başka cihazdan yeni sürüm. Form açıkken yazmakta olduğun kaydı ezmemek için beklet — ama ASLA atma.
+  // Cihazda hiç kayıt yoksa (ilk bağlanış) beklemeden uygula.
+  if(formOpen() && stateCount()){ _panelPending = {json, at:r.updatedAt}; return; }
+  await takeRemote(json, r.updatedAt);
+}
+/* Buluttan gelen sürüm: bu cihazda gönderilmemiş değişiklik yoksa olduğu gibi al, varsa birleştir */
+async function takeRemote(json, at){
+  if(!panelDirty()) return applyPanelJson(json, at);
+  let remote; try{ remote = JSON.parse(json); }catch(e){ return false; }
+  if(!remote || !Array.isArray(remote.students)) return false;
+  const seq = _saveSeq, mine = _clone(state);
+  const merged = merge3(await panelBaseObj(), mine, remote);
+  const now = seq === _saveSeq ? merged : merge3(mine, _clone(state), merged);
+  if(_same(now, remote)) return applyPanelJson(json, at, true);
+  replaceLocalState(now);
+  cloud.panelPushed = at; saveCloud();                     // ortak kopya artık bu bulut sürümü
+  await panelBaseSet(json, at);
+  _panelPending = null;
+  markPanelDirty(); render(); scheduleSync(true);          // birleşik hali buluta gönder
+  toast('Diğer cihazdaki değişiklikler bu cihazdakilerle birleştirildi');
+  return true;
+}
+function applyPanelJson(json, at, quietToast){
   try{
     const d = JSON.parse(json);
     if(!d || !Array.isArray(d.students)) return false;
@@ -3616,17 +3929,24 @@ function applyPanelJson(json, at){
     state = load();
     _panelAt = at; localStorage.setItem(PANEL_AT_KEY, String(at));
     cloud.panelPushed = at; saveCloud();
+    panelBaseSet(json, at);
+    clearPanelDirty();
     _panelPending = null;
-    render(); toast(`Panel verisi buluttan geldi · ${stateCount()} kayıt`);
+    render(); if(!quietToast) toast(`Panel verisi buluttan geldi · ${stateCount()} kayıt`);
     return true;
   }catch(e){ return false; }
 }
-/* Form kapandığında bekleyen bulut güncellemesi varsa uygula */
+/* Form kapandığında bekleyen bulut güncellemesi varsa birleştirerek uygula */
 function flushPanelPending(){
   if(!_panelPending) return;
   const {json, at} = _panelPending;
-  if(at > _panelAt) applyPanelJson(json, at); else _panelPending = null;
+  _panelPending = null;
+  if(at === cloud.panelPushed) return;
+  _panelQ = _panelQ.then(() => takeRemote(json, at)).catch(() => {});
 }
+/* Bağlantı geri gelince / uygulamaya dönünce bekleyen değişiklikleri gönder */
+window.addEventListener('online', () => { if(panelDirty()) scheduleSync(true); });
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && panelDirty()) scheduleSync(true); });
 function stopPanel(){ if(_panelUnsub){ _panelUnsub(); _panelUnsub = null; } _panelSeen = false; _panelPending = null; }
 /* Bulut belgesi doluluk ölçeri */
 const fmtKB = b => b >= 1048576 ? (b/1048576).toFixed(2)+' MB' : Math.max(1,Math.round(b/1024))+' KB';
@@ -3679,6 +3999,7 @@ async function pullPanelNow(){
     state = load();
     _panelAt = r.updatedAt || Date.now(); localStorage.setItem(PANEL_AT_KEY, String(_panelAt));
     cloud.panelPushed = _panelAt; saveCloud();
+    await panelBaseSet(json, _panelAt); clearPanelDirty();
     closeModal(); go('dashboard'); toast(`Buluttan indirildi · ${stateCount()} kayıt`);
   }catch(e){ toast('İndirilemedi: ' + (e.message||'veri okunamadı')); }
 }
@@ -3751,6 +4072,22 @@ function applyTicks(sid, data){
   state.studies = state.studies.filter(y=>!(y.sid===sid && !st[y.id]));
   if(state.studies.length !== b2) changed++;
 
+  // 4) Haftalık program blokları (öğrenci ekler/düzenler/siler; en son değiştiren kazanır)
+  state.plans = state.plans || [];
+  for(const [key, x] of Object.entries(data.plan || {})){
+    if(!x) continue;
+    const at = +x.at || 0;
+    const cur = state.plans.find(p=>p.sid===sid && planKey(p)===key);
+    if(x.deleted){
+      if(cur && at > (+cur.updatedAt||0)){ state.plans = state.plans.filter(p=>p!==cur); changed++; msg = `${first} programından bir çalışmayı kaldırdı`; }
+      if(at < Date.now() - 7*86400000) removeStudentInput(sid, 'plan', key);   // eski silme işaretlerini temizle
+      continue;
+    }
+    const clean = sanitizePlan(x); if(!clean) continue;
+    if(!cur){ state.plans.push({id:uid(), sid, srcId:key, byStudent:true, updatedAt:at, ...clean}); changed++; msg = `${first} programına çalışma ekledi: ${clean.subject}`; }
+    else if(at > (+cur.updatedAt||0)){ Object.assign(cur, clean, {updatedAt:at, byStudent:true}); changed++; msg = `${first} programını güncelledi: ${clean.subject}`; }
+  }
+
   if(changed){ save(); render(); if(msg) toast(msg); }
 }
 function sanitizeStudentExam(e){
@@ -3808,11 +4145,12 @@ service cloud.firestore {
     match /ticks/{tid} {
       allow get: if true;
       allow list: if false;
-      allow create, update: if request.resource.data.keys().hasOnly(['hw', 'exams', 'studies', 'seenAt', 'updatedAt'])
+      allow create, update: if request.resource.data.keys().hasOnly(['hw', 'exams', 'studies', 'plan', 'seenAt', 'updatedAt'])
         && (!('seenAt' in request.resource.data) || request.resource.data.seenAt is number)
         && (!('hw' in request.resource.data) || (request.resource.data.hw is map && request.resource.data.hw.size() <= 500))
         && (!('exams' in request.resource.data) || (request.resource.data.exams is map && request.resource.data.exams.size() <= 300))
-        && (!('studies' in request.resource.data) || (request.resource.data.studies is map && request.resource.data.studies.size() <= 2000));
+        && (!('studies' in request.resource.data) || (request.resource.data.studies is map && request.resource.data.studies.size() <= 2000))
+        && (!('plan' in request.resource.data) || (request.resource.data.plan is map && request.resource.data.plan.size() <= 400));
       allow delete: if isTeacher();
     }
     // Panel verisi (öğrenciler, dersler, ücretler, kişisel notlar): yalnızca öğretmen hesabı, kendi belgesi

@@ -62,9 +62,9 @@ input,select{font-family:inherit;font-size:1rem}
 .stat .value{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;margin-top:5px}
 .stat .hint{font-size:.72rem;color:var(--muted);margin-top:2px}
 
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0 14px}
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:6px 0 14px}
 .tabs button{padding:9px 4px;border-radius:10px;font-size:.8rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s;border:1px solid transparent}
-@media(max-width:480px){.tabs button{font-size:.72rem;padding:9px 1px;letter-spacing:-.01em}.tabs button .em{display:none}}
+@media(max-width:560px){.tabs{grid-template-columns:repeat(3,1fr)}.tabs button{font-size:.8rem;padding:9px 2px}}
 .tabs button.active{background:var(--card);color:var(--accent);box-shadow:var(--shadow);border:1px solid var(--line)}
 
 .section-title{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px;display:flex;align-items:center;gap:8px}
@@ -180,6 +180,28 @@ input,select{font-family:inherit;font-size:1rem}
 .study-form .btn{width:100%}
 .week-chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
 .week-chips .chip{background:var(--field-bg);border:1px solid var(--line)}
+.wk-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:10px}
+.wk-nav div{text-align:center;min-width:0}
+.wk-nav b{display:block;font-size:.95rem}
+.wk-nav span{font-size:.76rem;color:var(--muted)}
+.wk-nav button{width:38px;height:38px;border-radius:10px;background:var(--field-bg);border:1px solid var(--line);font-size:1.25rem;font-weight:700;color:var(--ink);flex-shrink:0}
+.wk-mini{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:10px;margin-bottom:12px}
+.wk-mini .col{cursor:pointer;text-align:center;min-width:0}
+.wk-mini .h{font-size:.64rem;font-weight:700;color:var(--muted);text-transform:uppercase}
+.wk-mini .h b{display:block;font-size:.9rem;color:var(--ink)}
+.wk-mini .col.today .h,.wk-mini .col.today .h b{color:var(--accent)}
+.wk-mini .bar{position:relative;height:120px;margin-top:4px;border-radius:8px;background:var(--field-bg);border:1px solid var(--line);overflow:hidden}
+.wk-mini .col.today .bar{border-color:var(--accent)}
+.wk-mini .bar i{position:absolute;left:2px;right:2px;border-radius:3px;background:var(--accent)}
+.wk-mini .bar i.lk{background:repeating-linear-gradient(135deg,var(--muted) 0 2px,transparent 2px 5px);border:1px solid var(--muted);opacity:.7}
+.plan-item{cursor:pointer}
+.plan-item .tm{width:50px;flex-shrink:0;text-align:center;font-variant-numeric:tabular-nums}
+.plan-item .tm b{display:block;font-size:.95rem}
+.plan-item .tm span{display:block;font-size:.72rem;color:var(--muted)}
+.plan-item.locked{cursor:default;background:repeating-linear-gradient(135deg,var(--card) 0 10px,var(--field-bg) 10px 20px)}
+.plan-item .edit{color:var(--muted);font-size:1rem;flex-shrink:0}
+.lock-chip{background:var(--field-bg);border:1px solid var(--line-strong);color:var(--muted)}
+.plan-empty{font-size:.8rem;color:var(--muted);padding:11px 14px;border:1px dashed var(--line-strong);border-radius:13px;margin-bottom:8px;cursor:pointer}
 .foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
 .foot button{color:var(--accent);font-weight:600}
 </style>
@@ -446,6 +468,15 @@ function viewHome(){
     html += emptyState('📅','Planlanmış ders yok','Öğretmenin yeni ders eklediğinde burada görünür.');
   }
 
+  /* 1b. Bugünkü çalışma planı */
+  const bugunPlan = planList().filter(p=>+p.day===dayIdx(td)).sort((a,b)=>+a.start - +b.start);
+  if(bugunPlan.length){
+    html += `<div class="section-title">Bugünkü çalışma planın <button class="link-btn" style="margin-left:auto" onclick="progView='hafta';setTab('program')">Haftalık program</button></div>`;
+    html += bugunPlan.map(p=>`<div class="item plan-item" style="border-left:4px solid ${PLAN_COLORS[p.subject]||'var(--accent)'}" onclick="openPlanForm('${esc(p.id)}')">
+      <div class="tm"><b>${fmtClock(+p.start)}</b><span>${fmtClock(+p.start + (+p.dur||60))}</span></div>
+      <div class="body"><div class="t">${esc(p.subject)}${p.topic?` <span style="font-weight:600;color:var(--muted)">· ${esc(p.topic)}</span>`:''}</div>${p.note?`<div class="d">${esc(p.note)}</div>`:''}</div></div>`).join('');
+  }
+
   /* 2. Ödevler: önce gecikenler, sonra yaklaşanlar */
   const acik = (data.homeworks||[]).map(h=>({...h, st:hwStatus(h)})).filter(h=>h.st !== 'yapildi');
   const gec = acik.filter(h=>h.due && h.due < td).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
@@ -482,6 +513,143 @@ function viewHome(){
 }
 
 /* --- Ders programı --- */
+/* --- Haftalık program: öğretmenin ders kayıtları (kilitli) + çalışma blokları (her hafta tekrarlar) --- */
+const PLAN_SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe'];
+const PLAN_DURS = [30,45,60,75,90,120,150,180,240];
+const PLAN_COLORS = {Matematik:'var(--blue)', Geometri:'var(--cyan)', Fizik:'var(--violet)', Kimya:'var(--accent)', Biyoloji:'var(--green)', 'Türkçe':'var(--amber)'};
+let progView = 'hafta', planWeekOff = 0;
+function setProgView(v){ progView = v; render(); }
+function shiftPlanWeek(n){ planWeekOff = n===0 ? 0 : planWeekOff + n; render(); }
+function weekDates(off){
+  const d = new Date(); d.setDate(d.getDate() - dayIdx(today()) + off*7);
+  return [...Array(7)].map((_,i)=>{ const x = new Date(d); x.setDate(d.getDate()+i); return localDate(x); });
+}
+const fmtDur = m => { const h = Math.floor(m/60), r = m%60; return h ? `${h} sa${r?' '+r+' dk':''}` : `${r} dk`; };
+/* Öğretmenin gönderdiği bloklar + benim değişikliklerim (en son değiştirenin hali geçerli) */
+function planList(){
+  const mine = inputs.plan || {}, out = [], seen = new Set();
+  for(const p of (data.plans || [])){
+    seen.add(p.id);
+    const x = mine[p.id];
+    if(x && (+x.at||0) > (+p.updatedAt||0)){ if(x.deleted) continue; out.push({...p, ...x, id:p.id, byStudent:true}); }
+    else out.push(p);
+  }
+  for(const [id, x] of Object.entries(mine)){
+    if(seen.has(id) || !x || x.deleted) continue;
+    out.push({...x, id, byStudent:true});
+  }
+  return out;
+}
+function viewProgram(){
+  const seg = `<div class="seg" style="margin-bottom:12px">
+    <button class="${progView==='hafta'?'on':''}" onclick="setProgView('hafta')">Haftalık Program</button>
+    <button class="${progView==='liste'?'on':''}" onclick="setProgView('liste')">Ders Listesi</button></div>`;
+  return seg + (progView==='hafta' ? viewWeekPlan() : viewLessonList());
+}
+function viewWeekPlan(){
+  const days = weekDates(planWeekOff), td = today();
+  const plans = planList();
+  const lessons = (data.lessons||[]).filter(l=>l.status!=='ertelendi' && l.date>=days[0] && l.date<=days[6]);
+  const lesStart = l => l.start!=null ? +l.start : 18*60;
+  const lesEnd = l => lesStart(l) + Math.round((+l.hours||1)*60);
+  const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
+  const range = `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
+  const label = {0:'Bu hafta', 1:'Gelecek hafta', '-1':'Geçen hafta'}[planWeekOff];
+  let html = `<div class="card wk-nav">
+    <button onclick="shiftPlanWeek(-1)" aria-label="Önceki hafta">‹</button>
+    <div><b>${label || range}</b>${label?`<span>${range}</span>`:''}</div>
+    <button onclick="shiftPlanWeek(1)" aria-label="Sonraki hafta">›</button></div>`;
+  // Hafta özeti: 06:00–24:00 arası küçük takvim; güne dokununca o güne iner
+  const Y = m => Math.max(0, Math.min(100, (m - 360) / (1440 - 360) * 100));
+  html += `<div class="card wk-mini">${days.map((ds,di)=>{
+    const bars = [
+      ...lessons.filter(l=>l.date===ds).map(l=>`<i class="lk" style="top:${Y(lesStart(l))}%;height:${Math.max(3, Y(lesEnd(l))-Y(lesStart(l)))}%"></i>`),
+      ...plans.filter(p=>+p.day===di).map(p=>`<i style="top:${Y(+p.start)}%;height:${Math.max(3, Y(+p.start+(+p.dur||60))-Y(+p.start))}%;background:${PLAN_COLORS[p.subject]||'var(--accent)'}"></i>`),
+    ].join('');
+    return `<div class="col ${ds===td?'today':''}" onclick="document.getElementById('pd${di}').scrollIntoView({behavior:'smooth',block:'start'})">
+      <div class="h">${WD_SHORT[di]}<b>${+ds.slice(8)}</b></div><div class="bar">${bars}</div></div>`;
+  }).join('')}</div>`;
+  const planMin = plans.reduce((t,p)=>t+(+p.dur||0),0);
+  const bySub = {}; plans.forEach(p=>{ bySub[p.subject] = (bySub[p.subject]||0) + (+p.dur||0); });
+  html += `<div class="toolbar"><button class="btn btn-sm" onclick="openPlanForm()">＋ Çalışma Ekle</button>
+    ${planWeekOff?'<button class="btn-ghost" onclick="shiftPlanWeek(0)">Bu haftaya dön</button>':''}</div>`;
+  if(planMin) html += `<div class="week-chips"><span class="chip badge-zero">Haftalık çalışma · ${fmtDur(planMin)}</span>${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${fmtDur(v)}</span>`).join('')}</div>`;
+  days.forEach((ds,di)=>{
+    const d = new Date(ds+'T12:00');
+    const items = [
+      ...lessons.filter(l=>l.date===ds).map(l=>({lock:true, l, start:lesStart(l), end:lesEnd(l)})),
+      ...plans.filter(p=>+p.day===di).map(p=>({p, start:+p.start, end:+p.start+(+p.dur||60)})),
+    ].sort((a,b)=>a.start-b.start || (a.lock?-1:1));
+    html += `<div class="section-title" id="pd${di}" style="scroll-margin-top:12px">${WD_LONG[di]} · ${d.getDate()} ${d.toLocaleDateString('tr-TR',{month:'short'})}${ds===td?' <span class="chip badge-zero">Bugün</span>':''}
+      <button class="link-btn" style="margin-left:auto" onclick="openPlanForm(null,${di})">＋ Ekle</button></div>`;
+    if(!items.length){ html += `<div class="plan-empty" onclick="openPlanForm(null,${di})">Boş gün · dokun, çalışma ekle</div>`; return; }
+    html += items.map(it=>{
+      const tm = `<div class="tm"><b>${fmtClock(it.start)}</b><span>${fmtClock(it.end)}</span></div>`;
+      if(it.lock){
+        const l = it.l;
+        return `<div class="item plan-item locked ${ds===td?'today':''}">${tm}
+          <div class="body"><div class="t">🔒 Özel ders · ${esc(l.subject)}</div>
+            ${l.topic?`<div class="d">${esc(l.topic)}</div>`:''}
+            <div class="chips">${subjectChip(l.subject)}<span class="chip lock-chip">Öğretmeninle · değiştirilemez</span></div></div></div>`;
+      }
+      const p = it.p;
+      return `<div class="item plan-item" style="border-left:4px solid ${PLAN_COLORS[p.subject]||'var(--accent)'}" onclick="openPlanForm('${esc(p.id)}')">${tm}
+        <div class="body"><div class="t">${esc(p.subject)}${p.topic?` <span style="font-weight:600;color:var(--muted)">· ${esc(p.topic)}</span>`:''}</div>
+          ${p.note?`<div class="d" style="white-space:pre-line">${esc(p.note)}</div>`:''}
+          <div class="chips"><span class="chip ${p.byStudent?'':'badge-zero'}" style="${p.byStudent?'background:var(--field-bg);border:1px solid var(--line)':''}">${p.byStudent?'Senin planın':'Öğretmeninin planı'}</span><span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${fmtDur(it.end-it.start)}</span></div></div>
+        <span class="edit" aria-hidden="true">✎</span></div>`;
+    }).join('');
+  });
+  html += `<div class="tick-hint" style="margin-top:14px">🔒 Kilitli bloklar öğretmeninle yaptığın derslerdir. Çalışma blokları her hafta tekrarlar; dokunarak saatini, konusunu ve ne yapacağını değiştirebilirsin. Öğretmenin de programını görür.</div>`;
+  return html;
+}
+function openPlanForm(id, day){
+  const p = id ? planList().find(x=>x.id===id)
+               : {day: day ?? dayIdx(today()), start:17*60, dur:60, subject:'Matematik', topic:'', note:''};
+  if(!p) return;
+  let times = '';
+  for(let m=360; m<1440; m+=15) times += `<option value="${m}" ${m===+p.start?'selected':''}>${fmtClock(m)}</option>`;
+  if((+p.start-360)%15 || +p.start<360) times = `<option value="${+p.start}" selected>${fmtClock(+p.start)}</option>` + times;
+  const durs = PLAN_DURS.includes(+p.dur) ? PLAN_DURS : [...PLAN_DURS, +p.dur].sort((a,b)=>a-b);
+  openModal(`
+  <h3>${id ? 'Çalışmayı Düzenle' : 'Programa Çalışma Ekle'}</h3>
+  ${id && !p.byStudent ? '<div class="tick-hint" style="margin:-6px 0 12px">Bu bloğu öğretmenin planladı. Değiştirirsen öğretmenin de görür.</div>' : ''}
+  <div class="form-grid">
+    <div class="field"><label>Ders</label><select id="p_sub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="field"><label>Gün</label><select id="p_day">${WD_LONG.map((n,i)=>`<option value="${i}" ${i===+p.day?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="field"><label>Başlangıç</label><select id="p_start">${times}</select></div>
+    <div class="field"><label>Süre</label><select id="p_dur">${durs.map(m=>`<option value="${m}" ${m===+p.dur?'selected':''}>${fmtDur(m)}</option>`).join('')}</select></div>
+    <div class="field full"><label>Konu</label><input id="p_topic" list="p_topics" value="${esc(p.topic||'')}" placeholder="Örn. Türev – zincir kuralı"><datalist id="p_topics"></datalist></div>
+    <div class="field full"><label>Ne yapacaksın?</label><textarea id="p_note" placeholder="Örn. Derste çözdüğümüz soruları tekrar et, 40 yeni soru">${esc(p.note||'')}</textarea></div>
+  </div>
+  <div class="modal-actions">
+    ${id ? `<button class="btn-ghost btn-danger" style="margin-right:auto" onclick="deletePlan('${esc(id)}')">Sil</button>` : ''}
+    <button class="btn-ghost" onclick="closeModal()">Vazgeç</button>
+    <button class="btn btn-sm" onclick="savePlan('${esc(id||'')}')">Kaydet</button>
+  </div>`);
+  planTopicList();
+}
+function planTopicList(){
+  const dl = document.getElementById('p_topics'); if(!dl) return;
+  dl.innerHTML = ((data.topics||{})[fv('p_sub')] || []).map(t=>`<option value="${esc(t)}">`).join('');
+}
+function planErr(e){
+  return String(e && (e.code||e.message) || '').includes('permission')
+    ? 'Kaydedilemedi: öğretmeninin sistemi güncellemesi gerekiyor' : 'Kaydedilemedi, tekrar dene';
+}
+async function savePlan(id){
+  const start = +fv('p_start');
+  const dur = Math.min(+fv('p_dur') || 60, 1440 - start);
+  const rec = {day:+fv('p_day'), start, dur, subject:fv('p_sub'), topic:fv('p_topic').slice(0,120), note:fv('p_note').slice(0,300), deleted:false, at:Date.now()};
+  try{ await writeInput({plan:{[id || uid()]:rec}}); closeModal(); toastMsg('Programa kaydedildi ✓'); }
+  catch(e){ toastMsg(planErr(e)); }
+}
+async function deletePlan(id){
+  if(!confirm('Bu çalışma programından kaldırılsın mı?')) return;
+  try{ await writeInput({plan:{[id]:{deleted:true, at:Date.now()}}}); closeModal(); toastMsg('Kaldırıldı'); }
+  catch(e){ toastMsg(planErr(e)); }
+}
+
 function lessonItem(l, td){
   const cls = l.date===td ? 'today' : (l.date < td ? 'muted' : '');
   return `<div class="item ${cls}">
@@ -495,7 +663,7 @@ function lessonItem(l, td){
 }
 let showPast = false;
 function togglePast(){ showPast = !showPast; render(); }
-function viewProgram(){
+function viewLessonList(){
   const td = today();
   const all = [...data.lessons].sort((a,b)=>(a.date||'').localeCompare(b.date||'') || (a.start||0)-(b.start||0));
   const future = all.filter(l=>l.date >= td);
