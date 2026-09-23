@@ -18,9 +18,12 @@
   --shadow-lg:0 24px 60px -24px rgba(30,33,56,.28);
   --radius:18px;
   font-size:15px;
+  color-scheme:light;
 }
+/* Koyu tema: elle seçim yoksa telefonun ayarını izler; seçim <html data-theme> ile yapılır */
 @media(prefers-color-scheme:dark){
-  :root{
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
     --bg:#16151b; --bg2:#0f0e13; --card:#1e1d25; --ink:#eceaf2; --muted:#9c9dae; --line:#2c2b37; --line-strong:#403e4f;
     --accent:#818cf8; --accent2:#c084fc; --accent-soft:#25243a;
     --green:#34d399; --green-soft:#142b21; --red:#f87171; --red-soft:#33191c;
@@ -32,6 +35,19 @@
     --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px -12px rgba(0,0,0,.55);
     --shadow-lg:0 24px 60px -24px rgba(0,0,0,.75);
   }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+    --bg:#16151b; --bg2:#0f0e13; --card:#1e1d25; --ink:#eceaf2; --muted:#9c9dae; --line:#2c2b37; --line-strong:#403e4f;
+    --accent:#818cf8; --accent2:#c084fc; --accent-soft:#25243a;
+    --green:#34d399; --green-soft:#142b21; --red:#f87171; --red-soft:#33191c;
+    --amber:#fbbf24; --amber-soft:#2f2712; --blue:#60a5fa; --blue-soft:#182437;
+    --cyan:#22d3ee; --cyan-soft:#11303a; --violet:#a78bfa; --violet-soft:#261e3b;
+    --rose:#fb7185; --rose-soft:#341a24; --field-bg:#17161d;
+    --hero1:#1b1c3a; --hero2:#31317a; --hero3:#5b3fae;
+    --glow:rgba(129,140,248,.4);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px -12px rgba(0,0,0,.55);
+    --shadow-lg:0 24px 60px -24px rgba(0,0,0,.75);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{
@@ -163,7 +179,7 @@ input,select{font-family:inherit;font-size:1rem}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .form-grid .full{grid-column:1/-1}
 .field label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field-bg);color:var(--ink);font-size:16px;outline:none;color-scheme:light dark;-webkit-appearance:none;appearance:none;min-width:0}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field-bg);color:var(--ink);font-size:16px;outline:none;-webkit-appearance:none;appearance:none;min-width:0}
 .field input,.field select{height:44px;line-height:22px}
 .field input[type=date]{display:block;text-align:left}
 .field input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
@@ -205,6 +221,7 @@ input,select{font-family:inherit;font-size:1rem}
 .foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
 .foot button{color:var(--accent);font-weight:600}
 </style>
+<script>try{var t=localStorage.getItem('ogrenciTema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
@@ -282,16 +299,25 @@ function getDb(){
   if(db) return db;
   if(typeof firebase === 'undefined') throw new Error('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.');
   if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
-  db = firebase.firestore(); return db;
+  db = firebase.firestore();
+  // iPhone/Safari ve bazı ağlarda sürekli akış bağlantısı kesilebiliyor → daha basit uzun sorgu bağlantısı
+  try{ db.settings({experimentalForceLongPolling:true, experimentalAutoDetectLongPolling:false, merge:true}); }catch(e){}
+  return db;
 }
 async function sha256hex(str){
   const h = await crypto.subtle.digest('SHA-256', _te.encode(str));
   return Array.from(new Uint8Array(h), b=>b.toString(16).padStart(2,'0')).join('');
 }
 async function fetchPackage(){
-  let snap;
-  try{ snap = await getDb().collection('pages').doc(sid).get(); }
-  catch(e){ throw new Error('Veri alınamadı. İnternetini kontrol edip tekrar dene.'); }
+  let snap = null, lastErr = null;
+  for(let i=0; i<3 && !snap; i++){                     // zayıf bağlantıda iki kez daha dene
+    try{ snap = await getDb().collection('pages').doc(sid).get(); }
+    catch(e){ lastErr = e; if(i<2) await new Promise(r=>setTimeout(r, 1000*(i+1))); }
+  }
+  if(!snap){
+    const c = lastErr && (lastErr.code || lastErr.name) || '';
+    throw new Error('Veri alınamadı. İnternetini kontrol edip tekrar dene.' + (c ? ` (${c})` : ''));
+  }
   if(!snap.exists) throw new Error('Sayfan henüz hazırlanmamış. Öğretmenine haber ver.');
   return snap.data();
 }
@@ -372,6 +398,19 @@ async function refresh(){
   try{ await unlock(code, false); render(); toastMsg('Güncellendi'); }
   catch(e){ toastMsg(e.message); }
 }
+/* Tema: seçim bu cihazda hatırlanır; seçim yoksa telefonun açık/koyu ayarı izlenir */
+const _darkMQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+function isDark(){
+  const t = document.documentElement.getAttribute('data-theme');
+  return t ? t === 'dark' : !!(_darkMQ && _darkMQ.matches);
+}
+function toggleTheme(){
+  const t = isDark() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem('ogrenciTema', t); }catch(e){}
+  if(document.querySelector('.hero')) render();
+}
+if(_darkMQ && _darkMQ.addEventListener) _darkMQ.addEventListener('change', ()=>{ if(!document.documentElement.getAttribute('data-theme') && document.querySelector('.hero')) render(); });
 function toastMsg(m){
   let t = document.getElementById('toast');
   if(!t){ t = document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:.86rem;z-index:99;box-shadow:var(--shadow-lg);transition:opacity .25s'; document.body.appendChild(t); }
@@ -391,6 +430,7 @@ function render(){
     <div class="avatar" style="background:${avatarColor(sid)}">${esc(initials(s.name))}</div>
     <div><h1>${esc(s.name)}</h1><div class="sub">${esc(s.grade||'')}${s.grade?' · ':''}Güncelleme: ${new Date(data.publishedAt).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</div></div>
     <div class="spacer"></div>
+    <button class="mini" onclick="toggleTheme()" title="${isDark()?'Açık temaya geç':'Koyu temaya geç'}" aria-label="Temayı değiştir">${isDark()?'☀️':'🌙'}</button>
     <button class="mini" onclick="refresh()" title="Yenile">⟳</button>
   </div>
   <div class="stat-grid">

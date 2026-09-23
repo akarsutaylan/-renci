@@ -3638,6 +3638,8 @@ function cloudInit(){
   try{
     if(!firebase.apps.length) firebase.initializeApp(cloudConfig());
     fb.db = firebase.firestore();
+    // iPhone/Safari ve bazı ağlarda sürekli akış bağlantısı kesilebiliyor → daha basit uzun sorgu bağlantısı
+    try{ fb.db.settings({experimentalForceLongPolling:true, experimentalAutoDetectLongPolling:false, merge:true}); }catch(e){}
     fb.auth = firebase.auth();
     fb.auth.onAuthStateChanged(u => {
       fb.user = u;
