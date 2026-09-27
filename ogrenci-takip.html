@@ -667,6 +667,14 @@ const CURRICULUM = {
 const AVATAR_COLORS = ['#5b5bd6','#0e7490','#0f9d6e','#b45309','#be185d','#7c3aed','#2563eb','#dc6803','#15803d','#9f1239'];
 
 let state = load();
+/* Program kaydının tarihi: eski sürümde çalışmalar haftanın günü (0=Pzt) ile tutulup her hafta tekrarlıyordu.
+   Artık her çalışma tek bir tarihe aittir. Eski kayıt, eklendiği/düzenlendiği andan sonraki ilk o güne yerleşir
+   (her cihazda aynı sonucu verir, senkronda çakışma yaratmaz). */
+function planDateFrom(ts, day){
+  const d = new Date(+ts > 1.7e12 ? +ts : Date.now());
+  d.setDate(d.getDate() + (((+day||0) - (d.getDay()+6)%7 + 7) % 7));
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function load(){
   try{
     const d = JSON.parse(localStorage.getItem(KEY));
@@ -674,6 +682,7 @@ function load(){
       d.lessons = d.lessons || []; d.payments = d.payments || []; d.homeworks = d.homeworks || []; d.exams = d.exams || [];
       d.schedule = d.schedule || []; d.bills = d.bills || [];
       d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || []; d.myCourses = d.myCourses || []; d.plans = d.plans || [];
+      d.plans.forEach(p=>{ if(!p.date) p.date = planDateFrom(p.updatedAt, p.day); delete p.day; delete p.start; delete p.dur; });
       // Eski ders blokları: aynı koddan tek bir "ders" tanımı üret ve blokları ona bağla
       d.myClasses.forEach(b=>{
         if(b.cid) return;
@@ -2846,8 +2855,8 @@ function dashboardWarnPanel(){
 }
 
 /* ================= ÖĞRENCİ PROGRAMI (haftalık çalışma planı) =================
-   state.plans: öğrenciye özel, her hafta tekrarlayan "o gün çalışılacak ders" kayıtları
-   {id, sid, day, subject, topic, note} — saat yoktur (eski kayıtlardaki start/dur yok sayılır).
+   state.plans: öğrenciye özel, TARİHLİ "o gün çalışılacak ders" kayıtları {id, sid, date, subject, topic, note}.
+   Her çalışma yalnızca kendi tarihinde (dolayısıyla yalnızca o haftada) görünür; saat yoktur.
    Her günün görünümü: senin o günkü ders kayıtların (KİLİTLİ, saatiyle) → çalışılacak dersler → o gün teslim ödevler.
    Öğrenci kendi sayfasından ders ekler / düzenler / siler; girdileri tik belgesindeki "plan" alanından gelir
    (anahtar = planKey). Kim en son değiştirdiyse onun hali geçerlidir. */
@@ -2863,7 +2872,7 @@ function setPlanWeek(n){ route.planWeek = n===0 ? 0 : (route.planWeek||0) + n; r
 const HW_LABEL = {bekliyor:'Bekliyor', yapildi:'Yapıldı ✓', eksik:'Eksik'};
 function studentProgramTab(s){
   const off = route.planWeek || 0, days = weekDates(off), td = today();
-  const plans = plansOf(s.id);
+  const plans = plansOf(s.id).filter(p=>p.date>=days[0] && p.date<=days[6]);
   const lessons = state.lessons.filter(l=>l.sid===s.id && isActive(l) && l.date>=days[0] && l.date<=days[6]);
   const hws = state.homeworks.filter(h=>h.sid===s.id && h.due>=days[0] && h.due<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
@@ -2872,7 +2881,7 @@ function studentProgramTab(s){
   const cols = days.map((ds,di)=>{
     const d = new Date(ds+'T12:00');
     const dayLessons = lessons.filter(l=>l.date===ds).sort((a,b)=>(+a.start||0)-(+b.start||0));
-    const dayPlans = plans.filter(p=>+p.day===di);
+    const dayPlans = plans.filter(p=>p.date===ds);
     const dayHw = hws.filter(h=>h.due===ds);
     const items = [
       ...dayLessons.map(l=>`<div class="pw-item pw-lesson" onclick="openLessonForm('${l.id}')" title="Ders kaydını aç — öğrencinin programında kilitli">
@@ -2888,12 +2897,12 @@ function studentProgramTab(s){
     return `<div class="pw-day ${ds===td?'today':''}">
       <div class="pw-head"><b>${WD_LONG[di]}</b><span>${d.getDate()} ${d.toLocaleDateString('tr-TR',{month:'short'})}</span></div>
       <div class="pw-items">${items || '<div class="pw-empty">Boş gün</div>'}</div>
-      <button class="pw-add" onclick="openPlanForm(null,'${s.id}',${di})">＋ Ders ekle</button>
+      <button class="pw-add" onclick="openPlanForm(null,'${s.id}','${ds}')">＋ Ders ekle</button>
     </div>`;
   }).join('');
   return `
   <div class="toolbar">
-    <button class="btn btn-primary btn-sm" onclick="openPlanForm(null,'${s.id}')">＋ Çalışma Ekle</button>
+    <button class="btn btn-primary btn-sm" onclick="openPlanForm(null,'${s.id}','${td>=days[0] && td<=days[6] ? td : days[0]}')">＋ Çalışma Ekle</button>
     <div class="pw-nav">
       <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(-1)" aria-label="Önceki hafta">‹</button>
       <button class="btn ${off===0?'btn-primary':'btn-ghost'} btn-sm" onclick="setPlanWeek(0)">Bu Hafta</button>
@@ -2902,17 +2911,17 @@ function studentProgramTab(s){
     </div>
   </div>
   <div class="plan-summary">
-    <span class="chip badge-zero">Haftalık plan · ${plans.length} çalışma</span>
+    <span class="chip badge-zero">Bu hafta ${plans.length} çalışma</span>
     <span class="chip plan-lock-chip">🔒 Bu hafta seninle ${lessons.length} ders</span>
     ${hws.length?`<span class="chip hw-bekliyor">📝 Bu hafta ${hws.length} ödev teslimi</span>`:''}
     ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${v}</span>`).join('')}
   </div>
   <div class="pw-grid">${cols}</div>
-  <p class="hint-text" style="margin-top:10px">Çalışmalar her hafta tekrarlar; saat yoktur, öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 o gün teslim edilecek ödevler. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür, kendi çalışmalarını ekleyebilir ve ödevlerini oradan işaretleyebilir.</p>`;
+  <p class="hint-text" style="margin-top:10px">Her çalışma yalnızca eklendiği tarihte görünür, sonraki haftalara taşınmaz. Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 o gün teslim edilecek ödevler. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür, kendi çalışmalarını ekleyebilir ve ödevlerini oradan işaretleyebilir.</p>`;
 }
-function openPlanForm(id, sid, day){
+function openPlanForm(id, sid, date){
   const p = id ? (state.plans||[]).find(x=>x.id===id)
-               : {sid, day: day ?? todayIdx(), subject:PLAN_SUBJECTS[0], topic:'', note:''};
+               : {sid, date: date || today(), subject:PLAN_SUBJECTS[0], topic:'', note:''};
   if(!p) return;
   const s = student(p.sid); if(!s) return;
   openModal(`
@@ -2920,7 +2929,7 @@ function openPlanForm(id, sid, day){
   ${p.byStudent?`<p class="hint-text" style="margin:-8px 0 12px">👤 Bunu öğrenci ekledi ya da en son öğrenci düzenledi. Senin değişikliğin geçerli olur.</p>`:''}
   <div class="form-grid">
     <div class="field"><label>Ders</label><select id="f_psub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="field"><label>Gün</label>${daySelect('f_pday', +p.day||0)}</div>
+    <div class="field"><label>Tarih</label><input id="f_pdate" type="date" value="${esc(p.date||today())}"></div>
     <div class="field full"><label>Konu</label><input id="f_ptopic" list="planTopics" value="${esc(p.topic||'')}" placeholder="Müfredattan seç ya da yaz · örn. Türev – zincir kuralı"><datalist id="planTopics"></datalist></div>
     <div class="field full"><label>Ne yapılacak?</label><textarea id="f_pnote" placeholder="Örn. Derste çözdüğümüz 20 soruyu tekrar et, 3D yayınları test 4">${esc(p.note||'')}</textarea></div>
   </div>
@@ -2936,11 +2945,13 @@ function planTopicList(){
   if(dl && sel) dl.innerHTML = (CURRICULUM[sel.value] ? currTopics(sel.value) : []).map(c=>`<option value="${esc(c.t)}">`).join('');
 }
 function savePlan(id, sid){
-  const data = {day:+fv('f_pday'), subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
+  const date = fv('f_pdate');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast('Tarih seç'); return; }
+  const data = {date, subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
   state.plans = state.plans || [];
-  if(id){ const p = state.plans.find(x=>x.id===id); if(!p) return; Object.assign(p, data); delete p.start; delete p.dur; }
+  if(id){ const p = state.plans.find(x=>x.id===id); if(!p) return; Object.assign(p, data); delete p.day; delete p.start; delete p.dur; }
   else state.plans.push({id:uid(), sid, ...data});
-  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : `${WD_LONG[data.day]} · ${data.subject} eklendi`);
+  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : `${fmtDate(date)} · ${data.subject} eklendi`);
 }
 function delPlan(id){
   const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
@@ -2949,12 +2960,12 @@ function delPlan(id){
   removeStudentInput(p.sid, 'plan', planKey(p));
   save(); closeModal(); render(); toast('Çalışma kaldırıldı');
 }
-/* Öğrencinin gönderdiği program kaydını doğrula (saat alanları artık kullanılmıyor) */
+/* Öğrencinin gönderdiği program kaydını doğrula (eski sürüm sayfası gün numarası gönderebilir → tarihe çevir) */
 function sanitizePlan(x){
-  const day = Math.round(+x.day);
-  if(!(day>=0 && day<=6)) return null;
+  let date = /^\d{4}-\d{2}-\d{2}$/.test(String(x.date||'')) ? String(x.date) : null;
+  if(!date){ const day = Math.round(+x.day); if(!(day>=0 && day<=6)) return null; date = planDateFrom(x.at, day); }
   if(!PLAN_SUBJECTS.includes(x.subject)) return null;
-  return {day, subject:x.subject, topic:String(x.topic||'').slice(0,120), note:String(x.note||'').slice(0,300)};
+  return {date, subject:x.subject, topic:String(x.topic||'').slice(0,120), note:String(x.note||'').slice(0,300)};
 }
 
 /* ================= MÜFREDAT TAKİBİ =================
@@ -3601,7 +3612,7 @@ function studentPayload(s){
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
-    plans: plansOf(s.id).map(p=>({id:planKey(p), day:p.day, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
+    plans: plansOf(s.id).filter(p=>p.date >= planDateFrom(Date.now() - 56*86400000, 0)).map(p=>({id:planKey(p), date:p.date, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
   };
 }
@@ -4063,7 +4074,7 @@ function applyTicks(sid, data){
     }
     const clean = sanitizePlan(x); if(!clean) continue;
     if(!cur){ state.plans.push({id:uid(), sid, srcId:key, byStudent:true, updatedAt:at, ...clean}); changed++; msg = `${first} programına çalışma ekledi: ${clean.subject}`; }
-    else if(at > (+cur.updatedAt||0)){ Object.assign(cur, clean, {updatedAt:at, byStudent:true}); changed++; msg = `${first} programını güncelledi: ${clean.subject}`; }
+    else if(at > (+cur.updatedAt||0)){ Object.assign(cur, clean, {updatedAt:at, byStudent:true}); delete cur.day; changed++; msg = `${first} programını güncelledi: ${clean.subject}`; }
   }
 
   if(changed){ save(); render(); if(msg) toast(msg); }

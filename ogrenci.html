@@ -518,7 +518,7 @@ function viewHome(){
   }
 
   /* 1b. Bugün çalışılacak dersler */
-  const bugunPlan = planList().filter(p=>+p.day===dayIdx(td));
+  const bugunPlan = planList().filter(p=>p.date===td);
   if(bugunPlan.length){
     html += `<div class="section-title">Bugün çalışılacak dersler <button class="link-btn" style="margin-left:auto" onclick="progView='hafta';setTab('program')">Haftalık program</button></div>`;
     html += bugunPlan.map(planRow).join('');
@@ -560,7 +560,14 @@ function viewHome(){
 }
 
 /* --- Ders programı --- */
-/* --- Haftalık program: her gün → öğretmenle dersler (kilitli, saatli) + o gün çalışılacak dersler (saatsiz, her hafta tekrarlar) + o gün teslim ödevler --- */
+/* --- Haftalık program: her gün → öğretmenle dersler (kilitli, saatli) + o gün çalışılacak dersler (saatsiz, TARİHLİ: yalnızca o gün) + o gün teslim ödevler --- */
+/* Eski sürüm kayıtları haftanın günü ile tutuluyordu: eklendiği andan sonraki ilk o güne yerleştir (panelle aynı kural) */
+function planDateFrom(ts, day){
+  const d = new Date(+ts > 1.7e12 ? +ts : Date.now());
+  d.setDate(d.getDate() + (((+day||0) - (d.getDay()+6)%7 + 7) % 7));
+  return localDate(d);
+}
+const planDateOf = x => /^\d{4}-\d{2}-\d{2}$/.test(String(x.date||'')) ? x.date : planDateFrom(x.at || x.updatedAt, x.day);
 const PLAN_SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe'];
 const PLAN_COLORS = {Matematik:'var(--blue)', Geometri:'var(--cyan)', Fizik:'var(--violet)', Kimya:'var(--accent)', Biyoloji:'var(--green)', 'Türkçe':'var(--amber)'};
 let progView = 'hafta', planWeekOff = 0;
@@ -576,12 +583,12 @@ function planList(){
   for(const p of (data.plans || [])){
     seen.add(p.id);
     const x = mine[p.id];
-    if(x && (+x.at||0) > (+p.updatedAt||0)){ if(x.deleted) continue; out.push({...p, ...x, id:p.id, byStudent:true}); }
-    else out.push(p);
+    if(x && (+x.at||0) > (+p.updatedAt||0)){ if(x.deleted) continue; out.push({...p, ...x, id:p.id, byStudent:true, date: x.date || x.day!=null ? planDateOf(x) : planDateOf(p)}); }
+    else out.push({...p, date: planDateOf(p)});
   }
   for(const [id, x] of Object.entries(mine)){
     if(seen.has(id) || !x || x.deleted) continue;
-    out.push({...x, id, byStudent:true});
+    out.push({...x, id, byStudent:true, date: planDateOf(x)});
   }
   return out;
 }
@@ -616,7 +623,7 @@ function hwRow(h, td){
 function dayRows(ds, di, td, plans, lessons){
   return [
     ...lessons.filter(l=>l.date===ds).sort((a,b)=>(+a.start||0)-(+b.start||0)).map(l=>lessonRow(l, td)),
-    ...plans.filter(p=>+p.day===di).map(planRow),
+    ...plans.filter(p=>p.date===ds).map(planRow),
     ...(data.homeworks||[]).filter(h=>h.due===ds).map(h=>hwRow(h, td)),
   ];
 }
@@ -628,7 +635,7 @@ function viewProgram(){
 }
 function viewWeekPlan(){
   const days = weekDates(planWeekOff), td = today();
-  const plans = planList();
+  const plans = planList().filter(p=>p.date>=days[0] && p.date<=days[6]);
   const lessons = (data.lessons||[]).filter(l=>l.status!=='ertelendi' && l.date>=days[0] && l.date<=days[6]);
   const hws = (data.homeworks||[]).filter(h=>h.due>=days[0] && h.due<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
@@ -642,36 +649,36 @@ function viewWeekPlan(){
   html += `<div class="card wk-mini">${days.map((ds,di)=>{
     const dots = [
       ...lessons.filter(l=>l.date===ds).map(()=>'<i class="lk"></i>'),
-      ...plans.filter(p=>+p.day===di).map(p=>`<i style="background:${PLAN_COLORS[p.subject]||'var(--accent)'}"></i>`),
+      ...plans.filter(p=>p.date===ds).map(p=>`<i style="background:${PLAN_COLORS[p.subject]||'var(--accent)'}"></i>`),
       ...hws.filter(h=>h.due===ds).map(h=>`<i class="hw ${hwStatus(h)==='yapildi'?'ok':''}"></i>`),
     ].join('');
     return `<div class="col ${ds===td?'today':''}" onclick="document.getElementById('pd${di}').scrollIntoView({behavior:'smooth',block:'start'})">
       <div class="h">${WD_SHORT[di]}<b>${+ds.slice(8)}</b></div><div class="dots">${dots}</div></div>`;
   }).join('')}</div>`;
   const bySub = {}; plans.forEach(p=>{ bySub[p.subject] = (bySub[p.subject]||0) + 1; });
-  html += `<div class="toolbar"><button class="btn btn-sm" onclick="openPlanForm()">＋ Çalışma Ekle</button>
+  html += `<div class="toolbar"><button class="btn btn-sm" onclick="openPlanForm(null,'${td>=days[0] && td<=days[6] ? td : days[0]}')">＋ Çalışma Ekle</button>
     ${planWeekOff?'<button class="btn-ghost" onclick="shiftPlanWeek(0)">Bu haftaya dön</button>':''}</div>`;
-  if(plans.length || hws.length) html += `<div class="week-chips">${plans.length?`<span class="chip badge-zero">Haftada ${plans.length} çalışma</span>`:''}${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}${hws.length?`<span class="chip hw-bekliyor">📝 ${hws.length} ödev teslimi</span>`:''}</div>`;
+  if(plans.length || hws.length) html += `<div class="week-chips">${plans.length?`<span class="chip badge-zero">Bu hafta ${plans.length} çalışma</span>`:''}${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}${hws.length?`<span class="chip hw-bekliyor">📝 ${hws.length} ödev teslimi</span>`:''}</div>`;
   days.forEach((ds,di)=>{
     const d = new Date(ds+'T12:00');
     const rows = dayRows(ds, di, td, plans, lessons);
     html += `<div class="section-title" id="pd${di}" style="scroll-margin-top:12px">${WD_LONG[di]} · ${d.getDate()} ${d.toLocaleDateString('tr-TR',{month:'short'})}${ds===td?' <span class="chip badge-zero">Bugün</span>':''}
-      <button class="link-btn" style="margin-left:auto" onclick="openPlanForm(null,${di})">＋ Ekle</button></div>`;
-    html += rows.length ? rows.join('') : `<div class="plan-empty" onclick="openPlanForm(null,${di})">Boş gün · dokun, çalışılacak ders ekle</div>`;
+      <button class="link-btn" style="margin-left:auto" onclick="openPlanForm(null,'${ds}')">＋ Ekle</button></div>`;
+    html += rows.length ? rows.join('') : `<div class="plan-empty" onclick="openPlanForm(null,'${ds}')">Boş gün · dokun, çalışılacak ders ekle</div>`;
   });
-  html += `<div class="tick-hint" style="margin-top:14px">🔒 Öğretmeninle yaptığın dersler değiştirilemez. Çalışılacak dersler her hafta tekrarlar; dokunarak konusunu ve ne yapacağını değiştirebilirsin. 📝 o gün teslim edilecek ödevlerdir, bitirince kutuya dokun.</div>`;
+  html += `<div class="tick-hint" style="margin-top:14px">🔒 Öğretmeninle yaptığın dersler değiştirilemez. Çalışılacak dersler yalnızca yazıldığı gün görünür; dokunarak konusunu, gününü ve ne yapacağını değiştirebilirsin. 📝 o gün teslim edilecek ödevlerdir, bitirince kutuya dokun.</div>`;
   return html;
 }
-function openPlanForm(id, day){
+function openPlanForm(id, date){
   const p = id ? planList().find(x=>x.id===id)
-               : {day: day ?? dayIdx(today()), subject:'Matematik', topic:'', note:''};
+               : {date: date || today(), subject:'Matematik', topic:'', note:''};
   if(!p) return;
   openModal(`
   <h3>${id ? 'Çalışmayı Düzenle' : 'Programa Çalışma Ekle'}</h3>
   ${id && !p.byStudent ? '<div class="tick-hint" style="margin:-6px 0 12px">Bunu öğretmenin planladı. Değiştirirsen öğretmenin de görür.</div>' : ''}
   <div class="form-grid">
     <div class="field"><label>Ders</label><select id="p_sub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="field"><label>Gün</label><select id="p_day">${WD_LONG.map((n,i)=>`<option value="${i}" ${i===+p.day?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="field"><label>Tarih</label><input id="p_date" type="date" value="${esc(p.date||today())}"></div>
     <div class="field full"><label>Konu</label><input id="p_topic" list="p_topics" value="${esc(p.topic||'')}" placeholder="Örn. Türev – zincir kuralı"><datalist id="p_topics"></datalist></div>
     <div class="field full"><label>Ne yapacaksın?</label><textarea id="p_note" placeholder="Örn. Derste çözdüğümüz soruları tekrar et, 40 yeni soru">${esc(p.note||'')}</textarea></div>
   </div>
@@ -691,7 +698,9 @@ function planErr(e){
     ? 'Kaydedilemedi: öğretmeninin sistemi güncellemesi gerekiyor' : 'Kaydedilemedi, tekrar dene';
 }
 async function savePlan(id){
-  const rec = {day:+fv('p_day'), subject:fv('p_sub'), topic:fv('p_topic').slice(0,120), note:fv('p_note').slice(0,300), deleted:false, at:Date.now()};
+  const date = fv('p_date');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toastMsg('Tarih seç'); return; }
+  const rec = {date, subject:fv('p_sub'), topic:fv('p_topic').slice(0,120), note:fv('p_note').slice(0,300), deleted:false, at:Date.now()};
   try{ await writeInput({plan:{[id || uid()]:rec}}); closeModal(); toastMsg('Programa kaydedildi ✓'); }
   catch(e){ toastMsg(planErr(e)); }
 }
