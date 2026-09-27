@@ -436,10 +436,31 @@ body.sm .main::before{
 .rem-item input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer}
 .rem-item .t{font-weight:600;font-size:.92rem}
 .rem-item .m{font-size:.8rem;color:var(--muted);margin-top:2px}
-.cal-block.plan-block,.cal-block.plan-lesson{cursor:pointer;touch-action:auto;padding:3px 6px}
-.cal-block.plan-lesson{background:repeating-linear-gradient(135deg,var(--field-bg) 0 6px,var(--line) 6px 12px);color:var(--ink);border:1.5px solid var(--line-strong);box-shadow:none}
-.cal-block .plan-topic{display:block;opacity:.92;font-size:.66rem;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
-.plan-daynum{font-weight:500;color:var(--muted);margin-left:4px}
+.pw-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:start}
+@media(max-width:1100px){.pw-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:760px){.pw-grid{grid-template-columns:1fr}}
+.pw-day{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow);min-width:0;display:flex;flex-direction:column;gap:7px}
+.pw-day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset,var(--shadow)}
+.pw-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:0 2px 2px}
+.pw-head b{font-size:.84rem}
+.pw-head span{font-size:.74rem;color:var(--muted)}
+.pw-day.today .pw-head b{color:var(--accent)}
+.pw-items{display:flex;flex-direction:column;gap:6px}
+.pw-item{border:1px solid var(--line);border-left:4px solid var(--line-strong);border-radius:9px;padding:7px 9px;cursor:pointer;background:var(--card);min-width:0}
+.pw-item:hover{border-color:var(--line-strong)}
+.pw-t{font-weight:700;font-size:.8rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pw-time{font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.pw-d{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.35;word-break:break-word}
+.pw-d.pw-topic{color:var(--ink);font-weight:600}
+.pw-lesson{background:repeating-linear-gradient(135deg,var(--card) 0 8px,var(--field-bg) 8px 16px);border-left-color:var(--muted)}
+.pw-hw{border-left-color:var(--amber);border-style:dashed;border-left-style:solid}
+.pw-hw .chip{font-size:.66rem;padding:1px 7px}
+.pw-empty{font-size:.76rem;color:var(--muted);padding:4px 2px}
+.pw-add{font-size:.76rem;font-weight:600;color:var(--accent);padding:6px;border:1px dashed var(--line-strong);border-radius:9px;background:none;cursor:pointer}
+.pw-add:hover{background:var(--accent-soft)}
+.pw-nav{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.pw-nav span{font-size:.84rem;color:var(--muted);white-space:nowrap}
+@media(max-width:560px){.pw-nav{width:100%}}
 .plan-summary{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px}
 .plan-lock-chip{background:var(--field-bg);border:1px solid var(--line-strong);color:var(--ink)}
 .cal-block.personal{cursor:pointer;box-shadow:none;opacity:.94;border:1.5px dashed rgba(255,255,255,.55)}
@@ -538,6 +559,8 @@ a.icon-btn{text-decoration:none}
   table{font-size:.84rem}
   .card{padding:16px 14px}
   .toolbar .btn{width:100%;justify-content:center}
+  .toolbar .pw-nav .btn{width:auto;flex:0 0 auto}
+  .toolbar .pw-nav .btn:nth-child(2){flex:1 1 auto}
   .curr-toolbar .btn{width:auto;flex:1 1 auto;padding-left:10px;padding-right:10px}
   .curr-toolbar .spacer{display:none}
   .curr-progress{gap:12px}
@@ -2823,14 +2846,12 @@ function dashboardWarnPanel(){
 }
 
 /* ================= ÖĞRENCİ PROGRAMI (haftalık çalışma planı) =================
-   state.plans: öğrenciye özel, her hafta tekrarlayan çalışma blokları {id, sid, day, start, dur, subject, topic, note}.
-   Senin ders kayıtların o haftanın programında KİLİTLİ blok olarak görünür (öğrenci değiştiremez).
-   Öğrenci kendi sayfasından blok ekler / düzenler / siler; girdileri tik belgesindeki "plan" alanından gelir
+   state.plans: öğrenciye özel, her hafta tekrarlayan "o gün çalışılacak ders" kayıtları
+   {id, sid, day, subject, topic, note} — saat yoktur (eski kayıtlardaki start/dur yok sayılır).
+   Her günün görünümü: senin o günkü ders kayıtların (KİLİTLİ, saatiyle) → çalışılacak dersler → o gün teslim ödevler.
+   Öğrenci kendi sayfasından ders ekler / düzenler / siler; girdileri tik belgesindeki "plan" alanından gelir
    (anahtar = planKey). Kim en son değiştirdiyse onun hali geçerlidir. */
 const PLAN_SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe'];
-const PL_START = 6*60, PL_END = 24*60;
-const PLAN_DURS = [30,45,60,75,90,120,150,180,240];
-const plY = m => (m - PL_START) / CAL_SLOT * CAL_SLOT_H;
 const planKey = p => p.srcId || p.id;
 function plansOf(sid){ return (state.plans||[]).filter(p=>p.sid===sid); }
 function subjectColor(n){ const x = SUBJECTS.find(s=>s.n===n); return x ? x.fg : 'var(--accent)'; }
@@ -2838,111 +2859,68 @@ function weekDates(off){
   const d = new Date(); d.setDate(d.getDate() - ((d.getDay()+6)%7) + off*7);
   return [...Array(7)].map((_,i)=>{ const x = new Date(d); x.setDate(d.getDate()+i); return localDate(x); });
 }
-const fmtDur = m => { const h = Math.floor(m/60), r = m%60; return h ? `${h} sa${r?' '+r+' dk':''}` : `${r} dk`; };
-/* Aynı gündeki çakışan blokları yan yana diz */
-function layoutLanes(items){
-  items.sort((a,b)=>a.start-b.start || b.end-a.end);
-  const out = []; let cluster = [], clusterEnd = -1;
-  const flush = () => {
-    const lanes = [];
-    cluster.forEach(it=>{ let i = lanes.findIndex(e=>e<=it.start); if(i<0){ i = lanes.length; lanes.push(0); } lanes[i] = it.end; it.lane = i; });
-    cluster.forEach(it=>{ it.lanes = lanes.length; out.push(it); });
-    cluster = [];
-  };
-  items.forEach(it=>{ if(cluster.length && it.start >= clusterEnd) flush(); cluster.push(it); clusterEnd = cluster.length===1 ? it.end : Math.max(clusterEnd, it.end); });
-  if(cluster.length) flush();
-  return out;
-}
 function setPlanWeek(n){ route.planWeek = n===0 ? 0 : (route.planWeek||0) + n; render(); }
+const HW_LABEL = {bekliyor:'Bekliyor', yapildi:'Yapıldı ✓', eksik:'Eksik'};
 function studentProgramTab(s){
   const off = route.planWeek || 0, days = weekDates(off), td = today();
   const plans = plansOf(s.id);
   const lessons = state.lessons.filter(l=>l.sid===s.id && isActive(l) && l.date>=days[0] && l.date<=days[6]);
-  let lines = '';
-  for(let m=PL_START+CAL_SLOT; m<PL_END; m+=CAL_SLOT) lines += `<div class="cal-line${m%60?' half':''}" style="top:${plY(m)}px"></div>`;
-  let times = '';
-  for(let m=PL_START; m<PL_END; m+=60) times += `<div class="cal-time" style="top:${plY(m)}px">${fmtClock(m)}</div>`;
-  const colH = plY(PL_END);
-  const cols = days.map((ds,di)=>{
-    const items = [
-      ...lessons.filter(l=>l.date===ds).map(l=>{ const st = l.start!=null ? +l.start : 18*60; return {kind:'lesson', l, start:st, end:st+Math.round((+l.hours||1)*60)}; }),
-      ...plans.filter(p=>+p.day===di).map(p=>({kind:'plan', p, start:+p.start, end:+p.start+(+p.dur||60)})),
-    ];
-    const blocks = layoutLanes(items).map(it=>{
-      const a = Math.max(PL_START, it.start), b = Math.min(PL_END, it.end);
-      const pos = `top:${plY(a)}px;height:${Math.max(18, (b-a)/CAL_SLOT*CAL_SLOT_H-2)}px;left:calc(${it.lane*100/it.lanes}% + 2px);width:calc(${100/it.lanes}% - 4px);right:auto`;
-      const saat = `${fmtClock(it.start)}–${fmtClock(it.end)}`;
-      if(it.kind==='lesson'){
-        const l = it.l;
-        return `<div class="cal-block plan-lesson" style="${pos}" onclick="event.stopPropagation();openLessonForm('${l.id}')"
-          title="Özel ders · ${esc(l.subject)} · ${saat}${l.topic?' · '+esc(l.topic):''} — öğrencinin programında kilitli; düzenlemek için tıkla">
-          <b>🔒 ${esc(l.subject)}</b><span class="cal-hours">${saat}</span>${l.topic?`<span class="plan-topic">${esc(l.topic)}</span>`:''}</div>`;
-      }
-      const p = it.p;
-      return `<div class="cal-block plan-block" style="${pos};background:${subjectColor(p.subject)}" onclick="event.stopPropagation();openPlanForm('${p.id}')"
-        title="${esc(p.subject)} · ${saat}${p.topic?' · '+esc(p.topic):''}${p.byStudent?' · öğrenci düzenledi':''}">
-        <b>${esc(p.subject)}${p.byStudent?' 👤':''}</b><span class="cal-hours">${saat}</span>${p.topic?`<span class="plan-topic">${esc(p.topic)}</span>`:''}</div>`;
-    }).join('');
-    return `<div class="cal-col plan-col" style="height:${colH}px;cursor:copy" onclick="planColClick(event,'${s.id}',${di})">${lines}${blocks}</div>`;
-  }).join('');
-  const heads = days.map((ds,di)=>`<div class="cal-dayhead" ${ds===td?'style="color:var(--accent)"':''}>${CAL_DAYS[di]}<span class="plan-daynum">${+ds.slice(8)}</span></div>`).join('');
-  const planMin = plans.reduce((t,p)=>t+(+p.dur||0),0);
-  const lesMin = lessons.reduce((t,l)=>t+Math.round((+l.hours||0)*60),0);
-  const bySub = {}; plans.forEach(p=>{ bySub[p.subject] = (bySub[p.subject]||0) + (+p.dur||0); });
+  const hws = state.homeworks.filter(h=>h.sid===s.id && h.due>=days[0] && h.due<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
   const range = `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
+  const bySub = {}; plans.forEach(p=>{ bySub[p.subject] = (bySub[p.subject]||0) + 1; });
+  const cols = days.map((ds,di)=>{
+    const d = new Date(ds+'T12:00');
+    const dayLessons = lessons.filter(l=>l.date===ds).sort((a,b)=>(+a.start||0)-(+b.start||0));
+    const dayPlans = plans.filter(p=>+p.day===di);
+    const dayHw = hws.filter(h=>h.due===ds);
+    const items = [
+      ...dayLessons.map(l=>`<div class="pw-item pw-lesson" onclick="openLessonForm('${l.id}')" title="Ders kaydını aç — öğrencinin programında kilitli">
+        <div class="pw-t">🔒 ${esc(l.subject)}${l.start!=null?` <span class="pw-time">${fmtClock(+l.start)}</span>`:''}</div>
+        ${l.topic?`<div class="pw-d">${esc(l.topic)}</div>`:''}</div>`),
+      ...dayPlans.map(p=>`<div class="pw-item pw-plan" style="border-left-color:${subjectColor(p.subject)}" onclick="openPlanForm('${p.id}')">
+        <div class="pw-t" style="color:${subjectColor(p.subject)}">${esc(p.subject)}${p.byStudent?' <span title="Öğrenci ekledi ya da en son öğrenci düzenledi">👤</span>':''}</div>
+        ${p.topic?`<div class="pw-d pw-topic">${esc(p.topic)}</div>`:''}${p.note?`<div class="pw-d">${esc(p.note)}</div>`:''}</div>`),
+      ...dayHw.map(h=>`<div class="pw-item pw-hw" onclick="openHomeworkForm('${h.id}','${s.id}')" title="Ödevi aç">
+        <div class="pw-t">📝 ${esc(h.subject||'Ödev')} <span class="chip hw-${esc(h.status)}">${HW_LABEL[h.status]||esc(h.status)}</span></div>
+        <div class="pw-d">${esc(h.desc||'')}</div></div>`),
+    ].join('');
+    return `<div class="pw-day ${ds===td?'today':''}">
+      <div class="pw-head"><b>${WD_LONG[di]}</b><span>${d.getDate()} ${d.toLocaleDateString('tr-TR',{month:'short'})}</span></div>
+      <div class="pw-items">${items || '<div class="pw-empty">Boş gün</div>'}</div>
+      <button class="pw-add" onclick="openPlanForm(null,'${s.id}',${di})">＋ Ders ekle</button>
+    </div>`;
+  }).join('');
   return `
   <div class="toolbar">
     <button class="btn btn-primary btn-sm" onclick="openPlanForm(null,'${s.id}')">＋ Çalışma Ekle</button>
-    <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(-1)">‹</button>
-    <button class="btn ${off===0?'btn-primary':'btn-ghost'} btn-sm" onclick="setPlanWeek(0)">Bu Hafta</button>
-    <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(1)">›</button>
-    <span style="font-size:.84rem;color:var(--muted)">${range}</span>
-  </div>
-  <div class="plan-summary">
-    <span class="chip badge-zero">Çalışma planı · haftada ${fmtDur(planMin)}</span>
-    <span class="chip plan-lock-chip">🔒 Seninle ders · bu hafta ${fmtDur(lesMin)}</span>
-    ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${fmtDur(v)}</span>`).join('')}
-  </div>
-  <div class="card cal-card">
-    <div class="cal-grid">
-      <div></div>${heads}
-      <div class="cal-timecol" style="height:${colH}px">${times}</div>
-      ${cols}
+    <div class="pw-nav">
+      <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(-1)" aria-label="Önceki hafta">‹</button>
+      <button class="btn ${off===0?'btn-primary':'btn-ghost'} btn-sm" onclick="setPlanWeek(0)">Bu Hafta</button>
+      <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(1)" aria-label="Sonraki hafta">›</button>
+      <span>${range}</span>
     </div>
   </div>
-  <p class="hint-text" style="margin-top:10px">Çalışma blokları her hafta tekrarlar; boş bir alana tıklayarak ekle, bloğa tıklayarak konusunu ve saatini düzenle. 🔒 taralı bloklar senin ders kayıtların: öğrencinin programında kilitli durur, burada tıklayınca ders kaydı açılır. 👤 işaretli blokları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür ve kendi çalışmalarını ekleyebilir.</p>`;
+  <div class="plan-summary">
+    <span class="chip badge-zero">Haftalık plan · ${plans.length} çalışma</span>
+    <span class="chip plan-lock-chip">🔒 Bu hafta seninle ${lessons.length} ders</span>
+    ${hws.length?`<span class="chip hw-bekliyor">📝 Bu hafta ${hws.length} ödev teslimi</span>`:''}
+    ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${v}</span>`).join('')}
+  </div>
+  <div class="pw-grid">${cols}</div>
+  <p class="hint-text" style="margin-top:10px">Çalışmalar her hafta tekrarlar; saat yoktur, öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 o gün teslim edilecek ödevler. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür, kendi çalışmalarını ekleyebilir ve ödevlerini oradan işaretleyebilir.</p>`;
 }
-function planColClick(ev, sid, di){
-  if(ev.target.closest && ev.target.closest('.cal-block')) return;
-  const rect = ev.currentTarget.getBoundingClientRect();
-  let start = PL_START + Math.floor((ev.clientY - rect.top) / CAL_SLOT_H) * CAL_SLOT;
-  start = Math.max(PL_START, Math.min(PL_END - 60, start));
-  openPlanForm(null, sid, di, start);
-}
-function planTimeOptions(sel){
-  let o = '';
-  for(let m=PL_START; m<PL_END; m+=15) o += `<option value="${m}" ${m===sel?'selected':''}>${fmtClock(m)}</option>`;
-  if(sel!=null && (sel-PL_START)%15) o = `<option value="${sel}" selected>${fmtClock(sel)}</option>` + o;
-  return o;
-}
-function planDurOptions(sel){
-  const list = PLAN_DURS.includes(sel) ? PLAN_DURS : [...PLAN_DURS, sel].sort((a,b)=>a-b);
-  return list.map(m=>`<option value="${m}" ${m===sel?'selected':''}>${fmtDur(m)}</option>`).join('');
-}
-function openPlanForm(id, sid, day, start){
+function openPlanForm(id, sid, day){
   const p = id ? (state.plans||[]).find(x=>x.id===id)
-               : {sid, day: day ?? todayIdx(), start: start ?? 17*60, dur:60, subject:PLAN_SUBJECTS[0], topic:'', note:''};
+               : {sid, day: day ?? todayIdx(), subject:PLAN_SUBJECTS[0], topic:'', note:''};
   if(!p) return;
   const s = student(p.sid); if(!s) return;
   openModal(`
-  <h3>${id?'Program Bloğu':'Programa Çalışma Ekle'} <span style="font-weight:500;color:var(--muted)">· ${esc(s.name)}</span></h3>
-  ${p.byStudent?`<p class="hint-text" style="margin:-8px 0 12px">👤 Bu bloğu öğrenci ekledi ya da en son öğrenci düzenledi. Senin değişikliğin geçerli olur.</p>`:''}
+  <h3>${id?'Çalışmayı Düzenle':'Programa Çalışma Ekle'} <span style="font-weight:500;color:var(--muted)">· ${esc(s.name)}</span></h3>
+  ${p.byStudent?`<p class="hint-text" style="margin:-8px 0 12px">👤 Bunu öğrenci ekledi ya da en son öğrenci düzenledi. Senin değişikliğin geçerli olur.</p>`:''}
   <div class="form-grid">
     <div class="field"><label>Ders</label><select id="f_psub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
     <div class="field"><label>Gün</label>${daySelect('f_pday', +p.day||0)}</div>
-    <div class="field"><label>Başlangıç</label><select id="f_pstart">${planTimeOptions(+p.start)}</select></div>
-    <div class="field"><label>Süre</label><select id="f_pdur">${planDurOptions(+p.dur||60)}</select></div>
     <div class="field full"><label>Konu</label><input id="f_ptopic" list="planTopics" value="${esc(p.topic||'')}" placeholder="Müfredattan seç ya da yaz · örn. Türev – zincir kuralı"><datalist id="planTopics"></datalist></div>
     <div class="field full"><label>Ne yapılacak?</label><textarea id="f_pnote" placeholder="Örn. Derste çözdüğümüz 20 soruyu tekrar et, 3D yayınları test 4">${esc(p.note||'')}</textarea></div>
   </div>
@@ -2958,27 +2936,25 @@ function planTopicList(){
   if(dl && sel) dl.innerHTML = (CURRICULUM[sel.value] ? currTopics(sel.value) : []).map(c=>`<option value="${esc(c.t)}">`).join('');
 }
 function savePlan(id, sid){
-  const start = +fv('f_pstart');
-  const dur = Math.min(+fv('f_pdur') || 60, 24*60 - start);
-  const data = {day:+fv('f_pday'), start, dur, subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
+  const data = {day:+fv('f_pday'), subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
   state.plans = state.plans || [];
-  if(id){ const p = state.plans.find(x=>x.id===id); if(!p) return; Object.assign(p, data); }
+  if(id){ const p = state.plans.find(x=>x.id===id); if(!p) return; Object.assign(p, data); delete p.start; delete p.dur; }
   else state.plans.push({id:uid(), sid, ...data});
-  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : `${WD_LONG[data.day]} ${fmtClock(start)} · ${data.subject} eklendi`);
+  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : `${WD_LONG[data.day]} · ${data.subject} eklendi`);
 }
 function delPlan(id){
   const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
-  if(!confirm('Bu çalışma bloğu öğrencinin programından da kaldırılsın mı?')) return;
+  if(!confirm('Bu çalışma öğrencinin programından da kaldırılsın mı?')) return;
   state.plans = state.plans.filter(x=>x.id!==id);
   removeStudentInput(p.sid, 'plan', planKey(p));
-  save(); closeModal(); render(); toast('Blok kaldırıldı');
+  save(); closeModal(); render(); toast('Çalışma kaldırıldı');
 }
-/* Öğrencinin gönderdiği program bloğunu doğrula */
+/* Öğrencinin gönderdiği program kaydını doğrula (saat alanları artık kullanılmıyor) */
 function sanitizePlan(x){
-  const day = Math.round(+x.day), start = Math.round(+x.start), dur = Math.round(+x.dur);
-  if(!(day>=0 && day<=6) || !(start>=0 && start<24*60) || !(dur>=15 && dur<=600)) return null;
+  const day = Math.round(+x.day);
+  if(!(day>=0 && day<=6)) return null;
   if(!PLAN_SUBJECTS.includes(x.subject)) return null;
-  return {day, start, dur:Math.min(dur, 24*60-start), subject:x.subject, topic:String(x.topic||'').slice(0,120), note:String(x.note||'').slice(0,300)};
+  return {day, subject:x.subject, topic:String(x.topic||'').slice(0,120), note:String(x.note||'').slice(0,300)};
 }
 
 /* ================= MÜFREDAT TAKİBİ =================
@@ -3625,7 +3601,7 @@ function studentPayload(s){
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
-    plans: plansOf(s.id).map(p=>({id:planKey(p), day:p.day, start:p.start, dur:p.dur, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
+    plans: plansOf(s.id).map(p=>({id:planKey(p), day:p.day, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
   };
 }
