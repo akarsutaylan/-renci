@@ -490,6 +490,41 @@ body.sm #cloudBtn{display:none}
 a.icon-btn{text-decoration:none}
 .share-row a.btn-ghost{text-decoration:none}
 
+/* ---------- Kompakt ödemeler ---------- */
+.pay-sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pay-sum > div{flex:1 1 180px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.pay-sum span{font-size:.76rem;color:var(--muted);font-weight:600}
+.pay-sum b{font-size:1.02rem;font-variant-numeric:tabular-nums}
+.pay-sum em{font-style:normal;font-size:.74rem;color:var(--muted)}
+.card.pay-card{padding:4px 0;margin-bottom:12px;overflow:hidden}
+.pay-row{border-top:1px solid var(--line)}
+.pay-row:first-child{border-top:none}
+.pay-row summary{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;list-style:none}
+.pay-row summary::-webkit-details-marker{display:none}
+.pay-row summary:hover{background:var(--row-hover)}
+.pr-ico{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber);font-weight:800;flex-shrink:0}
+.pr-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.pr-main b{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-main span{font-size:.74rem;color:var(--muted)}
+.pr-amt{font-size:.92rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pr-caret{color:var(--muted);font-size:1.1rem;transition:transform .15s}
+.pay-row[open] .pr-caret{transform:rotate(90deg)}
+.pr-lessons{padding:2px 14px 10px 52px}
+.pr-l{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.8rem;border-top:1px dashed var(--line)}
+.pr-l .d{flex:1;min-width:0;color:var(--muted);white-space:nowrap}
+.pr-l .h{color:var(--muted)}
+.pr-l b{font-variant-numeric:tabular-nums;min-width:62px;text-align:right}
+.pr-l .pay-btn{padding:3px 10px}
+.pay-pot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:9px 14px;border-top:1px solid var(--line);background:var(--field-bg)}
+.pay-pot .lbl{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
+.pay-pot .chip{font-size:.72rem}
+.pay-empty{padding:12px 14px;font-size:.86rem;color:var(--muted)}
+@media(max-width:560px){.pr-lessons{padding-left:14px}.pay-row summary{gap:8px;padding:9px 12px}.pr-main span{font-size:.7rem}}
+.dash-line{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 14px;margin:0 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:.86rem;color:var(--ink);cursor:pointer;flex-wrap:wrap}
+.dash-line:hover{border-color:var(--line-strong)}
+.dash-line em{margin-left:auto;font-style:normal;font-size:.8rem;font-weight:600;color:var(--accent);white-space:nowrap}
+.dash-line .dl-chips{display:flex;gap:5px;flex-wrap:wrap}
+.dash-line .chip{font-size:.72rem}
 /* ---------- Potansiyel kazanç şeridi ---------- */
 .pot-strip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px}
 .pot-box{flex:0 0 auto;min-width:150px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field-bg)}
@@ -938,8 +973,6 @@ function viewDashboard(){
   const now = new Date(), ym = now.toISOString().slice(0,7);
   const monthLessons = state.lessons.filter(l=>(l.date||'').startsWith(ym) && isBillable(l));
   const monthHours = monthLessons.reduce((t,l)=>t+(+l.hours||0),0);
-  const monthIncome = collectedInMonth(null, ym);
-  const totalDebt = state.students.reduce((t,s)=>t+Math.max(0,debt(s.id)),0);
   const pendingHw = state.homeworks.filter(h=>h.status==='bekliyor');
   const monthName = now.toLocaleDateString('tr-TR',{month:'long'});
 
@@ -955,7 +988,7 @@ function viewDashboard(){
       <div class="hint">${monthLessons.length} ders işlendi</div>
       <div class="stat-ico" style="background:var(--blue-soft);color:var(--blue)">${ICONS.lessons}</div>
     </div>
-    ${studentMode ? `
+    ${`
     <div class="card stat">
       <div class="label">Bekleyen Ödev</div><div class="value">${pendingHw.length}</div>
       <div class="hint">tamamlanmayı bekliyor</div>
@@ -965,16 +998,6 @@ function viewDashboard(){
       <div class="label">Deneme</div><div class="value">${state.exams.length}</div>
       <div class="hint">toplam deneme kaydı</div>
       <div class="stat-ico" style="background:var(--rose-soft);color:var(--rose)">${ICONS.exams}</div>
-    </div>` : `
-    <div class="card stat">
-      <div class="label">${monthName} Tahsilat</div><div class="value">${fmtTL(monthIncome)}</div>
-      <div class="hint">bu ay ödemesi alınan dersler</div>
-      <div class="stat-ico" style="background:var(--green-soft);color:var(--green)">${ICONS.payments}</div>
-    </div>
-    <div class="card stat">
-      <div class="label">Toplam Ödenmemiş</div><div class="value" style="color:${totalDebt>0?'var(--red)':'var(--green)'}">${fmtTL(totalDebt)}</div>
-      <div class="hint">${unpaidLessons(null).length} ders ödeme bekliyor</div>
-      <div class="stat-ico" style="background:var(--red-soft);color:var(--red)">${ICONS.exams}</div>
     </div>`}
   </div>`;
 
@@ -1020,19 +1043,10 @@ function viewDashboard(){
     </tbody></table></div>` : emptyState('✅','Bekleyen ödev yok','Tüm ödevler tamamlanmış görünüyor.')}
   </div>`;
 
-  const balances = state.students.map(s=>({s, d:debt(s.id)})).sort((a,b)=>b.d-a.d);
-  const balancePanel = studentMode ? '' : `
-  <div class="card panel">
-    <h3>Ödenmemiş Dersler <span class="chip badge-zero" title="Yalnızca işlenmiş dersler sayılır">bugüne kadar</span></h3>
-    ${balances.length ? `<div class="table-wrap"><table><tbody>
-      ${balances.map(({s,d})=>`<tr onclick="go('studentDetail','${s.id}')" style="cursor:pointer">
-        <td class="student-cell">${avatarHtml(s.id,'sm')}${esc(s.name)}</td>
-        <td style="color:var(--muted);font-size:.82rem;white-space:nowrap">bu hafta ${fmtTL(weekExpected(s.id))}${weekCollected(s.id)?` · <span style="color:var(--green)">alınan ${fmtTL(weekCollected(s.id))}</span>`:''}</td>
-        <td style="text-align:right">${debtBadge(d)}</td>
-      </tr>`).join('')}
-    </tbody></table></div>` : emptyState('👥','Öğrenci yok','Öğrenciler sekmesinden ilk öğrencini ekle.')}
-  </div>`;
-
+  // Ödemeler: tutar yazmadan tek satır (ayrıntı Ödemeler sayfasında)
+  const unpaidN = unpaidLessons(null).length, unpaidS = state.students.filter(s=>unpaidTotal(s.id)>0).length;
+  const payLine = studentMode || !unpaidN ? '' : `
+  <button class="dash-line" onclick="go('payments')">💳 <span>Ödeme bekleyen <b>${unpaidN} ders</b> · ${unpaidS} öğrenci</span><em>Ödemeler ›</em></button>`;
   const recentExams = [...state.exams].sort(byDateDesc).slice(0,6);
   const examsPanel = `
   <div class="card panel">
@@ -1048,7 +1062,7 @@ function viewDashboard(){
 
   const recentStudies = [...(state.studies||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.at||0)-(a.at||0)).slice(0,6);
   const studiesPanel = recentStudies.length ? `
-  <div class="card panel" style="margin-top:18px">
+  <div class="card panel">
     <h3>📖 Öğrencilerin Son Çalışmaları</h3>
     <div class="table-wrap"><table><tbody>
       ${recentStudies.map(x=>`<tr onclick="go('studentDetail','${x.sid}'); setSubtab('calismalar')" style="cursor:pointer">
@@ -1068,14 +1082,14 @@ function viewDashboard(){
   </div>
   ${dashboardReminderAlert()}
   ${stats}
+  ${payLine}
   ${dashboardWarnPanel()}
   ${dashboardPersonalPanel()}
   ${dashboardBillsPanel(ym, now.getDate())}
   ${telafiPanel}
   <div class="grid-2">${lessonsPanel}${hwPanel}</div>
   <div style="height:18px"></div>
-  <div class="grid-2">${balancePanel}${examsPanel}</div>
-  ${studiesPanel}`;
+  <div class="grid-2">${examsPanel}${studiesPanel}</div>`;
 }
 
 /* ================= ÖĞRENCİLER ================= */
@@ -1187,7 +1201,7 @@ function viewStudentDetail(){
     <div class="card stat"><div class="label">Bu Hafta</div><div class="value">${fmtTL(weekExpected(s.id))}</div><div class="hint">${weekLessons(s.id).length} ders · ${fmtTL(weekCollected(s.id))} alındı</div></div>
     <div class="card stat"><div class="label">Ödenmemiş</div><div class="value" style="color:${d>0?'var(--red)':'var(--green)'}">${fmtTL(d)}</div><div class="hint">${d>0?`${unpaidLessons(s.id).length} ders · en eskisi ${fmtDate(unpaidLessons(s.id)[0].date)}`:'ödeme bekleyen ders yok'}</div></div>`}
   </div>
-  ${studentMode ? '' : potentialStrip(s.id) + unpaidPanel(s.id, false)}
+  ${studentMode ? '' : payBlock(s.id)}
   ${s.note?`<div class="card panel" style="margin-bottom:4px"><h3>Not</h3><p style="font-size:.9rem;color:var(--muted)">${esc(s.note)}</p></div>`:''}
   <div class="subtabs">${tabs.map(t=>`<button class="${route.subtab===t.id?'active':''}" onclick="setSubtab('${t.id}')">${t.label}</button>`).join('')}</div>
   ${body}`;
@@ -1220,41 +1234,44 @@ function lessonsTable(list, showStudent=true){
   </tr>`).join('')}</tbody></table></div>`;
 }
 /* Potansiyel kazanç şeridi: bu hafta ve sonrası, yalnızca girilmiş dersler */
-function potentialStrip(sid){
-  const weeks = potentialWeeks(sid); if(!weeks.length) return '';
-  const cur = mondayOf(today());
-  return `<div class="card panel" style="margin-bottom:18px">
-    <h3>Potansiyel Kazanç <span class="chip badge-zero">${weeks.length} hafta · ${fmtTL(weeks.reduce((t,w)=>t+w.fee,0))}</span></h3>
-    <div class="pot-strip">${weeks.map(w=>{ const n = weekNo(w.mon); return `<div class="pot-box ${w.mon===cur?'cur':''}">
-      ${n!=null ? `<b>${n}. hafta</b><span class="r">${weekRangeLabel(w.mon)}</span>` : `<b>${weekRangeLabel(w.mon)}</b><span class="r">numarasız</span>`}
-      <span class="v">${w.count} ders · ${fmtTL(w.fee)}</span></div>`; }).join('')}</div>
-  </div>`;
+/* ================= ÖDEMELER (kompakt) =================
+   Ödenmemiş dersler öğrenci başına tek satır: ad · ders sayısı · tutar · "Hepsini Al".
+   Satıra dokununca dersler açılır; tek tek "Al" ile de işaretlenir. İleri tarihli dersler küçük çipler. */
+function payBlock(sid){
+  const list = unpaidLessons(sid), byStu = {};
+  list.forEach(l=>{ (byStu[l.sid] = byStu[l.sid] || []).push(l); });
+  const rows = Object.entries(byStu).sort((a,b)=>sumFee(b[1])-sumFee(a[1])).map(([id, ls])=>{
+    ls.sort((x,y)=>x.date.localeCompare(y.date) || (x.start||0)-(y.start||0));
+    return `<details class="pay-row">
+      <summary>
+        ${sid ? '<span class="pr-ico">₺</span>' : avatarHtml(id,'sm')}
+        <span class="pr-main"><b>${sid ? 'Ödenmemiş dersler' : esc(studentName(id))}</b><span>${ls.length} ders · en eskisi ${new Date(ls[0].date+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</span></span>
+        <b class="pr-amt">${fmtTL(sumFee(ls))}</b>
+        <button class="pay-btn pay-no" onclick="event.preventDefault();event.stopPropagation();payAll('${id}')">Hepsini Al</button>
+        <span class="pr-caret" aria-hidden="true">›</span>
+      </summary>
+      <div class="pr-lessons">${ls.map(l=>`<div class="pr-l">
+        <span class="d">${new Date(l.date+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',weekday:'short'})}${l.start!=null?' · '+fmtClock(l.start):''}</span>${subjectChip(l.subject)}
+        <span class="h">${l.hours} sa</span><b>${fmtTL(l.fee)}</b>
+        <button class="pay-btn pay-no" onclick="toggleLessonPaid('${l.id}')">Al</button></div>`).join('')}</div>
+    </details>`;
+  }).join('');
+  const pot = potentialWeeks(sid), cur = mondayOf(today());
+  const potLine = pot.length ? `<div class="pay-pot"><span class="lbl">İleri tarihli</span>${pot.map(w=>{ const n = weekNo(w.mon);
+      return `<span class="chip ${w.mon===cur?'badge-zero':'plan-lock-chip'}" title="${weekRangeLabel(w.mon)}">${n!=null?n+'. hafta':weekRangeLabel(w.mon)} · ${w.count} ders · ${fmtTL(w.fee)}</span>`; }).join('')}</div>` : '';
+  if(!rows && !potLine) return sid ? '' : `<div class="card pay-card"><div class="pay-empty">✅ Ödeme bekleyen ders yok</div></div>`;
+  return `<div class="card pay-card">${rows || '<div class="pay-empty">✅ Ödeme bekleyen ders yok</div>'}${potLine}</div>`;
 }
-/* Ödenmemiş dersler: haftaya göre gruplu, en yeni hafta üstte */
-function unpaidPanel(sid, showStudent){
-  const list = unpaidLessons(sid);
-  const groups = {};
-  list.forEach(l=>{ const m = mondayOf(l.date); (groups[m] = groups[m] || []).push(l); });
-  const weeks = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
-  const dayLbl = ds => new Date(ds+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short',weekday:'short'}).replace(/\s+/,' ');
-  const body = weeks.length ? weeks.map(mon=>{
-    const ls = groups[mon].sort((a,b)=>a.date.localeCompare(b.date) || (a.start||0)-(b.start||0));
-    const days = [...new Set(ls.map(l=>l.date))].map(dayLbl).join(', ');
-    return `<div class="wk-group">
-      <div class="wk-head"><b>${weekTitle(mon)}</b><span class="days">${days}</span><span class="tot">${fmtTL(sumFee(ls))}</span></div>
-      <div class="table-wrap"><table><tbody>${ls.map(l=>`<tr>
-        <td style="white-space:nowrap">${fmtDate(l.date)}${l.start!=null?`<span class="row-note">${fmtClock(l.start)}</span>`:''}</td>
-        ${showStudent?`<td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>`:''}
-        <td>${subjectChip(l.subject)}</td>
-        <td class="num" style="color:var(--muted)">${l.hours} sa</td>
-        <td class="num">${fmtTL(l.fee)}</td>
-        <td style="text-align:right"><button class="pay-btn pay-no" onclick="toggleLessonPaid('${l.id}')">₺ Ödeme Al</button></td>
-      </tr>`).join('')}</tbody></table></div>
-    </div>`; }).join('') : emptyState('✅','Ödeme bekleyen ders yok','İşlenen tüm derslerin ödemesi alınmış.');
-  return `<div class="card panel" style="margin-bottom:18px;padding-bottom:${weeks.length?'8px':'20px'}">
-    <h3>Ödenmemiş Dersler ${list.length?`<span class="chip badge-neg">${list.length} ders · ${fmtTL(sumFee(list))}</span>`:''}</h3>
-    ${body}
-  </div>`;
+/* Bir öğrencinin ödenmemiş tüm derslerini tek seferde ödendi say */
+function payAll(sid){
+  const ls = unpaidLessons(sid).filter(l=>l.sid===sid && !l.paid);
+  if(!ls.length) return;
+  if(!confirm(`${studentName(sid)} · ${ls.length} ders (${fmtTL(sumFee(ls))}) ödendi olarak işaretlensin mi?`)) return;
+  ls.forEach(l=>{
+    state.payments.push({id:uid(), sid:l.sid, date:today(), amount:+l.fee||0, method:'Nakit', note:`Ders ödemesi · ${l.subject} (${fmtDate(l.date)})`, lessonId:l.id});
+    l.paid = true; l.paidAt = today();
+  });
+  save(); render(); toast(`${fmtTL(sumFee(ls))} ödeme kaydedildi · ${ls.length} ders`);
 }
 const HW_ORDER = {bekliyor:0, eksik:1, yapildi:2};
 const byHwOrder = (a,b) => (HW_ORDER[a.status]-HW_ORDER[b.status]) || (a.due||'').localeCompare(b.due||'');
@@ -1353,18 +1370,18 @@ function viewLessons(){
 }
 function viewPayments(){
   const exp = weekExpected(null), col = weekCollected(null), unpaid = unpaidTotal(null);
-  const [wa, wb] = weekRange();
+  const n = unpaidLessons(null).length, ns = state.students.filter(s=>unpaidTotal(s.id)>0).length;
+  const [wa] = weekRange();
   return `
   <div class="topbar">
-    <div><h1>Ödemeler</h1><div class="sub">${weekTitle(wa)} · ödeme işareti yalnızca ders satırındaki "Ödeme Al" ile konur</div></div>
+    <div><h1>Ödemeler</h1><div class="sub">${weekTitle(wa)}</div></div>
   </div>
-  <div class="stat-grid">
-    <div class="card stat"><div class="label">Bu Hafta Beklenen</div><div class="value">${fmtTL(exp)}</div><div class="hint">${weekLessons(null).length} ders · ${fmtDate(wa)} – ${fmtDate(wb)}</div></div>
-    <div class="card stat"><div class="label">Bu Hafta Alınan</div><div class="value" style="color:var(--green)">${fmtTL(col)}</div><div class="hint">bu hafta ödemesi alınan dersler</div></div>
-    <div class="card stat"><div class="label">Toplam Ödenmemiş</div><div class="value" style="color:${unpaid>0?'var(--red)':'var(--green)'}">${fmtTL(unpaid)}</div><div class="hint">${unpaidLessons(null).length} ders · ${state.students.filter(s=>unpaidTotal(s.id)>0).length} öğrenci</div></div>
+  <div class="pay-sum">
+    <div><span>Ödenmemiş</span><b style="color:${unpaid>0?'var(--red)':'var(--green)'}">${fmtTL(unpaid)}</b><em>${n} ders · ${ns} öğrenci</em></div>
+    <div><span>Bu hafta alınan</span><b style="color:var(--green)">${fmtTL(col)}</b><em>beklenen ${fmtTL(exp)}</em></div>
   </div>
-  ${potentialStrip(null)}
-  ${unpaidPanel(null, true)}`;
+  ${payBlock(null)}
+  <p class="hint-text" style="margin-top:10px">Satıra dokununca o öğrencinin ödenmemiş dersleri açılır. "Hepsini Al" hepsini tek seferde ödendi sayar; derslerden birini geri almak için Dersler sayfasındaki ödeme işaretine tıkla.</p>`;
 }
 function viewHomework(){
   let list = [...state.homeworks].sort(byHwOrder);
@@ -1904,7 +1921,7 @@ function calBlockHtml(l){
     <button class="cal-x" style="right:22px" onpointerdown="event.stopPropagation()" onclick="openRescheduleForm('${l.id}')" title="Telafi · yeni tarihe taşı">⏳</button>
     <b>${esc(s.name)}</b>
     <span class="cal-hours">${fmtClock(l.start)}–${fmtClock(l.start+dur)}</span>
-    <span class="cal-hours">${pp ? '⏳ Ertelendi' : esc(l.subject)+(studentMode?'':' · '+fmtTL(l.fee)+(l.paid?' ✓':''))}</span>
+    <span class="cal-hours">${pp ? '⏳ Ertelendi' : esc(l.subject)}</span>
     <div class="cal-resize" onpointerdown="calResizeStart(event,'${l.id}')"></div>
   </div>`;
 }
@@ -1956,7 +1973,7 @@ function viewSchedule(){
   return `
   <div class="topbar">
     <div><h1>${wn!=null ? `${wn}. Hafta` : 'Haftalık Takvim'}${dates[0]===mondayOf(todayStr)?' <span class="chip badge-zero" style="vertical-align:middle">bu hafta</span>':''}</h1>
-      <div class="sub">${wn==null?'Numarasız hafta · ':''}${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat${studentMode?'':' · '+fmtTL(totF)}</div></div>
+      <div class="sub">${wn==null?'Numarasız hafta · ':''}${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">⧉ Geçen Haftayı Kopyala</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(-1)">‹ Önceki</button>
@@ -2091,34 +2108,15 @@ function billStatusBtn(b){
   return `<button class="pay-btn pay-no" onclick="toggleBillPaid('${b.id}')" title="Ödendi olarak işaretle">Ödenecek</button>`;
 }
 function dashboardBillsPanel(ym, td){
-  if(studentMode || (!state.bills.length && !state.subs.length)) return '';
-  const due = billsForMonth(ym)
-    .filter(x=>!isBillPaid(x.b, ym))
-    .sort((a,b)=>a.day-b.day);
-  const subsMonthly = state.subs.reduce((t,s)=>t+subMonthly(s),0);
-  if(!due.length && !state.subs.length) return '';
-  const dueTable = due.length ? `
-    <div class="table-wrap"><table><tbody>
-    ${due.map(({b,day})=>{
-      const lbl = day < td ? `<span class="chip badge-neg">⚠ Gecikti</span>`
-                : day === td ? `<span class="chip hw-bekliyor">Bugün!</span>`
-                : `<span class="chip badge-zero">${day-td} gün kaldı</span>`;
-      return `<tr>
-        <td style="font-weight:600">${esc(b.title)}${b.note?`<span class="row-note">${esc(b.note)}</span>`:''}</td>
-        <td style="color:var(--muted);font-size:.85rem;white-space:nowrap">Ayın ${day}'i</td>
-        <td class="num">${b.amount!=null?fmtTL(b.amount):''}</td>
-        <td>${lbl}</td>
-        <td style="text-align:right"><button class="btn btn-ghost btn-sm" onclick="toggleBillPaid('${b.id}')">Ödendi ✓</button></td>
-      </tr>`;
-    }).join('')}
-    </tbody></table></div>` : `<p style="font-size:.85rem;color:var(--muted)">Bu ayın tüm ödemeleri yapıldı ✓</p>`;
-  const subsLine = state.subs.length ? `
-    <p style="font-size:.78rem;color:var(--muted);margin-top:10px">🔁 ${state.subs.length} abonelik · aylık toplam ${fmtTLd(subsMonthly)} <button class="more" onclick="go('bills');setBillsTab('abonelik')">Aboneliklerim →</button></p>` : '';
-  return `
-  <div class="card panel bills-panel">
-    <h3>💳 Bu Ayki Ödemelerim <button class="more" onclick="go('bills')">Tümü →</button></h3>
-    ${dueTable}${subsLine}
-  </div>`;
+  if(studentMode || !state.bills.length) return '';
+  const due = billsForMonth(ym).filter(x=>!isBillPaid(x.b, ym)).sort((a,b)=>a.day-b.day);
+  if(!due.length) return '';
+  const chips = due.slice(0,4).map(({b,day})=>{
+    const cls = day < td ? 'badge-neg' : day === td ? 'hw-bekliyor' : 'plan-lock-chip';
+    const when = day < td ? 'gecikti' : day === td ? 'bugün' : `${day}'i`;
+    return `<span class="chip ${cls}">${esc(b.title)} · ${when}</span>`;
+  }).join('');
+  return `<button class="dash-line" onclick="go('bills')">🧾 <span>Bu ay ödemelerin</span><span class="dl-chips">${chips}${due.length>4?`<span class="chip plan-lock-chip">+${due.length-4}</span>`:''}</span><em>Ödeme Planım ›</em></button>`;
 }
 let billsTab = 'plan';
 function setBillsTab(t){ billsTab = t; render(); }
@@ -2321,11 +2319,11 @@ function calDueChip(it, ds){
     const late = !paid && ds < today();
     const cls = paid ? ' paid' : late ? ' late' : '';
     return `<button class="bill-chip${cls}" onclick="toggleBillPaidKey('${it.b.id}','${ym}')"
-      title="${esc(it.b.title)}${it.b.amount!=null?' · '+fmtTL(it.b.amount):''} — ${paid?'ödendi, geri almak için tıkla':'ödendi olarak işaretlemek için tıkla'}">
-      💳 ${esc(it.b.title)}${it.b.amount!=null?' · '+fmtTL(it.b.amount):''}${paid?' ✓':''}</button>`;
+      title="${esc(it.b.title)} — ${paid?'ödendi, geri almak için tıkla':'ödendi olarak işaretlemek için tıkla'}">
+      💳 ${esc(it.b.title)}${paid?' ✓':''}</button>`;
   }
   return `<button class="bill-chip sub" onclick="go('bills');setBillsTab('abonelik')"
-    title="Abonelik yenilemesi — Aboneliklerim'e git">🔁 ${esc(it.s.name)}${it.s.amount!=null?' · '+fmtTL(it.s.amount):''}</button>`;
+    title="Abonelik yenilemesi — Aboneliklerim'e git">🔁 ${esc(it.s.name)}</button>`;
 }
 function calDueRow(dates, todayStr){
   const perDay = dates.map(calAgendaForDate);
@@ -2825,7 +2823,7 @@ function studentAlerts(sid){
   const un = unpaidLessons(sid);
   if(un.length){
     const g = daysDiff(un[0].date, t);
-    if(g >= 21) out.push({lvl:2, t:`${fmtTL(debt(sid))} ödeme bekliyor`, d:`en eski ödenmemiş ders ${g} gün önce`});
+    if(g >= 21) out.push({lvl:2, t:`${unpaidLessons(sid).length} dersin ödemesi bekliyor`, d:`en eski ödenmemiş ders ${g} gün önce`});
   }
   return out;
 }
