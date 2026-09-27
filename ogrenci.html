@@ -72,11 +72,6 @@ input,select{font-family:inherit;font-size:1rem}
 .hero .mini:hover{background:rgba(255,255,255,.24)}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.stat{padding:14px 14px}
-.stat .label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.stat .value{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;margin-top:5px}
-.stat .hint{font-size:.72rem;color:var(--muted);margin-top:2px}
 
 .tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:6px 0 14px}
 .tabs button{padding:9px 4px;border-radius:10px;font-size:.8rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s;border:1px solid transparent}
@@ -118,15 +113,32 @@ input,select{font-family:inherit;font-size:1rem}
 }
 .tick.on{background:var(--green);border-color:var(--green);color:#fff}
 .tick:active{transform:scale(.92)}
+.tick.sm{width:32px;height:32px;border-radius:10px;font-size:.95rem}
+/* Ana sayfa */
+.hello{display:flex;flex-direction:column;gap:2px;margin:2px 4px 14px}
+.hello b{font-size:1.15rem;letter-spacing:-.01em}
+.hello span{font-size:.84rem;color:var(--muted)}
+.home-card{padding:6px 14px 8px;margin-bottom:12px}
+.hc-head{display:flex;align-items:center;gap:8px;padding:10px 0 6px}
+.hc-head b{font-size:.98rem;flex:1}
+.hc-head .link-btn{padding:4px 0;font-size:.8rem}
+.hcount{min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--amber-soft);color:var(--amber);font-size:.76rem;font-weight:700;display:inline-grid;place-items:center}
+.hrow{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
+.hc-head + .hrow{border-top:none}
+.hrow.tap{cursor:pointer}
+.hdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;align-self:flex-start;margin-top:6px}
+.hdot.lk{background:repeating-linear-gradient(135deg,var(--muted) 0 2px,transparent 2px 4px);border:1px solid var(--muted);border-radius:3px}
+.hb{flex:1;min-width:0}
+.ht{font-weight:600;font-size:.92rem;line-height:1.35;overflow-wrap:anywhere}
+.hs{font-size:.78rem;color:var(--muted);margin-top:2px;line-height:1.4;overflow-wrap:anywhere}
+.hrow.done .ht{text-decoration:line-through;opacity:.55}
+.w-late{color:var(--red);font-weight:600}
+.w-soon{color:var(--amber);font-weight:600}
+.w-ok{color:var(--green);font-weight:600}
+.hempty{font-size:.86rem;color:var(--muted);padding:6px 0 10px}
+.hmore{display:block;width:100%;text-align:center;font-size:.8rem;font-weight:600;color:var(--accent);padding:9px 0 4px;border-top:1px solid var(--line)}
 .item.done .t{text-decoration:line-through;opacity:.6}
 .tick-hint{font-size:.74rem;color:var(--muted);margin:-2px 4px 10px}
-.upd{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:1px solid var(--line);
-  border-radius:13px;margin-bottom:7px;background:var(--card);cursor:pointer;transition:border-color .15s}
-.upd:active,.upd:hover{border-color:var(--accent)}
-.upd .em{font-size:1.05rem;line-height:1.3}
-.upd .t{font-weight:600;font-size:.88rem;line-height:1.35}
-.upd .d{font-size:.77rem;color:var(--muted);margin-top:2px}
-.upd .w{font-size:.72rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
 
 .empty{text-align:center;padding:30px 20px;color:var(--muted)}
 .empty .emoji{font-size:2rem;margin-bottom:8px}
@@ -232,6 +244,7 @@ input,select{font-family:inherit;font-size:1rem}
 .day-strip{position:relative;display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 16px;
   margin:0 -16px;padding:2px 16px 6px;align-items:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
 .day-strip::-webkit-scrollbar{display:none}
+.day-strip{overflow-y:hidden;transition:height .2s ease}
 .day-strip::after{content:'';flex:0 0 30px}
 @media(min-width:640px){.day-strip::after{display:none}}
 .day-card{flex:0 0 calc(100% - 28px);scroll-snap-align:start;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 10px 4px;box-shadow:var(--shadow)}
@@ -453,9 +466,6 @@ function setDers(v){ dersFilter = v; render(); }
 
 function render(){
   const s = data.student, td = today();
-  const pendingHw = data.homeworks.filter(h=>hwStatus(h)!=='yapildi').length;
-  const upcoming = data.lessons.filter(l=>l.date >= td && l.status!=='ertelendi').length;
-  const lastExam = allExams().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
   const tabs = [['ana','🏠','Ana Sayfa'],['program','📅','Program'],['odevler','📝','Ödevler'],['notlar','📂','Notlar'],['denemeler','📈','Denemeler'],['calisma','📖','Çalışma']];
   app.innerHTML = `
   <div class="hero">
@@ -465,11 +475,6 @@ function render(){
     <button class="mini" onclick="toggleTheme()" title="${isDark()?'Açık temaya geç':'Koyu temaya geç'}" aria-label="Temayı değiştir">${isDark()?'☀️':'🌙'}</button>
     <button class="mini" onclick="refresh()" title="Yenile">⟳</button>
   </div>
-  <div class="stat-grid">
-    <div class="card stat"><div class="label">Bekleyen Ödev</div><div class="value" style="color:${pendingHw?'var(--amber)':'var(--green)'}">${pendingHw}</div><div class="hint">${pendingHw?'teslim bekliyor':'hepsi tamam 🎉'}</div></div>
-    <div class="card stat"><div class="label">Yaklaşan Ders</div><div class="value">${upcoming}</div><div class="hint">planlanan</div></div>
-    <div class="card stat"><div class="label">Son Deneme</div><div class="value">${lastExam ? (+lastExam.net).toLocaleString('tr-TR') : '—'}</div><div class="hint">${lastExam ? (lastExam.kind==='brans' ? lastExam.bransSubject+' branş' : lastExam.type||'genel') : 'kayıt yok'}</div></div>
-  </div>
   <div class="tabs">${tabs.map(([id,em,l])=>`<button class="${tab===id?'active':''}" onclick="setTab('${id}')"><span class="em">${em} </span>${l}</button>`).join('')}</div>
   ${tab==='ana' ? viewHome() : tab==='program' ? viewProgram() : tab==='odevler' ? viewHomework() : tab==='notlar' ? viewNotes() : tab==='calisma' ? viewStudies() : viewExams()}
   <div class="foot">Bu sayfa yalnızca senin erişim kodunla açılır.<br><button onclick="logout()">Kodu unut / çıkış</button></div>`;
@@ -477,8 +482,8 @@ function render(){
   if(tab==='program' && progView==='hafta') initDayStrip();
 }
 
-/* ================= ANA SAYFA ================= */
-const YENI_GUN = 7;                       // "yeni" sayılan gün aralığı
+/* ================= ANA SAYFA =================
+   Sade üç kart: Bugün (dersler + çalışmalar + o günün ödevleri) → Ödevlerin (en acil birkaç tane) → Sıradaki ders. */
 const gunFarki = (a, b) => Math.round((new Date(b+'T12:00') - new Date(a+'T12:00')) / 864e5);
 function relGun(ds){
   const d = gunFarki(today(), ds);
@@ -487,98 +492,71 @@ function relGun(ds){
   if(d === -1) return 'Dün';
   return d > 0 ? `${d} gün sonra` : `${-d} gün önce`;
 }
-function relZaman(ts){
-  const g = Math.floor((Date.now() - ts) / 864e5);
-  if(g <= 0) return 'bugün';
-  if(g === 1) return 'dün';
-  return `${g} gün önce`;
+/* Ödev satırındaki kısa durum yazısı */
+function hwWhen(h, td){
+  const st = hwStatus(h);
+  if(st === 'yapildi') return {t:'Yapıldı ✓', c:'ok'};
+  if(st === 'eksik') return {t:'Eksik', c:'late'};
+  if(!h.due) return {t:'Teslim tarihi yok', c:''};
+  if(h.due < td) return {t:`Gecikti · ${fmtDate(h.due)}`, c:'late'};
+  if(h.due === td) return {t:'Teslim bugün', c:'soon'};
+  return {t:`Teslim ${relGun(h.due).toLowerCase()}`, c: gunFarki(td, h.due) <= 2 ? 'soon' : ''};
 }
-/* Öğretmenin son günlerde eklediği/güncellediği her şey */
-function sonGuncellemeler(){
-  const sinir = Date.now() - YENI_GUN * 864e5, td = today(), out = [];
-  (data.homeworks||[]).forEach(h=>{
-    if((h.updatedAt||0) > sinir)
-      out.push({ts:h.updatedAt, em:'📝', t:esc(h.desc||'Ödev'), d:`${esc(h.subject||'')}${h.due?' · teslim '+fmtDate(h.due):''}`, tab:'odevler'});
-  });
-  (data.exams||[]).forEach(e=>{
-    if((e.at||0) > sinir && !e.byStudent)
-      out.push({ts:e.at, em:'📈', t:`Deneme sonucun işlendi: ${esc(e.name||e.type||'Deneme')}`, d:`${(+e.net||0).toLocaleString('tr-TR')} net · ${fmtDate(e.date)}`, tab:'denemeler'});
-  });
-  (data.lessons||[]).forEach(l=>{
-    if((l.at||0) > sinir)
-      out.push({ts:l.at, em:'📅', t:`Ders: ${fmtDate(l.date)} · ${esc(l.subject||'')}`, d:esc(l.topic||'')||relGun(l.date), tab:'program'});
-  });
-  if(notesState.status === 'ok'){
-    notesState.files.filter(f=>f.date && f.date <= td && gunFarki(f.date, td) <= YENI_GUN).forEach(f=>{
-      out.push({ts:new Date(f.date+'T12:00').getTime(), em:'📂', t:`Yeni ders notu: ${esc(f.title)}`,
-        d:`${esc(DERS_LABEL[f.ders]||cap(f.ders))} · ${esc(SEVIYE_LABEL[f.seviye]||String(f.seviye).toUpperCase())}`, tab:'notlar'});
-    });
-  }
-  return out.sort((a,b)=>b.ts-a.ts).slice(0, 8);
+function homeHwRow(h, td){
+  const w = hwWhen(h, td), done = hwStatus(h) === 'yapildi';
+  return `<div class="hrow ${done?'done':''}">
+    <span class="hdot" style="background:${PLAN_COLORS[h.subject]||'var(--muted)'}"></span>
+    <div class="hb"><div class="ht">${esc(h.desc||'Ödev')}</div><div class="hs">${esc(h.subject||'')} · <span class="w-${w.c}">${w.t}</span></div></div>
+    ${h.id ? `<button class="tick sm ${done?'on':''}" onclick="toggleTick('${h.id}')" aria-label="${done?'İşareti kaldır':'Tamamladım'}">✓</button>` : ''}
+  </div>`;
 }
 function viewHome(){
-  const td = today();
-  if(notesState.status === 'idle') loadNotes();      // yeni notları da gösterebilmek için
-  let html = '';
+  const td = today(), first = (data.student.name||'').trim().split(/\s+/)[0];
+  const _d = new Date(td+'T12:00'), tarih = `${WD_LONG[dayIdx(td)]}, ${_d.getDate()} ${_d.toLocaleDateString('tr-TR',{month:'long'})}`;
+  let html = `<div class="hello"><b>Merhaba ${esc(first)} 👋</b><span>${tarih}</span></div>`;
 
-  /* 1. Sıradaki ders */
-  const ileri = (data.lessons||[]).filter(l=>l.date >= td && l.status !== 'ertelendi')
-    .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || (a.start||0)-(b.start||0));
-  const next = ileri[0];
-  html += `<div class="section-title">Sıradaki ders</div>`;
+  /* 1. Bugün */
+  const dersler = (data.lessons||[]).filter(l=>l.date===td && l.status!=='ertelendi').sort((a,b)=>(+a.start||0)-(+b.start||0));
+  const calisma = planList().filter(p=>p.date===td);
+  const bugunHw = (data.homeworks||[]).filter(h=>hwDay(h)===td);
+  const bugunRows = [
+    ...dersler.map(l=>`<div class="hrow">
+      <span class="hdot lk"></span>
+      <div class="hb"><div class="ht">${l.start!=null?`${fmtClock(+l.start)} · `:''}Özel ders · ${esc(l.subject)}</div>${l.topic?`<div class="hs">${esc(l.topic)}</div>`:''}</div>
+    </div>`),
+    ...calisma.map(p=>`<div class="hrow tap" onclick="openPlanForm('${esc(p.id)}')">
+      <span class="hdot" style="background:${PLAN_COLORS[p.subject]||'var(--accent)'}"></span>
+      <div class="hb"><div class="ht">${esc(p.subject)}${p.topic?` · ${esc(p.topic)}`:''}</div>${p.note?`<div class="hs">${esc(p.note)}</div>`:''}</div>
+    </div>`),
+    ...bugunHw.map(h=>homeHwRow(h, td)),
+  ];
+  html += `<div class="card home-card">
+    <div class="hc-head"><b>Bugün</b><button class="link-btn" onclick="progView='hafta';planWeekOff=0;planSelDay=null;setTab('program')">Haftalık program ›</button></div>
+    ${bugunRows.length ? bugunRows.join('') : `<div class="hempty">Bugün için planlanmış bir şey yok.</div>`}
+  </div>`;
+
+  /* 2. Ödevlerin: bugünküler hariç, önce gecikenler, sonra en yakın teslim */
+  const acik = (data.homeworks||[]).filter(h=>hwStatus(h)!=='yapildi' && hwDay(h)!==td)
+    .sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+  html += `<div class="card home-card">
+    <div class="hc-head"><b>Ödevlerin</b>${acik.length?`<span class="hcount">${acik.length}</span>`:''}<button class="link-btn" onclick="setTab('odevler')">Tümü ›</button></div>
+    ${acik.length ? acik.slice(0,4).map(h=>homeHwRow(h, td)).join('') + (acik.length>4?`<button class="hmore" onclick="setTab('odevler')">${acik.length-4} ödev daha</button>`:'')
+      : `<div class="hempty">Bekleyen ödevin yok 🎉</div>`}
+  </div>`;
+
+  /* 3. Sıradaki ders (bugünkü dersler zaten yukarıda) */
+  const next = (data.lessons||[]).filter(l=>l.date > td && l.status!=='ertelendi')
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || (+a.start||0)-(+b.start||0))[0];
   if(next){
-    html += `<div class="item ${next.date===td?'today':''}">
-      ${dateBox(next.date)}
-      <div class="body">
-        <div class="t">${relGun(next.date)}${next.start!=null?` · ${fmtClock(next.start)} – ${fmtClock(next.start + Math.round((+next.hours||1)*60))}`:''}</div>
-        <div class="chips">${subjectChip(next.subject)}<span class="chip badge-zero">${(+next.hours||0).toLocaleString('tr-TR')} saat</span></div>
-        ${next.topic?`<div class="d">${esc(next.topic)}</div>`:''}
+    const d = new Date(next.date+'T12:00');
+    html += `<div class="card home-card">
+      <div class="hc-head"><b>Sıradaki ders</b></div>
+      <div class="hrow">
+        <span class="hdot lk"></span>
+        <div class="hb"><div class="ht">${relGun(next.date)} · ${d.toLocaleDateString('tr-TR',{weekday:'long'})}${next.start!=null?` · ${fmtClock(+next.start)}`:''}</div>
+          <div class="hs">${esc(next.subject||'')}${next.topic?` · ${esc(next.topic)}`:''}</div></div>
       </div>
     </div>`;
-    if(ileri.length > 1)
-      html += `<div class="tick-hint">Sonraki: ${ileri.slice(1,3).map(l=>`${relGun(l.date)} · ${esc(l.subject||'')}`).join(' — ')} <button class="link-btn" onclick="setTab('program')">Programın tamamı</button></div>`;
-  } else {
-    html += emptyState('📅','Planlanmış ders yok','Öğretmenin yeni ders eklediğinde burada görünür.');
-  }
-
-  /* 1b. Bugün çalışılacak dersler */
-  const bugunPlan = planList().filter(p=>p.date===td);
-  if(bugunPlan.length){
-    html += `<div class="section-title">Bugün çalışılacak dersler <button class="link-btn" style="margin-left:auto" onclick="progView='hafta';planWeekOff=0;planSelDay=null;setTab('program')">Haftalık program</button></div>`;
-    html += bugunPlan.map(planRow).join('');
-  }
-
-  /* 2. Ödevler: önce gecikenler, sonra yaklaşanlar */
-  const acik = (data.homeworks||[]).map(h=>({...h, st:hwStatus(h)})).filter(h=>h.st !== 'yapildi');
-  const gec = acik.filter(h=>h.due && h.due < td).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
-  const yakin = acik.filter(h=>!h.due || h.due >= td).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
-  if(gec.length){
-    html += `<div class="section-title" style="color:var(--red)">Geciken ödevler · ${gec.length}</div>`;
-    html += gec.slice(0,5).map(h=>hwItem(h, td)).join('');
-    if(gec.length > 5) html += `<div class="tick-hint"><button class="link-btn" onclick="setTab('odevler')">${gec.length-5} tane daha</button></div>`;
-  }
-  html += `<div class="section-title">Yaklaşan ödevler</div>`;
-  if(yakin.length){
-    html += yakin.slice(0,5).map(h=>hwItem(h, td)).join('');
-    html += `<div class="tick-hint">Bitirdiğin ödevin sağındaki kutuya dokun; öğretmenin anında görür.
-      ${yakin.length>5?`<button class="link-btn" onclick="setTab('odevler')">${yakin.length-5} tane daha</button>`:''}</div>`;
-  } else if(!gec.length){
-    html += emptyState('🎉','Bekleyen ödevin yok','Hepsini tamamlamışsın, harika!');
-  } else {
-    html += `<div class="tick-hint">Yaklaşan yeni ödev yok.</div>`;
-  }
-
-  /* 3. Öğretmenden son güncellemeler */
-  const upd = sonGuncellemeler();
-  html += `<div class="section-title">Öğretmeninden son güncellemeler</div>`;
-  if(upd.length){
-    html += upd.map(u=>`<div class="upd" onclick="setTab('${u.tab}')">
-      <span class="em">${u.em}</span>
-      <div style="flex:1;min-width:0"><div class="t">${u.t}</div>${u.d?`<div class="d">${u.d}</div>`:''}</div>
-      <span class="w">${relZaman(u.ts)}</span>
-    </div>`).join('');
-  } else {
-    html += `<div class="tick-hint">Son ${YENI_GUN} günde yeni bir şey eklenmedi.</div>`;
   }
   return html;
 }
@@ -593,13 +571,20 @@ function planDateFrom(ts, day){
 }
 const planDateOf = x => /^\d{4}-\d{2}-\d{2}$/.test(String(x.date||'')) ? x.date : planDateFrom(x.at || x.updatedAt, x.day);
 const PLAN_SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe'];
+/* Ödev programda hangi günde durur: teslim tarihi varsa o gün, yoksa öğretmenin verdiği gün */
+const hwDay = h => h.due || h.given || '';
 const PLAN_COLORS = {Matematik:'var(--blue)', Geometri:'var(--cyan)', Fizik:'var(--violet)', Kimya:'var(--accent)', Biyoloji:'var(--green)', 'Türkçe':'var(--amber)'};
 let progView = 'hafta', planWeekOff = 0;
 function setProgView(v){ progView = v; render(); }
 function shiftPlanWeek(n){ planWeekOff = n===0 ? 0 : planWeekOff + n; planSelDay = null; render(); }
 /* Yana kaydırılan gün şeridi: seçili gün yeniden çizimlerde korunur, üstteki özette vurgulanır */
 let planSelDay = null;
-function markSelDay(i){ document.querySelectorAll('.wk-mini .col').forEach((c,k)=>c.classList.toggle('sel', k===i)); }
+function markSelDay(i){
+  document.querySelectorAll('.wk-mini .col').forEach((c,k)=>c.classList.toggle('sel', k===i));
+  // Şerit, seçili günün kartı kadar uzun olsun (kısa günlerde altta boşluk kalmasın)
+  const strip = document.getElementById('dayStrip'), card = strip && strip.children[i];
+  if(card) strip.style.height = (card.offsetHeight + 10) + 'px';
+}
 function selectPlanDay(i, smooth=true){
   planSelDay = i; markSelDay(i);
   const strip = document.getElementById('dayStrip'); const card = strip && strip.children[i];
@@ -660,18 +645,19 @@ function planRow(p){
 }
 function hwRow(h, td){
   const st = hwStatus(h), isDone = st==='yapildi';
-  const late = !isDone && h.due && h.due < td;
+  const w = hwWhen(h, td);
+  const cls = isDone ? 'hw-yapildi' : w.c==='late' ? 'hw-gecikti' : w.c==='soon' ? 'hw-bekliyor' : 'lock-chip';
   return `<div class="item plan-item plan-hw ${isDone?'done':''}">
     <span class="plan-dot hw">📝</span>
     <div class="body"><div class="t">${esc(h.desc||'Ödev')}</div>
-      <div class="chips">${subjectChip(h.subject)}<span class="chip ${late?'hw-gecikti':'hw-'+st}">${late?'Gecikti':({bekliyor:'Teslim bugün',yapildi:'Yapıldı ✓',eksik:'Eksik'}[st]||st)}</span></div></div>
+      <div class="chips">${subjectChip(h.subject)}<span class="chip ${cls}">${!h.due && !isDone ? 'Verilen ödev · teslim tarihi yok' : w.t}</span></div></div>
     ${h.id ? `<button class="tick ${isDone?'on':''}" onclick="toggleTick('${h.id}')" title="${isDone?'İşareti kaldır':'Tamamladım'}">✓</button>` : ''}</div>`;
 }
 function dayRows(ds, di, td, plans, lessons){
   return [
     ...lessons.filter(l=>l.date===ds).sort((a,b)=>(+a.start||0)-(+b.start||0)).map(l=>lessonRow(l, td)),
     ...plans.filter(p=>p.date===ds).map(planRow),
-    ...(data.homeworks||[]).filter(h=>h.due===ds).map(h=>hwRow(h, td)),
+    ...(data.homeworks||[]).filter(h=>hwDay(h)===ds).map(h=>hwRow(h, td)),
   ];
 }
 function viewProgram(){
@@ -684,7 +670,7 @@ function viewWeekPlan(){
   const days = weekDates(planWeekOff), td = today();
   const plans = planList().filter(p=>p.date>=days[0] && p.date<=days[6]);
   const lessons = (data.lessons||[]).filter(l=>l.status!=='ertelendi' && l.date>=days[0] && l.date<=days[6]);
-  const hws = (data.homeworks||[]).filter(h=>h.due>=days[0] && h.due<=days[6]);
+  const hws = (data.homeworks||[]).filter(h=>hwDay(h) && hwDay(h)>=days[0] && hwDay(h)<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
   const range = `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
   const label = {0:'Bu hafta', 1:'Gelecek hafta', '-1':'Geçen hafta'}[planWeekOff];
@@ -697,7 +683,7 @@ function viewWeekPlan(){
     const dots = [
       ...lessons.filter(l=>l.date===ds).map(()=>'<i class="lk"></i>'),
       ...plans.filter(p=>p.date===ds).map(p=>`<i style="background:${PLAN_COLORS[p.subject]||'var(--accent)'}"></i>`),
-      ...hws.filter(h=>h.due===ds).map(h=>`<i class="hw ${hwStatus(h)==='yapildi'?'ok':''}"></i>`),
+      ...hws.filter(h=>hwDay(h)===ds).map(h=>`<i class="hw ${hwStatus(h)==='yapildi'?'ok':''}"></i>`),
     ].join('');
     return `<div class="col ${ds===td?'today':''}" onclick="selectPlanDay(${di})">
       <div class="h">${WD_SHORT[di]}<b>${+ds.slice(8)}</b></div><div class="dots">${dots}</div></div>`;
@@ -717,8 +703,8 @@ function viewWeekPlan(){
   <div class="strip-hint">‹ Günler arasında geçmek için yana kaydır ›</div>`;
   html += `<div class="toolbar"><button class="btn btn-sm" onclick="openPlanForm(null,'${td>=days[0] && td<=days[6] ? td : days[0]}')">＋ Çalışma Ekle</button>
     ${planWeekOff?'<button class="btn-ghost" onclick="shiftPlanWeek(0)">Bu haftaya dön</button>':''}</div>`;
-  if(plans.length || hws.length) html += `<div class="week-chips">${plans.length?`<span class="chip badge-zero">Bu hafta ${plans.length} çalışma</span>`:''}${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}${hws.length?`<span class="chip hw-bekliyor">📝 ${hws.length} ödev teslimi</span>`:''}</div>`;
-  html += `<div class="tick-hint" style="margin-top:14px">🔒 Öğretmeninle yaptığın dersler değiştirilemez. Çalışılacak dersler yalnızca yazıldığı gün görünür; dokunarak konusunu, gününü ve ne yapacağını değiştirebilirsin. 📝 o gün teslim edilecek ödevlerdir, bitirince kutuya dokun.</div>`;
+  if(plans.length || hws.length) html += `<div class="week-chips">${plans.length?`<span class="chip badge-zero">Bu hafta ${plans.length} çalışma</span>`:''}${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}${hws.length?`<span class="chip hw-bekliyor">📝 ${hws.length} ödev</span>`:''}</div>`;
+  html += `<div class="tick-hint" style="margin-top:14px">🔒 Öğretmeninle yaptığın dersler değiştirilemez. Çalışılacak dersler yalnızca yazıldığı gün görünür; dokunarak konusunu, gününü ve ne yapacağını değiştirebilirsin. 📝 ödevler teslim gününde, teslim tarihi yoksa verildiği günde görünür; bitirince kutuya dokun.</div>`;
   return html;
 }
 function openPlanForm(id, date){

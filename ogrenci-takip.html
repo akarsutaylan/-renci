@@ -1526,7 +1526,7 @@ function saveHomework(id){
   if(!desc){ toast('Ödev açıklaması gerekli'); return; }
   const data = {sid:fv('f_sid'), subject:fv('f_subject'), due:fv('f_due'), desc, status:fv('f_status'), updatedAt:Date.now(), byStudent:false};
   if(id){ Object.assign(state.homeworks.find(x=>x.id===id), data); toast('Ödev güncellendi'); }
-  else { state.homeworks.push({id:uid(), ...data}); toast('Ödev eklendi'); }
+  else { state.homeworks.push({id:uid(), createdAt:Date.now(), ...data}); toast('Ödev eklendi'); }
   save(); closeModal(); render();
 }
 function setHwStatus(id, status){
@@ -2870,11 +2870,20 @@ function weekDates(off){
 }
 function setPlanWeek(n){ route.planWeek = n===0 ? 0 : (route.planWeek||0) + n; render(); }
 const HW_LABEL = {bekliyor:'Bekliyor', yapildi:'Yapıldı ✓', eksik:'Eksik'};
+/* Ödevin verildiği gün: yeni ödevlerde createdAt; eskilerde kayıt kimliğinin başındaki zaman damgası (uid) */
+function hwGivenDate(h){
+  let ts = +h.createdAt || 0;
+  if(!ts){ const t = parseInt(String(h.id||'').slice(0,8), 36); if(t > 1.6e12 && t < 2.2e12) ts = t; }
+  if(!ts) ts = +h.updatedAt || 0;
+  return ts ? localDate(new Date(ts)) : '';
+}
+/* Ödev programda hangi günde durur: teslim tarihi varsa o gün, yoksa verildiği gün */
+const hwDay = h => h.due || hwGivenDate(h);
 function studentProgramTab(s){
   const off = route.planWeek || 0, days = weekDates(off), td = today();
   const plans = plansOf(s.id).filter(p=>p.date>=days[0] && p.date<=days[6]);
   const lessons = state.lessons.filter(l=>l.sid===s.id && isActive(l) && l.date>=days[0] && l.date<=days[6]);
-  const hws = state.homeworks.filter(h=>h.sid===s.id && h.due>=days[0] && h.due<=days[6]);
+  const hws = state.homeworks.filter(h=>h.sid===s.id && hwDay(h)>=days[0] && hwDay(h)<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
   const range = `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
   const bySub = {}; plans.forEach(p=>{ bySub[p.subject] = (bySub[p.subject]||0) + 1; });
@@ -2882,7 +2891,7 @@ function studentProgramTab(s){
     const d = new Date(ds+'T12:00');
     const dayLessons = lessons.filter(l=>l.date===ds).sort((a,b)=>(+a.start||0)-(+b.start||0));
     const dayPlans = plans.filter(p=>p.date===ds);
-    const dayHw = hws.filter(h=>h.due===ds);
+    const dayHw = hws.filter(h=>hwDay(h)===ds);
     const items = [
       ...dayLessons.map(l=>`<div class="pw-item pw-lesson" onclick="openLessonForm('${l.id}')" title="Ders kaydını aç — öğrencinin programında kilitli">
         <div class="pw-t">🔒 ${esc(l.subject)}${l.start!=null?` <span class="pw-time">${fmtClock(+l.start)}</span>`:''}</div>
@@ -2891,7 +2900,7 @@ function studentProgramTab(s){
         <div class="pw-t" style="color:${subjectColor(p.subject)}">${esc(p.subject)}${p.byStudent?' <span title="Öğrenci ekledi ya da en son öğrenci düzenledi">👤</span>':''}</div>
         ${p.topic?`<div class="pw-d pw-topic">${esc(p.topic)}</div>`:''}${p.note?`<div class="pw-d">${esc(p.note)}</div>`:''}</div>`),
       ...dayHw.map(h=>`<div class="pw-item pw-hw" onclick="openHomeworkForm('${h.id}','${s.id}')" title="Ödevi aç">
-        <div class="pw-t">📝 ${esc(h.subject||'Ödev')} <span class="chip hw-${esc(h.status)}">${HW_LABEL[h.status]||esc(h.status)}</span></div>
+        <div class="pw-t">📝 ${esc(h.subject||'Ödev')} <span class="chip hw-${esc(h.status)}">${HW_LABEL[h.status]||esc(h.status)}</span>${h.due?'':'<span class="chip plan-lock-chip" title="Teslim tarihi girilmemiş; verildiği günde gösteriliyor">tarihsiz</span>'}</div>
         <div class="pw-d">${esc(h.desc||'')}</div></div>`),
     ].join('');
     return `<div class="pw-day ${ds===td?'today':''}">
@@ -2917,7 +2926,7 @@ function studentProgramTab(s){
     ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${v}</span>`).join('')}
   </div>
   <div class="pw-grid">${cols}</div>
-  <p class="hint-text" style="margin-top:10px">Her çalışma yalnızca eklendiği tarihte görünür, sonraki haftalara taşınmaz. Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 o gün teslim edilecek ödevler. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür, kendi çalışmalarını ekleyebilir ve ödevlerini oradan işaretleyebilir.</p>`;
+  <p class="hint-text" style="margin-top:10px">Her çalışma yalnızca eklendiği tarihte görünür, sonraki haftalara taşınmaz. Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 ödevler: teslim tarihi varsa teslim gününde, yoksa verildiği günde görünür. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür, kendi çalışmalarını ekleyebilir ve ödevlerini oradan işaretleyebilir.</p>`;
 }
 function openPlanForm(id, sid, date){
   const p = id ? (state.plans||[]).find(x=>x.id===id)
@@ -3610,7 +3619,7 @@ function studentPayload(s){
     v:2,
     student:{name:s.name, grade:s.grade||''},
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
-    homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, status:h.status, updatedAt:h.updatedAt||0})),
+    homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, given:hwGivenDate(h), status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
     plans: plansOf(s.id).filter(p=>p.date >= planDateFrom(Date.now() - 56*86400000, 0)).map(p=>({id:planKey(p), date:p.date, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
