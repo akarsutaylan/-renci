@@ -294,7 +294,15 @@ const localDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'
 const today = () => localDate(new Date());
 const dayIdx = ds => (new Date(ds+'T12:00').getDay()+6)%7;
 const subjectChip = n => { const c = SUBJECTS[n] || ['var(--accent-soft)','var(--accent)']; return `<span class="chip" style="background:${c[0]};color:${c[1]}">${esc(n)}</span>`; };
-function avatarColor(id){ let h=0; for(const ch of id) h=(h*31+ch.charCodeAt(0))>>>0; return AVATAR_COLORS[h%AVATAR_COLORS.length]; }
+function avatarColor(id){
+  if(data && data.student && data.student.color) return data.student.color;   // öğretmenin panelde seçtiği renk
+  let h=0; for(const ch of id) h=(h*31+ch.charCodeAt(0))>>>0; return AVATAR_COLORS[h%AVATAR_COLORS.length];
+}
+function inkOn(hex){
+  const m = String(hex||'').match(/^#?([0-9a-f]{6})$/i); if(!m) return '#fff';
+  const n = parseInt(m[1],16), ch = v => { v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); };
+  return (.2126*ch(n>>16&255) + .7152*ch(n>>8&255) + .0722*ch(n&255)) > .42 ? '#1f2130' : '#fff';
+}
 const initials = name => name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 function dateBox(ds, extra=''){
   const d = new Date(ds+'T12:00');
@@ -481,7 +489,7 @@ function render(){
   const tabs = [['ana','🏠','Ana Sayfa'],['program','📅','Program'],['notlar','📂','Notlar'],['denemeler','📈','Denemeler'],['calisma','📖','Çalışma']];
   app.innerHTML = `
   <div class="hero">
-    <div class="avatar" style="background:${avatarColor(sid)}">${esc(initials(s.name))}</div>
+    <div class="avatar" style="background:${avatarColor(sid)};color:${inkOn(avatarColor(sid))}">${esc(initials(s.name))}</div>
     <div><h1>${esc(s.name)}</h1><div class="sub">${esc(s.grade||'')}${s.grade?' · ':''}Güncelleme: ${new Date(data.publishedAt).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</div></div>
     <div class="spacer"></div>
     <button class="mini" onclick="toggleTheme()" title="${isDark()?'Açık temaya geç':'Koyu temaya geç'}" aria-label="Temayı değiştir">${isDark()?'☀️':'🌙'}</button>

@@ -520,6 +520,20 @@ a.icon-btn{text-decoration:none}
 .pay-pot .chip{font-size:.72rem}
 .pay-empty{padding:12px 14px;font-size:.86rem;color:var(--muted)}
 @media(max-width:560px){.pr-lessons{padding-left:14px}.pay-row summary{gap:8px;padding:9px 12px}.pr-main span{font-size:.7rem}}
+.cl-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 4px}
+.cl-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.cl-row > b{flex:1 1 120px;min-width:0;font-size:.88rem}
+.cl-sub{display:block;font-size:.74rem;font-weight:500;color:var(--muted)}
+.cl-row .swatches{flex-basis:100%;padding-left:40px}
+.cl-prev{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+.swatches{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.sw{width:20px;height:20px;border-radius:6px;border:2px solid transparent;cursor:pointer;padding:0;position:relative}
+.sw.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--card) inset}
+.sw-custom{display:grid;place-items:center;font-size:.8rem;font-weight:700;color:var(--muted);background:var(--field-bg);border:1px dashed var(--line-strong);overflow:hidden}
+.sw-custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.sw-reset{font-size:.72rem;font-weight:600;color:var(--accent);padding:3px 6px;border-radius:6px}
+.sw-reset:hover{background:var(--accent-soft)}
+@media(max-width:560px){.sw{width:26px;height:26px}.cl-row .swatches{padding-left:0}}
 .dash-line{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 14px;margin:0 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:.86rem;color:var(--ink);cursor:pointer;flex-wrap:wrap}
 .dash-line:hover{border-color:var(--line-strong)}
 .dash-line em{margin-left:auto;font-style:normal;font-size:.8rem;font-weight:600;color:var(--accent);white-space:nowrap}
@@ -809,13 +823,21 @@ function lastSeenHtml(s){
 function student(id){ return state.students.find(s=>s.id===id); }
 function studentName(id){ const s=student(id); return s ? s.name : 'Silinmiş öğrenci'; }
 function avatarColor(id){
+  const s = student(id); if(s && s.color) return s.color;      // elle seçilen renk
   const i = state.students.findIndex(s=>s.id===id);
   return AVATAR_COLORS[(i<0?0:i) % AVATAR_COLORS.length];
+}
+/* Arka plan rengine göre okunaklı yazı rengi (açık renklerde koyu yazı) */
+function inkOn(hex){
+  const m = String(hex||'').match(/^#?([0-9a-f]{6})$/i); if(!m) return '#fff';
+  const n = parseInt(m[1],16), ch = v => { v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); };
+  const L = .2126*ch(n>>16&255) + .7152*ch(n>>8&255) + .0722*ch(n&255);
+  return L > .42 ? '#1f2130' : '#fff';
 }
 function initials(name){ return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 function avatarHtml(id, cls=''){
   const s = student(id); if(!s) return '';
-  return `<div class="avatar ${cls}" style="background:${avatarColor(id)}">${esc(initials(s.name))}</div>`;
+  return `<div class="avatar ${cls}" style="background:${avatarColor(id)};color:${inkOn(avatarColor(id))}">${esc(initials(s.name))}</div>`;
 }
 function subjectChip(name){
   const s = SUBJECTS.find(x=>x.n===name) || {bg:'var(--accent-soft)',fg:'var(--accent)'};
@@ -1182,7 +1204,7 @@ function viewStudentDetail(){
     <button class="btn btn-ghost btn-sm" onclick="go('students')">← Öğrenciler</button>
   </div>
   <div class="detail-hero">
-    <div class="avatar" style="background:${avatarColor(s.id)}">${esc(initials(s.name))}</div>
+    <div class="avatar" style="background:${avatarColor(s.id)};color:${inkOn(avatarColor(s.id))}">${esc(initials(s.name))}</div>
     <div>
       <h2>${esc(s.name)}</h2>
       <div class="sub">${esc(s.grade||'')}${s.phone?' · '+esc(s.phone):''}${studentMode?'':' · Saat ücreti '+fmtTL(s.rate)} · Son giriş: ${lastSeenHtml(s)}</div>
@@ -1915,7 +1937,7 @@ function calBlockHtml(l){
   const s = student(l.sid); if(!s || l.start==null) return '';
   const dur = lessonDur(l);
   const pp = l.status==='ertelendi';
-  return `<div class="cal-block${pp?' postponed':''}" data-id="${l.id}" style="top:${calY(l.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${avatarColor(l.sid)}"
+  return `<div class="cal-block${pp?' postponed':''}" data-id="${l.id}" style="top:${calY(l.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${avatarColor(l.sid)};color:${inkOn(avatarColor(l.sid))}"
     onpointerdown="calMoveStart(event,'${l.id}')" ondblclick="openLessonForm('${l.id}')" title="Düzenlemek için çift tıkla">
     <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="delItem('lessons','${l.id}')" title="Dersi sil">×</button>
     <button class="cal-x" style="right:22px" onpointerdown="event.stopPropagation()" onclick="openRescheduleForm('${l.id}')" title="Telafi · yeni tarihe taşı">⏳</button>
@@ -1939,7 +1961,7 @@ function calPersonalBlocks(di, date){
   const cls = state.myClasses.filter(c=>c.day===di).map(c=>{
     const dur = +c.dur||60;
     const oda = mcRoom(c);
-    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))}"
+    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))};color:${inkOn(mcColor(mcCode(c)))}"
       onclick="openMyBlockForm('${c.id}')" title="Üniversite dersin — düzenlemek için tıkla">
       <b>🎓 ${esc(mcCode(c))}</b>
       <span class="cal-hours">${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''}</span>
@@ -1975,6 +1997,7 @@ function viewSchedule(){
     <div><h1>${wn!=null ? `${wn}. Hafta` : 'Haftalık Takvim'}${dates[0]===mondayOf(todayStr)?' <span class="chip badge-zero" style="vertical-align:middle">bu hafta</span>':''}</h1>
       <div class="sub">${wn==null?'Numarasız hafta · ':''}${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="openColorsModal()" title="Öğrenci ve ders renklerini değiştir">🎨 Renkler</button>
       <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">⧉ Geçen Haftayı Kopyala</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(-1)">‹ Önceki</button>
       <button class="btn ${calWeekOff===0?'btn-primary':'btn-ghost'} btn-sm" onclick="calShiftWeek(0)">Bu Hafta${cwn!=null?` · ${cwn}`:''}</button>
@@ -2371,9 +2394,44 @@ function daySelect(id, sel){
 }
 
 /* ---------- DERS PROGRAMIM (kendi üniversite programın) ---------- */
+/* ---------- Takvim renkleri: öğrenciler ve okul derslerin ---------- */
+const COLOR_SWATCHES = ['#5b5bd6','#2563eb','#0e7490','#0f9d6e','#15803d','#65a30d','#ca8a04',
+  '#dc6803','#b45309','#e11d48','#be185d','#7c3aed','#c026d3','#475569'];
+function colorPicker(kind, id, cur, custom){
+  return `<div class="swatches">
+    ${COLOR_SWATCHES.map(c=>`<button class="sw ${c.toLowerCase()===String(cur).toLowerCase()?'on':''}" style="background:${c}" onclick="setItemColor('${kind}','${id}','${c}')" aria-label="Renk ${c}"></button>`).join('')}
+    <label class="sw sw-custom" title="Başka bir renk seç" style="${COLOR_SWATCHES.some(c=>c.toLowerCase()===String(cur).toLowerCase())?'':`background:${cur};color:${inkOn(cur)}`}"><input type="color" value="${esc(cur)}" onchange="setItemColor('${kind}','${id}',this.value)">＋</label>
+    ${custom?`<button class="sw-reset" onclick="setItemColor('${kind}','${id}','')" title="Otomatik renge dön">Otomatik</button>`:''}
+  </div>`;
+}
+function openColorsModal(){
+  const box = document.getElementById('modalBox'), keep = box && document.getElementById('modalBackdrop').classList.contains('open') ? box.scrollTop : 0;
+  const stu = state.students.map(s=>`<div class="cl-row">
+      <span class="cl-prev" style="background:${avatarColor(s.id)};color:${inkOn(avatarColor(s.id))}">${esc(initials(s.name))}</span>
+      <b>${esc(s.name)}</b>${colorPicker('s', s.id, avatarColor(s.id), !!s.color)}</div>`).join('');
+  const crs = (state.myCourses||[]).map(k=>`<div class="cl-row">
+      <span class="cl-prev" style="background:${mcColor(k.code)};color:${inkOn(mcColor(k.code))}">🎓</span>
+      <b>${esc(k.code)}${k.name?`<span class="cl-sub">${esc(k.name)}</span>`:''}</b>${colorPicker('c', k.id, mcColor(k.code), !!k.color)}</div>`).join('');
+  openModal(`
+  <h3>🎨 Takvim Renkleri</h3>
+  <p class="hint-text" style="margin:-8px 0 12px">Seçtiğin renk takvimde, öğrenci listesinde ve öğrencinin kendi sayfasında kullanılır. Açık renklerde yazı otomatik koyulaşır.</p>
+  ${stu ? `<div class="cl-title">Öğrenciler</div>${stu}` : ''}
+  ${crs ? `<div class="cl-title">Okul derslerim</div>${crs}` : ''}
+  ${!stu && !crs ? '<p class="hint-text">Henüz öğrenci ya da ders yok.</p>' : ''}
+  <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Tamam</button></div>`);
+  if(keep) box.scrollTop = keep;
+}
+function setItemColor(kind, id, color){
+  const o = kind==='s' ? student(id) : (state.myCourses||[]).find(x=>x.id===id);
+  if(!o) return;
+  if(color) o.color = color; else delete o.color;
+  save(); render(); openColorsModal();
+}
+
 const MC_START = 8*60, MC_END = 21*60;
 const mcY = m => (m - MC_START) / CAL_SLOT * CAL_SLOT_H;
 function mcColor(code){
+  const k = (state.myCourses||[]).find(x=>x.code===code); if(k && k.color) return k.color;   // elle seçilen renk
   let h = 0; const s = String(code||'');
   for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
@@ -2398,7 +2456,7 @@ function viewMySchedule(){
   return `
   <div class="topbar">
     <div><h1>Ders Programım</h1><div class="sub">${kurslar.length} ders · ${state.myClasses.length} blok · haftada ${totalH.toLocaleString('tr-TR')} saat</div></div>
-    <button class="btn btn-primary" onclick="openMyCourseForm()">＋ Ders Tanımla</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openColorsModal()">🎨 Renkler</button><button class="btn btn-primary" onclick="openMyCourseForm()">＋ Ders Tanımla</button></div>
   </div>
   <div class="cal-layout">
     <div class="card cal-card">
@@ -2428,7 +2486,7 @@ function viewMySchedule(){
 function mcColInner(di){
   return state.myClasses.filter(c=>c.day===di).map(c=>{
     const dur = +c.dur||60, oda = mcRoom(c);
-    return `<div class="cal-block" data-id="${c.id}" style="top:${mcY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))}"
+    return `<div class="cal-block" data-id="${c.id}" style="top:${mcY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))};color:${inkOn(mcColor(mcCode(c)))}"
       onpointerdown="mcMoveStart(event,'${c.id}')" ondblclick="openMyBlockForm('${c.id}')" title="${esc(mcCode(c))} · ${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''} — düzenlemek için çift tıkla">
       <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="mcDelBlock('${c.id}')" title="Bu bloğu sil">×</button>
       <b>${esc(mcCode(c))}</b>
@@ -3633,7 +3691,7 @@ async function tickId(s){ return sha256hex(`tick:${s.id}:${studentCode(s).trim()
 function studentPayload(s){
   return {
     v:2,
-    student:{name:s.name, grade:s.grade||''},
+    student:{name:s.name, grade:s.grade||'', color:avatarColor(s.id)},
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, given:hwGivenDate(h), status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
