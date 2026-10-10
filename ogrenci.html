@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Öğrenci Sayfam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f4f3ef; --bg2:#edeff9; --card:#ffffff; --ink:#20222e; --muted:#6d7089; --line:#e8e7f0; --line-strong:#c9cdea;
@@ -268,6 +271,75 @@ input,select{font-family:inherit;font-size:1rem}
 .plan-empty{font-size:.8rem;color:var(--muted);padding:11px 14px;border:1px dashed var(--line-strong);border-radius:13px;margin-bottom:8px;cursor:pointer}
 .foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
 .foot button{color:var(--accent);font-weight:600}
+
+/* =====================================================================
+   TASARIM KATMANI · sade / premium (panel ile aynı dil, 2026-10)
+   Eski görünüm: yedekler/2026-10-10_tasarim-oncesi/ogrenci.html
+   ===================================================================== */
+:root{ --bg:#f6f6f4; --bg2:#f6f6f4; --card:#ffffff; --ink:#17171a; --muted:#73737c; --line:#e9e9e6; --line-strong:#d9d9d4; --field-bg:#fafaf9;
+    --accent:#24614f; --accent2:#24614f; --accent-soft:#e9f1ed; --primary:#17171a; --primary-ink:#ffffff;
+    --green:#2f7a52; --green-soft:#eaf3ed; --red:#b4433a; --red-soft:#f8ecea; --amber:#9a6416; --amber-soft:#f6efe2;
+    --blue:#3a5b8c; --blue-soft:#ebf0f6; --cyan:#2b6f7a; --cyan-soft:#e7f1f2; --violet:#5f4f8f; --violet-soft:#efedf5; --rose:#9a4566; --rose-soft:#f6ecf0;
+    --glow:transparent; --shadow:0 1px 2px rgba(20,20,24,.04); --shadow-lg:0 18px 48px -18px rgba(20,20,24,.22); --radius:12px;
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif; font-size:15px }
+@media(prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#0f0f11; --bg2:#0f0f11; --card:#161619; --ink:#ececef; --muted:#8d8d96; --line:#25252a; --line-strong:#34343a; --field-bg:#131316;
+    --accent:#6fbfa5; --accent2:#6fbfa5; --accent-soft:#16251f; --primary:#ececef; --primary-ink:#111113;
+    --green:#6cc08f; --green-soft:#14231a; --red:#e2827a; --red-soft:#2a1715; --amber:#d9a85a; --amber-soft:#272012;
+    --blue:#8aa6d4; --blue-soft:#161d29; --cyan:#74b6bf; --cyan-soft:#132326; --violet:#a99bd6; --violet-soft:#1d1a28; --rose:#d48aa7; --rose-soft:#28161e;
+    --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 24px 60px -20px rgba(0,0,0,.7); } }
+:root[data-theme="dark"]{ --bg:#0f0f11; --bg2:#0f0f11; --card:#161619; --ink:#ececef; --muted:#8d8d96; --line:#25252a; --line-strong:#34343a; --field-bg:#131316;
+    --accent:#6fbfa5; --accent2:#6fbfa5; --accent-soft:#16251f; --primary:#ececef; --primary-ink:#111113;
+    --green:#6cc08f; --green-soft:#14231a; --red:#e2827a; --red-soft:#2a1715; --amber:#d9a85a; --amber-soft:#272012;
+    --blue:#8aa6d4; --blue-soft:#161d29; --cyan:#74b6bf; --cyan-soft:#132326; --violet:#a99bd6; --violet-soft:#1d1a28; --rose:#d48aa7; --rose-soft:#28161e;
+    --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 24px 60px -20px rgba(0,0,0,.7); }
+body{font-family:var(--font);background:var(--bg);font-feature-settings:"cv11","ss01","ss03";-webkit-font-smoothing:antialiased;letter-spacing:-.006em}
+button,input,select,textarea{font-family:var(--font)}
+.card{box-shadow:none;border-radius:var(--radius)}
+/* Üst kart: geçişsiz, sade */
+.hero{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none;border-radius:var(--radius);padding:18px 18px}
+.hero h1{font-weight:600;letter-spacing:-.025em}
+.hero .sub{color:var(--muted)}
+.avatar{box-shadow:none;border-radius:11px;font-weight:600}
+.hero .mini{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-weight:500}
+.hero .mini:hover{background:var(--field-bg)}
+/* Sekmeler: alt çizgili */
+.tabs{gap:0;border-bottom:1px solid var(--line);margin:4px 0 16px}
+.tabs button{border-radius:0;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500;padding:10px 2px}
+.tabs button.active{background:none;box-shadow:none;border:none;border-bottom:2px solid var(--ink);color:var(--ink)}
+.tabs button .em{display:none}
+/* Düğmeler */
+.btn{background:var(--primary);color:var(--primary-ink);box-shadow:none;border-radius:9px;font-weight:500}
+.btn:hover{opacity:.92}
+.btn-ghost{box-shadow:none;border-radius:8px;font-weight:500}
+.btn-sm{border-radius:8px}
+.note-acts .dl{background:var(--primary);color:var(--primary-ink);box-shadow:none}
+.link-btn{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line-strong)}
+/* Parçalı seçici */
+.seg{border-radius:9px}
+.seg button{border-radius:7px;font-weight:500}
+.seg button.on{color:var(--ink);box-shadow:0 0 0 1px var(--line),var(--shadow)}
+/* Satırlar, çipler */
+.item{box-shadow:none;border-radius:10px}
+.item.today{border-color:var(--ink);box-shadow:none}
+.chip{border-radius:6px;font-weight:500}
+.section-title{font-weight:600;letter-spacing:.04em}
+.tick{border-radius:9px;border-width:1.5px}
+.home-card,.day-card,.wk-nav,.wk-mini{box-shadow:none}
+.day-card.today{border-color:var(--ink);box-shadow:none}
+.wk-mini .col.today .h,.wk-mini .col.today .h b,.wk-mini .col.sel .h b{color:var(--ink)}
+.wk-mini .col.sel .dots{background:var(--field-bg);border-color:var(--ink);box-shadow:none}
+.day-card .item{background:var(--card)}
+.hcount{border-radius:6px}
+.hello b{font-weight:600;letter-spacing:-.02em}
+/* Giriş ekranı */
+.gate .mark{background:var(--primary);color:var(--primary-ink);box-shadow:none;border-radius:12px;width:48px;height:48px;font-size:1.05rem}
+.gate input{border-radius:10px;font-weight:600}
+.gate input:focus{border-color:var(--ink)}
+.field input,.field select,.field textarea{border-radius:8px;background:var(--card)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+.modal{border-radius:14px;border:1px solid var(--line)}
+.modal-backdrop{background:rgba(12,12,14,.32);backdrop-filter:blur(2px)}
+.empty .emoji{display:none}
 </style>
 <script>try{var t=localStorage.getItem('ogrenciTema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -533,7 +605,7 @@ function homeHwRow(h, td){
 function viewHome(){
   const td = today(), first = (data.student.name||'').trim().split(/\s+/)[0];
   const _d = new Date(td+'T12:00'), tarih = `${WD_LONG[dayIdx(td)]}, ${_d.getDate()} ${_d.toLocaleDateString('tr-TR',{month:'long'})}`;
-  let html = `<div class="hello"><b>Merhaba ${esc(first)} 👋</b><span>${tarih}</span></div>`;
+  let html = `<div class="hello"><b>Merhaba ${esc(first)}</b><span>${tarih}</span></div>`;
 
   /* 1. Bugün */
   const dersler = (data.lessons||[]).filter(l=>l.date===td && l.status!=='ertelendi').sort((a,b)=>(+a.start||0)-(+b.start||0));
@@ -562,7 +634,7 @@ function viewHome(){
   html += `<div class="card home-card">
     <div class="hc-head"><b>Ödevlerin</b>${acik.length?`<span class="hcount">${acik.length}</span>`:''}<button class="link-btn" onclick="openTasks()">Tümü ›</button></div>
     ${acik.length ? acik.slice(0,4).map(h=>homeHwRow(h, td)).join('') + (acik.length>4?`<button class="hmore" onclick="openTasks()">${acik.length-4} ödev daha</button>`:'')
-      : `<div class="hempty">Bekleyen ödevin yok 🎉</div>`}
+      : `<div class="hempty">Bekleyen ödevin yok</div>`}
   </div>`;
 
   /* 3. Sıradaki ders (bugünkü dersler zaten yukarıda) */

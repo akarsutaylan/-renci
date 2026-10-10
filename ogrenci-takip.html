@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Öğrenci Takip Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f4f3ef; --bg2:#edeff9; --card:#ffffff; --ink:#20222e; --muted:#6d7089; --line:#e8e7f0; --line-strong:#c9cdea;
@@ -632,6 +635,252 @@ a.icon-btn{text-decoration:none}
   .modal-actions{flex-wrap:wrap}
   .modal-actions .btn{flex:1;justify-content:center}
 }
+
+/* =====================================================================
+   TASARIM KATMANI · sade / premium (2026-10)
+   Bu blok yukarıdaki stilleri ezer. Eski görünüme dönmek için bu bloğu
+   silmek ya da yedekler/2026-10-10_tasarim-oncesi/ içindeki dosyayı
+   kullanmak yeterli.
+   ===================================================================== */
+:root{
+  --bg:#f6f6f4; --bg2:#f6f6f4; --card:#ffffff; --ink:#17171a; --text:#17171a; --muted:#73737c;
+  --line:#e9e9e6; --line-strong:#d9d9d4; --row-hover:#f8f8f6; --field-bg:#fafaf9;
+  --accent:#24614f; --accent2:#24614f; --accent-soft:#e9f1ed;
+  --primary:#17171a; --primary-ink:#ffffff; --primary-hover:#2c2c31;
+  --green:#2f7a52; --green-soft:#eaf3ed; --red:#b4433a; --red-soft:#f8ecea;
+  --amber:#9a6416; --amber-soft:#f6efe2; --blue:#3a5b8c; --blue-soft:#ebf0f6;
+  --cyan:#2b6f7a; --cyan-soft:#e7f1f2; --violet:#5f4f8f; --violet-soft:#efedf5;
+  --rose:#9a4566; --rose-soft:#f6ecf0;
+  --sb-bg:transparent; --sb-text:#55555e; --sb-strong:#17171a; --sb-muted:#8b8b93;
+  --sb-hover:#ededea; --sb-line:#e6e6e2;
+  --toast-bg:#17171a; --toast-ink:#ffffff;
+  --glow:transparent;
+  --shadow:0 1px 2px rgba(20,20,24,.04);
+  --shadow-lg:0 18px 48px -18px rgba(20,20,24,.22),0 2px 6px rgba(20,20,24,.05);
+  --radius:12px;
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  font-size:14.5px;
+}
+body.dark{
+  --bg:#0f0f11; --bg2:#0f0f11; --card:#161619; --ink:#ececef; --text:#ececef; --muted:#8d8d96;
+  --line:#25252a; --line-strong:#34343a; --row-hover:#1b1b1f; --field-bg:#131316;
+  --accent:#6fbfa5; --accent2:#6fbfa5; --accent-soft:#16251f;
+  --primary:#ececef; --primary-ink:#111113; --primary-hover:#ffffff;
+  --green:#6cc08f; --green-soft:#14231a; --red:#e2827a; --red-soft:#2a1715;
+  --amber:#d9a85a; --amber-soft:#272012; --blue:#8aa6d4; --blue-soft:#161d29;
+  --cyan:#74b6bf; --cyan-soft:#132326; --violet:#a99bd6; --violet-soft:#1d1a28;
+  --rose:#d48aa7; --rose-soft:#28161e;
+  --sb-bg:transparent; --sb-text:#a2a2ab; --sb-strong:#ececef; --sb-muted:#77777f;
+  --sb-hover:#1c1c20; --sb-line:#232327;
+  --toast-bg:#ececef; --toast-ink:#111113;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+  --shadow-lg:0 24px 60px -20px rgba(0,0,0,.7),0 2px 6px rgba(0,0,0,.3);
+}
+
+/* ---------- Temel ---------- */
+body{font-family:var(--font);background:var(--bg);font-feature-settings:"cv11","ss01","ss03";
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.006em}
+input,select,textarea,button{font-family:var(--font)}
+::selection{background:var(--accent-soft);color:var(--ink)}
+.num,td.num,.stat .value,.pr-amt,.pay-sum b{font-variant-numeric:tabular-nums}
+
+/* ---------- Kenar menü: açık, çizgiyle ayrılmış ---------- */
+.sidebar{background:var(--bg);color:var(--sb-text);margin:0;border-radius:0;top:0;height:100vh;
+  box-shadow:none;border-right:1px solid var(--sb-line);padding:22px 12px 16px;width:228px}
+.logo{padding:2px 10px 24px;gap:10px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--primary);color:var(--primary-ink);
+  box-shadow:none;font-size:.78rem;font-weight:700;letter-spacing:.02em}
+.logo-text b{color:var(--sb-strong);font-size:.94rem;font-weight:600;letter-spacing:-.01em}
+.logo-text span{color:var(--sb-muted);font-size:.72rem;letter-spacing:0}
+.nav{gap:1px}
+.nav button{padding:7px 10px;border-radius:7px;font-size:.9rem;font-weight:500;color:var(--sb-text);gap:10px}
+.nav button svg{width:17px;height:17px;opacity:.7;stroke-width:1.8}
+.nav button:hover{background:var(--sb-hover);color:var(--sb-strong)}
+.nav button.active{background:var(--card);color:var(--sb-strong);box-shadow:0 0 0 1px var(--line),var(--shadow);font-weight:600}
+.nav button.active svg{opacity:1}
+.nav-label{color:var(--sb-muted);font-size:.68rem;font-weight:600;letter-spacing:.06em;padding:18px 10px 6px}
+.sidebar-foot{border-top:1px solid var(--sb-line);padding-top:10px;gap:1px}
+.sidebar-foot button{padding:7px 10px;border-radius:7px;font-size:.84rem;color:var(--sb-muted)}
+.sidebar-foot button:hover{background:var(--sb-hover);color:var(--sb-strong)}
+.sidebar-foot svg{width:16px;height:16px;stroke-width:1.8}
+.sidebar-foot button.sm-on{background:var(--accent-soft);color:var(--accent)}
+.sidebar-foot button.sm-on svg{color:var(--accent)}
+
+/* ---------- İçerik ---------- */
+.main{padding:36px 44px 72px;max-width:1160px}
+.topbar{margin-bottom:28px;align-items:flex-end}
+.topbar h1{font-size:1.6rem;font-weight:600;letter-spacing:-.03em;line-height:1.15}
+.topbar .sub{font-size:.86rem;margin-top:5px}
+
+/* ---------- Düğmeler ---------- */
+.btn{border-radius:8px;padding:8px 14px;font-size:.87rem;font-weight:500;gap:7px;transition:background .15s,border-color .15s,color .15s}
+.btn-primary{background:var(--primary);color:var(--primary-ink);box-shadow:none}
+.btn-primary:hover{background:var(--primary-hover);transform:none;box-shadow:none}
+.btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+.btn-ghost:hover{border-color:var(--line-strong);background:var(--row-hover)}
+.btn-danger{background:transparent;border:1px solid color-mix(in srgb,var(--red) 35%,var(--line));color:var(--red)}
+.btn-danger:hover{background:var(--red-soft)}
+.btn-sm{padding:5px 10px;font-size:.8rem;border-radius:7px}
+.icon-btn{border-radius:7px;width:28px;height:28px}
+.icon-btn:hover{background:var(--row-hover);color:var(--ink)}
+.icon-btn.danger:hover{background:var(--red-soft);color:var(--red)}
+
+/* ---------- Kartlar, istatistikler ---------- */
+.card{border-radius:var(--radius);box-shadow:none;border:1px solid var(--line)}
+.panel{padding:20px 22px}
+.panel h3{font-size:.92rem;font-weight:600;letter-spacing:-.01em;margin-bottom:14px}
+.panel h3 .more,.more{font-size:.8rem;font-weight:500;color:var(--muted)}
+.panel h3 .more:hover,.more:hover{color:var(--ink)}
+.stat-grid{gap:12px;margin-bottom:28px}
+.stat{padding:16px 18px}
+.stat .label{font-size:.76rem;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+.stat .value{font-size:1.65rem;font-weight:600;letter-spacing:-.03em;margin-top:8px}
+.stat .hint{font-size:.76rem;margin-top:3px}
+.stat .stat-ico{display:none}
+.grid-2{gap:16px}
+
+/* ---------- Tablolar ---------- */
+th{font-size:.74rem;font-weight:500;text-transform:none;letter-spacing:0;padding:10px 14px;color:var(--muted)}
+td{padding:11px 14px}
+tbody tr:hover{background:var(--row-hover)}
+td.num{font-weight:500}
+
+/* ---------- Çipler ve avatarlar ---------- */
+.chip{border-radius:6px;padding:2px 8px;font-size:.74rem;font-weight:500}
+.avatar{border-radius:9px;font-weight:600;font-size:.86rem;width:38px;height:38px}
+.avatar.sm{width:26px;height:26px;border-radius:7px;font-size:.66rem}
+.student-cell{font-weight:500}
+
+/* ---------- Öğrenci kartları ---------- */
+.students-grid{gap:12px}
+.student-card{padding:18px}
+.student-card:hover{transform:none;box-shadow:none;border-color:var(--line-strong)}
+.student-card .name{font-weight:600;font-size:.98rem;letter-spacing:-.01em}
+.student-card .meta{border-top:1px solid var(--line);gap:10px}
+.student-card .meta b{font-weight:500}
+
+/* ---------- Öğrenci detay başlığı: düz kart ---------- */
+.detail-hero{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none;padding:22px 24px;border-radius:var(--radius)}
+.detail-hero .avatar{width:48px;height:48px;border-radius:11px;box-shadow:none;font-size:1.05rem}
+.detail-hero h2{font-size:1.3rem;font-weight:600;letter-spacing:-.025em}
+.detail-hero .sub{color:var(--muted)}
+.detail-hero .btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.detail-hero .btn-ghost:hover{background:var(--row-hover);border-color:var(--line-strong)}
+
+/* ---------- Alt sekmeler: alt çizgili ---------- */
+.subtabs{gap:2px;margin:26px 0 18px;border-bottom:1px solid var(--line)}
+.subtabs button{padding:9px 12px;border-radius:0;font-size:.86rem;font-weight:500;color:var(--muted);border:none;margin-bottom:-1px;border-bottom:2px solid transparent}
+.subtabs button:hover{color:var(--ink)}
+.subtabs button.active{background:none;box-shadow:none;border:none;border-bottom:2px solid var(--ink);color:var(--ink)}
+
+/* ---------- Form ve araç çubuğu ---------- */
+.toolbar select,.toolbar input{border-radius:8px;box-shadow:none}
+.field label{font-weight:500;font-size:.78rem}
+.field input,.field select,.field textarea{border-radius:8px;background:var(--card);color-scheme:light}
+body.dark .field input,body.dark .field select,body.dark .field textarea{color-scheme:dark}
+.field input:focus,.field select:focus,.field textarea:focus,.toolbar select:focus,.toolbar input:focus{
+  border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 8%,transparent)}
+
+/* ---------- Pencere ---------- */
+.modal-backdrop{background:rgba(12,12,14,.32);backdrop-filter:blur(2px)}
+.modal{border-radius:14px;border:1px solid var(--line);box-shadow:var(--shadow-lg);padding:24px}
+.modal h3{font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
+
+/* ---------- Boş durum: emoji yok ---------- */
+.empty{padding:44px 24px}
+.empty .emoji{display:none}
+.empty b{font-weight:600;font-size:.95rem}
+
+/* ---------- Durum ve ödeme düğmeleri ---------- */
+.hw-status{border-radius:6px;font-weight:500;padding:4px 10px}
+.pay-btn{border-radius:6px;font-weight:500;padding:4px 10px}
+.pay-no{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.pay-no:hover{background:var(--row-hover);filter:none;transform:none}
+.pay-yes{background:var(--green-soft);color:var(--green)}
+
+/* ---------- Takvim: tonlu bloklar, renk çizgisi ---------- */
+.cal-card{padding:12px}
+.cal-dayhead{font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0}
+.cal-line{border-top-color:var(--line)}
+.cal-line.half{opacity:.6}
+.cal-block{border-radius:6px;box-shadow:none;padding:4px 7px 4px 9px;
+  background:color-mix(in srgb,var(--c,var(--accent)) 15%,var(--card)) !important;
+  color:var(--ink) !important;border-left:3px solid var(--c,var(--accent))}
+.cal-block b{font-weight:600}
+.cal-block .cal-hours{opacity:.72}
+.cal-block .cal-x{background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--ink)}
+.cal-resize::after{background:color-mix(in srgb,var(--c,var(--ink)) 60%,transparent);opacity:0;transition:opacity .15s}
+.cal-block:hover .cal-resize::after{opacity:1}
+@media(hover:none){.cal-resize::after{opacity:.6}}
+.cal-block.personal{border:none;border-left:3px dashed var(--c,var(--accent));opacity:1;
+  background:color-mix(in srgb,var(--c,var(--accent)) 9%,var(--card)) !important}
+.cal-block.postponed{outline:1px dashed var(--line-strong)}
+.cal-side h3{font-weight:600}
+.cal-chip{border-radius:8px;font-weight:500;background:var(--card)}
+.cal-chip:hover{box-shadow:none;transform:none;border-color:var(--line-strong)}
+.bill-chip{border-radius:5px;font-weight:500}
+.bill-chip:hover{transform:none}
+
+/* ---------- Panelli bloklar: renkli sol şerit yerine sade ---------- */
+.telafi-panel,.bills-panel,.personal-panel{border-left:1px solid var(--line)}
+.telafi-panel h3::before,.bills-panel h3::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-right:8px;vertical-align:middle}
+.progress i{background:var(--ink)}
+.warn-row{background:var(--card);border-radius:10px}
+.warn-row.hot{border-left:1px solid var(--line);box-shadow:inset 3px 0 0 var(--red)}
+.warn-row.mild{border-left:1px solid var(--line);box-shadow:inset 3px 0 0 var(--amber)}
+.warn-chip{border-radius:6px;font-weight:500}
+.rem-alert{border-radius:12px;border:1px solid color-mix(in srgb,var(--amber) 40%,var(--line));box-shadow:none;animation:none;background:var(--amber-soft)}
+.rem-alert.urgent{border-color:color-mix(in srgb,var(--red) 40%,var(--line));box-shadow:none}
+.rem-alert h3{font-weight:600}
+.dash-line{border-radius:10px;font-size:.85rem}
+.dash-line em{color:var(--muted);font-weight:500}
+.dash-line:hover em{color:var(--ink)}
+
+/* ---------- Program / müfredat / ödemeler ---------- */
+.pw-day{box-shadow:none;border-radius:10px}
+.pw-day.today{border-color:var(--ink);box-shadow:none}
+.pw-day.today .pw-head b{color:var(--ink)}
+.pw-item{border-radius:7px;border-left-width:3px}
+.pw-add{color:var(--muted);border-radius:7px;font-weight:500}
+.pw-add:hover{background:var(--row-hover);color:var(--ink)}
+.curr-item{border-radius:9px;background:var(--card)}
+.share-box{border-radius:10px}
+.share-box .code{color:var(--ink);font-weight:700}
+.pay-sum > div{border-radius:10px}
+.pr-ico{background:var(--field-bg);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.sw.on{border-color:var(--ink)}
+.sw-reset,.panel h3 .more{color:var(--muted)}
+
+/* ---------- Öğrenci modu etiketi ---------- */
+body.sm .main::before{content:'Öğrenci modu';background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line),var(--shadow);
+  font-weight:500;border-radius:999px;padding:5px 12px 5px 22px;top:12px;right:14px;
+  background-image:radial-gradient(circle at 11px 50%,var(--accent) 3.5px,transparent 4px)}
+
+/* ---------- Bildirim ---------- */
+#toast{border-radius:10px;font-size:.86rem;font-weight:500;box-shadow:var(--shadow-lg)}
+
+/* ---------- Dar ekran ---------- */
+@media(max-width:820px){
+  .sidebar{height:auto;margin:0;border-radius:0;border-right:none;border-bottom:1px solid var(--sb-line);padding:10px 12px;position:sticky;top:0;z-index:30;
+    background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px)}
+  .sidebar{width:auto}
+  .main{padding:22px 18px 56px;width:100%;max-width:100%}
+  .topbar{align-items:flex-start}
+}
+@media(max-width:560px){
+  .sidebar{margin:0;border-radius:0;padding:8px 10px;position:static;background:var(--bg)}
+  .nav{border-top:1px solid var(--sb-line)}
+  .nav button{padding:8px}
+  .nav button.active{box-shadow:0 0 0 1px var(--line)}
+  .main{padding:18px 14px 48px;width:100%;max-width:100%}
+  .topbar{align-items:stretch}
+  .topbar h1{font-size:1.4rem}
+  .nav-label{display:none}
+  .sidebar-foot{border-top:none;padding-top:0}
+  .card{padding:16px 14px}
+  .card.pay-card{padding:4px 0}
+  .stat .value{font-size:1.3rem}
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -1026,7 +1275,7 @@ function viewDashboard(){
   const postponed = state.lessons.filter(l=>l.status==='ertelendi').sort(byDateDesc);
   const telafiPanel = postponed.length ? `
   <div class="card panel telafi-panel">
-    <h3>⏳ Tarih Bekleyen Eski Ertelemeler <span class="chip hw-bekliyor">${postponed.length} ders</span></h3>
+    <h3>Tarih Bekleyen Eski Ertelemeler <span class="chip hw-bekliyor">${postponed.length} ders</span></h3>
     <div class="table-wrap"><table><tbody>
     ${postponed.map(l=>`<tr>
       <td class="student-cell">${avatarHtml(l.sid,'sm')}${esc(studentName(l.sid))}</td>
@@ -1068,7 +1317,7 @@ function viewDashboard(){
   // Ödemeler: tutar yazmadan tek satır (ayrıntı Ödemeler sayfasında)
   const unpaidN = unpaidLessons(null).length, unpaidS = state.students.filter(s=>unpaidTotal(s.id)>0).length;
   const payLine = studentMode || !unpaidN ? '' : `
-  <button class="dash-line" onclick="go('payments')">💳 <span>Ödeme bekleyen <b>${unpaidN} ders</b> · ${unpaidS} öğrenci</span><em>Ödemeler ›</em></button>`;
+  <button class="dash-line" onclick="go('payments')"><span>Ödeme bekleyen <b>${unpaidN} ders</b> · ${unpaidS} öğrenci</span><em>Ödemeler ›</em></button>`;
   const recentExams = [...state.exams].sort(byDateDesc).slice(0,6);
   const examsPanel = `
   <div class="card panel">
@@ -1085,7 +1334,7 @@ function viewDashboard(){
   const recentStudies = [...(state.studies||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.at||0)-(a.at||0)).slice(0,6);
   const studiesPanel = recentStudies.length ? `
   <div class="card panel">
-    <h3>📖 Öğrencilerin Son Çalışmaları</h3>
+    <h3>Öğrencilerin Son Çalışmaları</h3>
     <div class="table-wrap"><table><tbody>
       ${recentStudies.map(x=>`<tr onclick="go('studentDetail','${x.sid}'); setSubtab('calismalar')" style="cursor:pointer">
         <td class="student-cell">${avatarHtml(x.sid,'sm')}${esc(studentName(x.sid))}</td>
@@ -1210,7 +1459,7 @@ function viewStudentDetail(){
       <div class="sub">${esc(s.grade||'')}${s.phone?' · '+esc(s.phone):''}${studentMode?'':' · Saat ücreti '+fmtTL(s.rate)} · Son giriş: ${lastSeenHtml(s)}</div>
     </div>
     <div class="spacer"></div>
-    ${studentMode?'':`<button class="btn btn-ghost btn-sm" onclick="openShareForm('${s.id}')">🔗 Öğrenci Sayfası</button>`}
+    ${studentMode?'':`<button class="btn btn-ghost btn-sm" onclick="openShareForm('${s.id}')">Öğrenci Sayfası</button>`}
     <button class="btn btn-ghost btn-sm" onclick="openStudentForm('${s.id}')">Düzenle</button>
     <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">Sil</button>
   </div>
@@ -1937,7 +2186,7 @@ function calBlockHtml(l){
   const s = student(l.sid); if(!s || l.start==null) return '';
   const dur = lessonDur(l);
   const pp = l.status==='ertelendi';
-  return `<div class="cal-block${pp?' postponed':''}" data-id="${l.id}" style="top:${calY(l.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${avatarColor(l.sid)};color:${inkOn(avatarColor(l.sid))}"
+  return `<div class="cal-block${pp?' postponed':''}" data-id="${l.id}" style="top:${calY(l.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;--c:${avatarColor(l.sid)}"
     onpointerdown="calMoveStart(event,'${l.id}')" ondblclick="openLessonForm('${l.id}')" title="Düzenlemek için çift tıkla">
     <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="delItem('lessons','${l.id}')" title="Dersi sil">×</button>
     <button class="cal-x" style="right:22px" onpointerdown="event.stopPropagation()" onclick="openRescheduleForm('${l.id}')" title="Telafi · yeni tarihe taşı">⏳</button>
@@ -1961,7 +2210,7 @@ function calPersonalBlocks(di, date){
   const cls = state.myClasses.filter(c=>c.day===di).map(c=>{
     const dur = +c.dur||60;
     const oda = mcRoom(c);
-    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))};color:${inkOn(mcColor(mcCode(c)))}"
+    return `<div class="cal-block personal" style="top:${calY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;--c:${mcColor(mcCode(c))}"
       onclick="openMyBlockForm('${c.id}')" title="Üniversite dersin — düzenlemek için tıkla">
       <b>🎓 ${esc(mcCode(c))}</b>
       <span class="cal-hours">${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''}</span>
@@ -1970,7 +2219,7 @@ function calPersonalBlocks(di, date){
   const wos = state.workouts.filter(w=>w.day===di && w.time!=null).map(w=>{
     const dur = +w.dur||60;
     const done = (w.doneDates||[]).includes(date);
-    return `<div class="cal-block personal${done?' wodone':''}" style="top:${calY(w.time)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:var(--green)"
+    return `<div class="cal-block personal${done?' wodone':''}" style="top:${calY(w.time)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;--c:var(--green)"
       onclick="openWorkoutForm('${w.id}')" title="Antrenmanın — düzenlemek için tıkla">
       <button class="cal-x" style="opacity:1" onclick="event.stopPropagation();toggleWorkoutDoneKey('${w.id}','${date}')" title="${done?'İşareti kaldır':'Yapıldı olarak işaretle'}">${done?'✓':'○'}</button>
       <b>🏋️ ${esc(w.title)}${done?' ✓':''}</b>
@@ -1997,8 +2246,8 @@ function viewSchedule(){
     <div><h1>${wn!=null ? `${wn}. Hafta` : 'Haftalık Takvim'}${dates[0]===mondayOf(todayStr)?' <span class="chip badge-zero" style="vertical-align:middle">bu hafta</span>':''}</h1>
       <div class="sub">${wn==null?'Numarasız hafta · ':''}${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="openColorsModal()" title="Öğrenci ve ders renklerini değiştir">🎨 Renkler</button>
-      <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">⧉ Geçen Haftayı Kopyala</button>
+      <button class="btn btn-ghost btn-sm" onclick="openColorsModal()" title="Öğrenci ve ders renklerini değiştir">Renkler</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">Geçen Haftayı Kopyala</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(-1)">‹ Önceki</button>
       <button class="btn ${calWeekOff===0?'btn-primary':'btn-ghost'} btn-sm" onclick="calShiftWeek(0)">Bu Hafta${cwn!=null?` · ${cwn}`:''}</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(1)">Sonraki ›</button>
@@ -2139,14 +2388,14 @@ function dashboardBillsPanel(ym, td){
     const when = day < td ? 'gecikti' : day === td ? 'bugün' : `${day}'i`;
     return `<span class="chip ${cls}">${esc(b.title)} · ${when}</span>`;
   }).join('');
-  return `<button class="dash-line" onclick="go('bills')">🧾 <span>Bu ay ödemelerin</span><span class="dl-chips">${chips}${due.length>4?`<span class="chip plan-lock-chip">+${due.length-4}</span>`:''}</span><em>Ödeme Planım ›</em></button>`;
+  return `<button class="dash-line" onclick="go('bills')"><span>Bu ay ödemelerin</span><span class="dl-chips">${chips}${due.length>4?`<span class="chip plan-lock-chip">+${due.length-4}</span>`:''}</span><em>Ödeme Planım ›</em></button>`;
 }
 let billsTab = 'plan';
 function setBillsTab(t){ billsTab = t; render(); }
 function billsTabsHtml(){
   return `<div class="subtabs">
-    <button class="${billsTab==='plan'?'active':''}" onclick="setBillsTab('plan')">💳 Ödemeler</button>
-    <button class="${billsTab==='abonelik'?'active':''}" onclick="setBillsTab('abonelik')">🔁 Aboneliklerim</button>
+    <button class="${billsTab==='plan'?'active':''}" onclick="setBillsTab('plan')">Ödemeler</button>
+    <button class="${billsTab==='abonelik'?'active':''}" onclick="setBillsTab('abonelik')">Aboneliklerim</button>
   </div>`;
 }
 function viewBills(){
@@ -2413,7 +2662,7 @@ function openColorsModal(){
       <span class="cl-prev" style="background:${mcColor(k.code)};color:${inkOn(mcColor(k.code))}">🎓</span>
       <b>${esc(k.code)}${k.name?`<span class="cl-sub">${esc(k.name)}</span>`:''}</b>${colorPicker('c', k.id, mcColor(k.code), !!k.color)}</div>`).join('');
   openModal(`
-  <h3>🎨 Takvim Renkleri</h3>
+  <h3>Takvim Renkleri</h3>
   <p class="hint-text" style="margin:-8px 0 12px">Seçtiğin renk takvimde, öğrenci listesinde ve öğrencinin kendi sayfasında kullanılır. Açık renklerde yazı otomatik koyulaşır.</p>
   ${stu ? `<div class="cl-title">Öğrenciler</div>${stu}` : ''}
   ${crs ? `<div class="cl-title">Okul derslerim</div>${crs}` : ''}
@@ -2456,7 +2705,7 @@ function viewMySchedule(){
   return `
   <div class="topbar">
     <div><h1>Ders Programım</h1><div class="sub">${kurslar.length} ders · ${state.myClasses.length} blok · haftada ${totalH.toLocaleString('tr-TR')} saat</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openColorsModal()">🎨 Renkler</button><button class="btn btn-primary" onclick="openMyCourseForm()">＋ Ders Tanımla</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openColorsModal()">Renkler</button><button class="btn btn-primary" onclick="openMyCourseForm()">＋ Ders Tanımla</button></div>
   </div>
   <div class="cal-layout">
     <div class="card cal-card">
@@ -2486,7 +2735,7 @@ function viewMySchedule(){
 function mcColInner(di){
   return state.myClasses.filter(c=>c.day===di).map(c=>{
     const dur = +c.dur||60, oda = mcRoom(c);
-    return `<div class="cal-block" data-id="${c.id}" style="top:${mcY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;background:${mcColor(mcCode(c))};color:${inkOn(mcColor(mcCode(c)))}"
+    return `<div class="cal-block" data-id="${c.id}" style="top:${mcY(c.start)}px;height:${dur/CAL_SLOT*CAL_SLOT_H-2}px;--c:${mcColor(mcCode(c))}"
       onpointerdown="mcMoveStart(event,'${c.id}')" ondblclick="openMyBlockForm('${c.id}')" title="${esc(mcCode(c))} · ${fmtClock(c.start)}–${fmtClock(c.start+dur)}${oda?' · '+esc(oda):''} — düzenlemek için çift tıkla">
       <button class="cal-x" onpointerdown="event.stopPropagation()" onclick="mcDelBlock('${c.id}')" title="Bu bloğu sil">×</button>
       <b>${esc(mcCode(c))}</b>
@@ -2839,7 +3088,7 @@ function saveBook(id){
 }
 
 /* ================= ERKEN UYARI =================
-   Mevcut kayıtlardan üretilir: ödev oranı, çalışma kaydı, deneme trendi,
+   Mevcut kayıtlardan üretilir: ödev oranı, programdaki çalışma etkinliği, deneme trendi,
    ders arası ve ödeme gecikmesi. Öğrenci Modunda hiç oluşturulmaz. */
 const daysDiff = (a, b) => Math.round((new Date(b+'T12:00') - new Date(a+'T12:00')) / 864e5);
 function studentAlerts(sid){
@@ -2851,12 +3100,22 @@ function studentAlerts(sid){
     if(ok / due.length < 0.5)
       out.push({lvl:2, t:`Ödevlerin ${ok}/${due.length} tanesi yapıldı`, d:`son 1 haftada teslim tarihi geçen ödevler`});
   }
-  // 2. Çalışma kaydı duraklamış (daha önce kayıt girmiş öğrenciler için)
-  const st = (state.studies||[]).filter(x=>x.sid===sid && x.date);
-  if(st.length){
-    const son = st.map(x=>x.date).sort().pop();
-    const g = daysDiff(son, t);
-    if(g >= 4) out.push({lvl:1, t:`${g} gündür çalışma kaydı yok`, d:`son kayıt ${fmtDate(son)}`});
+  // 2. Çalışma duraklamış. Ayrı "çalışma kaydı" girmek gerekmez: öğrencinin programa kendi eklediği çalışmalar,
+  //    programda "yaptım" diye işaretlediği çalışmalar ve ödevler de çalışma sayılır (eski çalışma kayıtları da).
+  const tsDay = ts => +ts > 1.6e12 ? localDate(new Date(+ts)) : '';
+  const plans = (state.plans||[]).filter(p=>p.sid===sid && p.date);
+  const aktivite = [
+    ...(state.studies||[]).filter(x=>x.sid===sid).map(x=>x.date),
+    ...plans.filter(p=>p.status==='yapildi').map(p=>tsDay(p.statusAt) || p.date),
+    ...plans.filter(p=>p.byStudent).map(p=>p.date),          // öğrencinin bugüne/geçmişe eklediği (yaptığını yazdığı) çalışma
+    ...state.homeworks.filter(h=>h.sid===sid && h.byStudent && h.status==='yapildi').map(h=>tsDay(h.updatedAt)),
+  ].filter(d=>d && d<=t).sort();
+  const bekleyen = plans.filter(p=>p.date < t && p.date >= shiftDate(t,-7) && p.status!=='yapildi');
+  if(aktivite.length){
+    const son = aktivite[aktivite.length-1], g = daysDiff(son, t);
+    if(g >= 4) out.push({lvl:1, t:`${g} gündür çalışma yok`, d:`son çalışma ${fmtDate(son)} (programa ekleme ya da işaretleme)${bekleyen.length?` · son 1 haftada ${bekleyen.length} çalışma işaretlenmedi`:''}`});
+  } else if(bekleyen.length >= 2){
+    out.push({lvl:1, t:`Programdaki çalışmalar işaretlenmiyor`, d:`son 1 haftada ${bekleyen.length} çalışma var, hiçbiri "yaptım" diye işaretlenmedi`});
   }
   // 3. Deneme netleri geriliyor (aynı tür denemeler karşılaştırılır)
   const ex = state.exams.filter(e=>e.sid===sid && e.kind!=='brans' && e.date).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
@@ -2894,13 +3153,13 @@ function dashboardWarnPanel(){
     });
   if(!rows.length) return `
   <div class="card panel" style="margin-bottom:18px">
-    <h3>🩺 Erken Uyarı <span class="chip badge-pos">Her şey yolunda</span></h3>
+    <h3>Erken Uyarı <span class="chip badge-pos">Her şey yolunda</span></h3>
     <p style="color:var(--muted);font-size:.85rem">Ödev, çalışma, deneme ve ödeme tarafında dikkat gerektiren öğrenci yok.</p>
   </div>`;
   const hot = rows.filter(x=>x.a.some(y=>y.lvl===2)).length;
   return `
   <div class="card panel" style="margin-bottom:18px">
-    <h3>🩺 Erken Uyarı <span class="chip ${hot?'badge-neg':'badge-zero'}">${rows.length} öğrenci</span></h3>
+    <h3>Erken Uyarı <span class="chip ${hot?'badge-neg':'badge-zero'}">${rows.length} öğrenci</span></h3>
     ${rows.map(({s,a})=>{
       const lvl = a.some(y=>y.lvl===2) ? 'hot' : 'mild';
       return `<div class="warn-row ${lvl}" onclick="go('studentDetail','${s.id}')" title="Öğrenci detayına git">
@@ -2910,7 +3169,7 @@ function dashboardWarnPanel(){
           <div class="warn-chips">${a.map(y=>`<span class="warn-chip ${y.lvl===2?'hot':'mild'}" title="${esc(y.d)}">${esc(y.t)}</span>`).join('')}</div>
         </div>
       </div>`;}).join('')}
-    <p class="hint-text" style="margin-top:10px">Ödev oranı, çalışma kaydı, deneme trendi, ders arası ve ödeme gecikmesinden üretilir. Öğrenci Modunda gizlenir.</p>
+    <p class="hint-text" style="margin-top:10px">Ödev oranı, programdaki çalışmalar (öğrencinin eklemesi ya da işaretlemesi), deneme trendi, ders arası ve ödeme gecikmesinden üretilir. Öğrenci Modunda gizlenir.</p>
   </div>`;
 }
 
@@ -3175,7 +3434,7 @@ function curriculumTab(s){
     </div>`;}).join('');
   return `
   <div class="card panel">
-    <h3>📘 ${esc(sub)} Müfredatı</h3>
+    <h3>${esc(sub)} Müfredatı</h3>
     <div class="subtabs" style="margin-top:0">
       ${subs.map(x=>`<button class="${x===sub?'active':''}" onclick="setCurrSub('${esc(x)}')">${esc(x)}</button>`).join('')}
     </div>
@@ -3260,7 +3519,7 @@ function reportTab(s){
     <input type="month" value="${ym}" onchange="setRepMonth(this.value)" style="padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--field-bg);color:var(--ink);font:inherit">
     <div class="spacer" style="flex:1"></div>
     <button class="btn btn-ghost btn-sm" onclick="copyReport('${s.id}','${ym}')">Metni Kopyala</button>
-    <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Yazdır / PDF</button>
+    <button class="btn btn-primary btn-sm" onclick="window.print()">Yazdır / PDF</button>
   </div>
   <div class="card report">
     <div class="rep-head">
@@ -3340,7 +3599,7 @@ function dashboardReminderAlert(){
     </div>`;}).join('');
   return `
   <div class="rem-alert ${urgent?'urgent':''}" role="alert">
-    <h3>🔔 Hatırlatma uyarısı <span style="font-weight:600;opacity:.8">· ${parts.join(', ')}</span>
+    <h3>Hatırlatma <span style="font-weight:600;opacity:.8">· ${parts.join(', ')}</span>
       <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="go('notes')">Tümü →</button></h3>
     <div class="rem-alert-list">${rows}</div>
   </div>`;
@@ -3465,8 +3724,8 @@ function viewNotes(){
       <button class="btn btn-primary" onclick="openReminderForm()">＋ Hatırlatma</button>
     </div>
   </div>
-  <div class="card panel"><h3>🔔 Hatırlatmalar</h3>${remList}</div>
-  <div class="card panel"><h3>📝 Notlarım</h3>${memoGrid}</div>
+  <div class="card panel"><h3>Hatırlatmalar</h3>${remList}</div>
+  <div class="card panel"><h3>Notlarım</h3>${memoGrid}</div>
   <p style="color:var(--muted);font-size:.8rem;margin-top:12px">Bu bölüm Öğrenci Modu açıkken görünmez. Veriler yalnızca bu cihazda tutulur, buluta gönderilmez.</p>`;
 }
 function toggleReminderDone(id, ds){
@@ -3611,7 +3870,7 @@ function dashboardPersonalPanel(){
   ].join('');
   return `
   <div class="card panel personal-panel">
-    <h3>🎯 Bugün Bana Özel <span class="chip badge-zero">${WD_LONG[ti]}</span></h3>
+    <h3>Bugün Bana Özel <span class="chip badge-zero">${WD_LONG[ti]}</span></h3>
     <div class="table-wrap"><table><tbody>${rows}</tbody></table></div>
   </div>`;
 }
