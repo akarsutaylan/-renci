@@ -76,7 +76,7 @@ input,select{font-family:inherit;font-size:1rem}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0 14px}
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:6px 0 14px}
 .tabs button{padding:9px 4px;border-radius:10px;font-size:.8rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s;border:1px solid transparent}
 @media(max-width:560px){.tabs button{font-size:.74rem;padding:9px 1px}.tabs button .em{display:none}}
 .tabs button .em{margin-right:3px}
@@ -272,6 +272,31 @@ input,select{font-family:inherit;font-size:1rem}
 .foot{text-align:center;font-size:.76rem;color:var(--muted);margin-top:28px;line-height:1.7}
 .foot button{color:var(--accent);font-weight:600}
 
+.cu-subs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:10px;scrollbar-width:none}
+.cu-subs::-webkit-scrollbar{display:none}
+.cu-subs button{flex:0 0 auto;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:.84rem;font-weight:500;color:var(--muted)}
+.cu-subs button.on{color:var(--ink);border-color:var(--ink)}
+.cu-card{padding:14px 16px;margin-bottom:12px}
+.cu-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cu-head b{font-size:1rem;font-weight:600}
+.cu-head span{font-size:.78rem;color:var(--muted)}
+.cu-bar{margin-top:8px}
+.cu-lbl{display:flex;align-items:baseline;gap:8px;font-size:.8rem;margin-bottom:5px}
+.cu-lbl span{color:var(--muted);width:34px}
+.cu-lbl b{font-variant-numeric:tabular-nums}
+.cu-lbl em{font-style:normal;color:var(--muted);margin-left:auto;font-size:.74rem}
+.cu-track{height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+.cu-track i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.cu-list{padding:2px 14px}
+.cu-row{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.cu-row:first-child{border-top:none}
+.cu-mark{width:16px;height:16px;border-radius:50%;border:1.5px dashed var(--line-strong);display:grid;place-items:center;font-size:.62rem;font-weight:700;flex-shrink:0;margin-top:3px;color:#fff;cursor:default}
+.cu-row.done .cu-mark{background:var(--green);border:1.5px solid var(--green)}
+.cu-body{flex:1;min-width:0}
+.cu-t{font-size:.9rem;font-weight:500;overflow-wrap:anywhere}
+.cu-row.done .cu-t{color:var(--muted)}
+.cu-m{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:4px;font-size:.74rem;color:var(--muted)}
+.cu-m .chip{font-size:.68rem;padding:1px 7px}
 /* =====================================================================
    TASARIM KATMANI · sade / premium (panel ile aynı dil, 2026-10)
    Eski görünüm: yedekler/2026-10-10_tasarim-oncesi/ogrenci.html
@@ -340,6 +365,8 @@ button,input,select,textarea{font-family:var(--font)}
 .modal{border-radius:14px;border:1px solid var(--line)}
 .modal-backdrop{background:rgba(12,12,14,.32);backdrop-filter:blur(2px)}
 .empty .emoji{display:none}
+/* Telefonda altı sekme: yana kaydırılabilir satır */
+@media(max-width:560px){.tabs{display:flex;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{flex:0 0 auto;padding:10px 10px}}
 </style>
 <script>try{var t=localStorage.getItem('ogrenciTema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -558,7 +585,7 @@ function setDers(v){ dersFilter = v; render(); }
 
 function render(){
   const s = data.student, td = today();
-  const tabs = [['ana','🏠','Ana Sayfa'],['program','📅','Program'],['notlar','📂','Notlar'],['denemeler','📈','Denemeler'],['calisma','📖','Çalışma']];
+  const tabs = [['ana','🏠','Ana Sayfa'],['program','📅','Program'],['mufredat','📘','Müfredat'],['notlar','📂','Notlar'],['denemeler','📈','Denemeler'],['calisma','📖','Çalışma']];
   app.innerHTML = `
   <div class="hero">
     <div class="avatar" style="background:${avatarColor(sid)};color:${inkOn(avatarColor(sid))}">${esc(initials(s.name))}</div>
@@ -568,7 +595,7 @@ function render(){
     <button class="mini" onclick="refresh()" title="Yenile">⟳</button>
   </div>
   <div class="tabs">${tabs.map(([id,em,l])=>`<button class="${tab===id?'active':''}" onclick="setTab('${id}')"><span class="em">${em} </span>${l}</button>`).join('')}</div>
-  ${tab==='ana' ? viewHome() : tab==='program' || tab==='odevler' ? viewProgram() : tab==='notlar' ? viewNotes() : tab==='calisma' ? viewStudies() : viewExams()}
+  ${tab==='ana' ? viewHome() : tab==='program' || tab==='odevler' ? viewProgram() : tab==='mufredat' ? viewCurriculum() : tab==='notlar' ? viewNotes() : tab==='calisma' ? viewStudies() : viewExams()}
   <div class="foot">Bu sayfa yalnızca senin erişim kodunla açılır.<br><button onclick="logout()">Kodu unut / çıkış</button></div>`;
   window.scrollTo({top:0});
   if(tab==='program' && progView==='hafta') initDayStrip();
@@ -922,6 +949,33 @@ function viewLessonList(){
 }
 
 /* --- Ödevler --- */
+/* --- Müfredat (salt okunur: öğretmen panelden işaretler, öğrenci yalnızca görür) --- */
+let currSub = '', currLvl = 0;
+function setCurrSub(v){ currSub = v; render(); }
+function setCurrLvl(v){ currLvl = v; render(); }
+function viewCurriculum(){
+  const list = data.curriculum || [];
+  if(!list.length) return emptyState('📘','Müfredat henüz paylaşılmadı','Öğretmenin müfredat takibini başlattığında konuların burada görünür.');
+  const cur = list.find(x=>x.sub===currSub) || list[0];
+  const stat = lvl => { const ts = cur.t.filter(x=>!lvl || (x[1] & lvl)); const done = ts.filter(x=>x[2]).length; return {done, total:ts.length, pct: ts.length ? Math.round(done/ts.length*100) : 0}; };
+  const bar = (label, st) => `<div class="cu-bar"><div class="cu-lbl"><span>${label}</span><b>%${st.pct}</b><em>${st.done}/${st.total} konu</em></div><div class="cu-track"><i style="width:${Math.max(2, st.pct)}%"></i></div></div>`;
+  const rows = cur.t.filter(x=>!currLvl || (x[1] & currLvl)).map(([t, e, d, src])=>`
+    <div class="cu-row ${d?'done':''}">
+      <span class="cu-mark" aria-hidden="true">${d?'✓':''}</span>
+      <div class="cu-body"><div class="cu-t">${esc(t)}</div>
+        <div class="cu-m"><span class="chip ${e===1?'badge-zero':e===2?'hw-bekliyor':'lock-chip'}">${e===1?'TYT':e===2?'AYT':'TYT + AYT'}</span>${d?`<span>${src==='d'?`${fmtDate(d)} dersinde işlendi`:`tamamlandı · ${fmtDate(d)}`}</span>`:''}</div></div>
+    </div>`).join('');
+  return `
+  <div class="cu-subs">${list.map(x=>`<button class="${x.sub===cur.sub?'on':''}" onclick="setCurrSub(${esc(JSON.stringify(x.sub))})">${esc(x.sub)}</button>`).join('')}</div>
+  <div class="card cu-card">
+    <div class="cu-head"><b>${esc(cur.sub)}</b><span>${stat(0).done}/${stat(0).total} konu tamam</span></div>
+    ${bar('TYT', stat(1))}${bar('AYT', stat(2))}
+  </div>
+  <div class="seg" style="margin:4px 0 10px">${[[0,'Tümü'],[1,'TYT'],[2,'AYT']].map(([v,l])=>`<button class="${currLvl===v?'on':''}" onclick="setCurrLvl(${v})">${l}</button>`).join('')}</div>
+  <div class="card cu-list">${rows || '<div class="hempty" style="padding:14px">Bu filtrede konu yok.</div>'}</div>
+  <div class="tick-hint" style="margin-top:10px">Müfredatı öğretmenin günceller. Derste işlenen konular kendiliğinden işaretlenir.</div>`;
+}
+
 /* --- Ders notları (GitHub Pages deposundan, GitHub API ile listelenir) --- */
 const NOTES_REPO = ''; // 'kullanici/depo' — boş bırakılırsa sayfanın adresinden türetilir
 const DERS_LABEL = {fizik:'Fizik', kimya:'Kimya', matematik:'Matematik'};

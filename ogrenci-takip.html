@@ -3956,7 +3956,20 @@ function studentPayload(s){
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
     plans: plansOf(s.id).filter(p=>p.date >= planDateFrom(Date.now() - 56*86400000, 0)).map(p=>({id:planKey(p), date:p.date, status:p.status||'bekliyor', statusAt:p.statusAt||0, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
+    curriculum: curriculumPayload(s),
   };
+}
+/* Öğrenciye salt okunur müfredat: [{sub, t:[[konu, düzey(1 TYT/2 AYT/3 ikisi), tarih, kaynak('d' derste / 'm' elle)]]}]
+   Öğrenci bunu yalnızca görür; değiştirme yolu yoktur (işaretler panelde, öğretmende). */
+function curriculumPayload(s){
+  const man = s.curr || {};
+  return currSubjects(s.id).filter(sub=>currTopics(sub).length).map(sub=>{
+    const auto = autoCovered(s.id, sub);
+    return {sub, t: currTopics(sub).map(c=>{
+      const k = currKey(sub, c.t), a = auto[k], m = man[k];
+      return [c.t, +c.e||3, a || m || '', a ? 'd' : m ? 'm' : ''];
+    })};
+  });
 }
 
 /* --- Firebase bağlantısı --- */
