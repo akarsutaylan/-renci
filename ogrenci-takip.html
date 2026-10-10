@@ -1345,7 +1345,7 @@ function viewDashboard(){
       ${recentStudies.map(x=>`<tr onclick="go('studentDetail','${x.sid}'); setSubtab('calismalar')" style="cursor:pointer">
         <td class="student-cell">${avatarHtml(x.sid,'sm')}${esc(studentName(x.sid))}</td>
         <td>${subjectChip(x.subject)}</td>
-        <td class="num">${x.hours ? (+x.hours).toLocaleString('tr-TR')+' sa' : ''}</td>
+        <td class="num">${x.hours ? fmtHM(x.hours) : ''}</td>
         <td style="color:var(--muted);font-size:.85rem;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.topic||'')}</td>
         <td style="color:var(--muted);font-size:.82rem;white-space:nowrap">${fmtDate(x.date)}</td>
       </tr>`).join('')}
@@ -1602,10 +1602,15 @@ function studiesTable(list, showStudent=true){
     <td style="white-space:nowrap">${fmtDate(x.date)}</td>
     ${showStudent?`<td class="student-cell">${avatarHtml(x.sid,'sm')}${esc(studentName(x.sid))}</td>`:''}
     <td>${subjectChip(x.subject)}</td>
-    <td class="num">${x.hours ? (+x.hours).toLocaleString('tr-TR')+' sa' : '<span style="color:var(--muted);font-weight:400">—</span>'}</td>
+    <td class="num">${x.hours ? fmtHM(x.hours) : '<span style="color:var(--muted);font-weight:400">—</span>'}</td>
     <td style="font-size:.88rem;white-space:pre-line">${esc(x.topic||'')}</td>
     <td style="text-align:right;white-space:nowrap"><button class="icon-btn danger" onclick="delItem('studies','${x.id}')" title="Sil">${SVG_DEL}</button></td>
   </tr>`).join('')}</tbody></table></div>`;
+}
+/* Süre gösterimi: saat cinsinden kaydı "2 sa 42 dk" biçiminde yazar */
+function fmtHM(hours){
+  const m = Math.round((+hours||0) * 60), h = Math.floor(m / 60), d = m % 60;
+  return h && d ? `${h} sa ${d} dk` : h ? `${h} sa` : `${d} dk`;
 }
 function studyWeekSummary(sid){
   const mon = new Date(); mon.setDate(mon.getDate() - ((mon.getDay()+6)%7));
@@ -1614,8 +1619,8 @@ function studyWeekSummary(sid){
   if(!wk.length) return '';
   const bySub = {}; let tot = 0;
   wk.forEach(x=>{ const h = +x.hours||0; tot += h; bySub[x.subject] = (bySub[x.subject]||0) + h; });
-  const chips = Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${esc(k)} · ${v.toLocaleString('tr-TR')} sa</span>`).join(' ');
-  return `<div class="card panel" style="margin-bottom:16px"><h3>Bu Hafta <span class="chip badge-zero">${wk.length} kayıt · ${tot.toLocaleString('tr-TR')} sa</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div></div>`;
+  const chips = Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${esc(k)} · ${fmtHM(v)}</span>`).join(' ');
+  return `<div class="card panel" style="margin-bottom:16px"><h3>Bu Hafta <span class="chip badge-zero">${wk.length} kayıt · ${fmtHM(tot)}</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div></div>`;
 }
 const SVG_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>';
 const SVG_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
@@ -3558,7 +3563,7 @@ function reportText(s, ym){
     L.push(`Deneme: ${r.ex.length} deneme, ortalama ${r.exOrt!=null?r.exOrt.toFixed(1)+' net':'—'}` +
       (r.exOnceOrt!=null && r.exOrt!=null ? ` (önceki ay ${r.exOnceOrt.toFixed(1)})` : ''));
   }
-  if(r.stSaat) L.push(`Kendi çalışması: ${r.stSaat.toLocaleString('tr-TR')} saat`);
+  if(r.stSaat) L.push(`Kendi çalışması: ${fmtHM(r.stSaat)}`);
   r.muf.forEach(m=>L.push(`Müfredat (${m.sub}): TYT %${m.tyt.pct} · AYT %${m.ayt.pct}`));
   const n = (s.repNotes||{})[ym];
   if(n) L.push('', 'Not: ' + n);
@@ -3596,7 +3601,7 @@ function reportTab(s){
         ${kutu('Ders', r.ls.length, r.saat.toLocaleString('tr-TR')+' saat')}
         ${kutu('Ödev', r.hw.length ? `${r.hwOk}/${r.hw.length}` : '—', r.hw.length ? '%'+Math.round(r.hwOk/r.hw.length*100)+' tamamlandı' : 'ödev verilmedi')}
         ${kutu('Deneme', r.ex.length || '—', r.exOrt!=null ? 'ortalama '+r.exOrt.toFixed(1)+' net' : 'deneme yok')}
-        ${kutu('Kendi Çalışması', r.stSaat ? r.stSaat.toLocaleString('tr-TR')+' sa' : '—', r.st.length+' kayıt')}
+        ${kutu('Kendi Çalışması', r.stSaat ? fmtHM(r.stSaat) : '—', r.st.length+' kayıt')}
       </div>
     </div>
     ${r.konular.length ? `<div class="rep-sec">
@@ -3625,7 +3630,7 @@ function reportTab(s){
     </div>` : ''}
     ${r.stSaat ? `<div class="rep-sec">
       <h4>Kendi çalışma kayıtları</h4>
-      <p style="font-size:.88rem">Toplam ${r.stSaat.toLocaleString('tr-TR')} saat · ${Object.entries(r.stDagilim).map(([k,v])=>esc(k)+' '+v.toLocaleString('tr-TR')+' sa').join(' · ')}</p>
+      <p style="font-size:.88rem">Toplam ${fmtHM(r.stSaat)} · ${Object.entries(r.stDagilim).map(([k,v])=>esc(k)+' '+fmtHM(v)).join(' · ')}</p>
     </div>` : ''}
     <div class="rep-sec">
       <h4>Öğretmen notu</h4>

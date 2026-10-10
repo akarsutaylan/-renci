@@ -365,6 +365,9 @@ button,input,select,textarea{font-family:var(--font)}
 .modal{border-radius:14px;border:1px solid var(--line)}
 .modal-backdrop{background:rgba(12,12,14,.32);backdrop-filter:blur(2px)}
 .empty .emoji{display:none}
+.hm{display:flex;align-items:center;gap:6px}
+.hm input{width:100%;min-width:0;text-align:center;font-variant-numeric:tabular-nums}
+.hm span{font-size:.82rem;color:var(--muted);flex-shrink:0}
 /* Telefonda altı sekme: yana kaydırılabilir satır */
 @media(max-width:560px){.tabs{display:flex;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{flex:0 0 auto;padding:10px 10px}}
 </style>
@@ -1205,6 +1208,11 @@ async function deleteExam(srcId){
 }
 
 /* --- Çalışmalarım --- */
+/* Süre gösterimi: saat cinsinden kaydı "2 sa 42 dk" biçiminde yazar */
+function fmtHM(hours){
+  const m = Math.round((+hours||0) * 60), h = Math.floor(m / 60), d = m % 60;
+  return h && d ? `${h} sa ${d} dk` : h ? `${h} sa` : `${d} dk`;
+}
 function viewStudies(){
   const td = today();
   const list = Object.entries(inputs.studies || {}).map(([id,x])=>({id, ...x})).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.at||0)-(a.at||0));
@@ -1216,19 +1224,22 @@ function viewStudies(){
     <div class="form-grid">
       <div class="field full"><label>Ders</label><select id="s_subject">${SUBJECT_LIST.map(d=>`<option>${d}</option>`).join('')}</select></div>
       <div class="field"><label>Tarih</label><input id="s_date" type="date" value="${td}"></div>
-      <div class="field"><label>Süre (saat)</label><input id="s_hours" type="text" inputmode="decimal" placeholder="örn. 1,5"></div>
+      <div class="field"><label>Süre</label><div class="hm">
+        <input id="s_h" type="text" inputmode="numeric" maxlength="2" placeholder="0" aria-label="Saat"><span>sa</span>
+        <input id="s_m" type="text" inputmode="numeric" maxlength="2" placeholder="0" aria-label="Dakika"><span>dk</span>
+      </div></div>
       <div class="field full"><label>Ne çalıştın?</label><textarea id="s_topic" placeholder="Örn. Türev alma kuralları, 60 soru çözdüm; zincir kuralında zorlandım"></textarea></div>
     </div>
     <div class="modal-actions" style="margin-top:10px"><button class="btn btn-sm" onclick="saveStudy()">Kaydet</button></div>
   </div>`;
-  const summary = wk.length ? `<div class="section-title">Bu hafta · ${tot.toLocaleString('tr-TR')} saat</div>
-    <div class="week-chips">${Object.entries(bySub).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v.toLocaleString('tr-TR')} sa</span>`).join('')}</div>` : '';
+  const summary = wk.length ? `<div class="section-title">Bu hafta · ${fmtHM(tot)}</div>
+    <div class="week-chips">${Object.entries(bySub).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${fmtHM(v)}</span>`).join('')}</div>` : '';
   let items = ''; let lastDate = null;
   list.forEach(x=>{
     if(x.date !== lastDate){ items += `<div class="section-title">${x.date===td?'Bugün':fmtDate(x.date)} · ${WD_LONG[dayIdx(x.date)]}</div>`; lastDate = x.date; }
     items += `<div class="item">
       <div class="body">
-        <div class="chips" style="margin:0 0 4px">${subjectChip(x.subject)}${x.hours?`<span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${(+x.hours).toLocaleString('tr-TR')} sa</span>`:''}</div>
+        <div class="chips" style="margin:0 0 4px">${subjectChip(x.subject)}${x.hours?`<span class="chip" style="background:var(--field-bg);border:1px solid var(--line)">${fmtHM(x.hours)}</span>`:''}</div>
         ${x.topic?`<div class="d" style="color:var(--ink);white-space:pre-line">${esc(x.topic)}</div>`:''}
       </div>
       <button class="icon-btn" onclick="deleteStudy('${x.id}')" title="Sil">🗑</button>
@@ -1238,9 +1249,14 @@ function viewStudies(){
 }
 async function saveStudy(){
   const date = fv('s_date') || today(), subject = fv('s_subject'), topic = fv('s_topic');
-  const hours = parseFloat(fv('s_hours').replace(',','.'));
-  if(!topic && isNaN(hours)){ toastMsg('Süre ya da konu gir'); return; }
-  const rec = {date, subject, hours:isNaN(hours)?0:hours, topic, at:Date.now()};
+  const hs = fv('s_h'), ms = fv('s_m');
+  if((hs && !/^\d{1,2}$/.test(hs)) || (ms && !/^\d{1,2}$/.test(ms))){ toastMsg('Saat ve dakikayı rakamla yaz'); return; }
+  const h = +hs || 0, m = +ms || 0;
+  if(m > 59){ toastMsg('Dakika 0 ile 59 arasında olmalı'); return; }
+  if(h > 23){ toastMsg('Saat 0 ile 23 arasında olmalı'); return; }
+  if(!topic && !h && !m){ toastMsg('Süre ya da konu gir'); return; }
+  const hours = Math.round((h + m/60) * 10000) / 10000;   // kayıt saat cinsinden kalır (panel hesapları değişmez)
+  const rec = {date, subject, hours, topic, at:Date.now()};
   try{ await writeInput({studies:{[uid()]:rec}}); toastMsg('Çalışma kaydedildi ✓'); }
   catch(e){ toastMsg('Kaydedilemedi, tekrar dene'); }
 }
