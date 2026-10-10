@@ -518,13 +518,40 @@ function hwStatus(h){
 /* Programdaki çalışmanın durumu: öğrencinin tiki öğretmenin son durum değişikliğinden yeniyse tik geçerli */
 function planStatus(p){
   const t = ticks[p.id];
+  if(p.occ){   // tekrarlanan çalışmanın bir günü: o günün kendi durumu
+    const cur = (p.done||{})[p.date];
+    if(t && t.status && (+t.at||0) > (cur ? +cur.at||0 : 0)) return t.status;
+    return cur ? cur.s : 'bekliyor';
+  }
   if(t && t.status && (+t.at||0) > (+p.statusAt||0)) return t.status;
   return p.status || 'bekliyor';
+}
+/* Tekrarlanan çalışmalar (öğretmen ayarlar): {k:'d', n} n günde bir · {k:'w', days} haftanın günleri (0 = Pzt) */
+const isRep = p => !!(p && p.rep && ((p.rep.k==='d' && +p.rep.n>=1) || (p.rep.k==='w' && (p.rep.days||[]).length)));
+function planOn(p, ds){
+  if(!isRep(p)) return p.date === ds;
+  if(ds < p.date || (p.until && ds > p.until) || (p.skip||[]).includes(ds)) return false;
+  if(p.rep.k === 'w') return p.rep.days.includes(dayIdx(ds));
+  return Math.round((new Date(ds+'T12:00') - new Date(p.date+'T12:00')) / 864e5) % (+p.rep.n) === 0;
+}
+function repLabel(p){
+  if(!isRep(p)) return '';
+  if(p.rep.k === 'd') return +p.rep.n === 1 ? 'Her gün' : `${p.rep.n} günde bir`;
+  return 'Her ' + [...p.rep.days].sort().map(i=>WD_SHORT[i]).join(', ');
+}
+/* Bir güne düşen çalışmalar; tekrarlananların her günü ayrı bir örnek (kimlik: anahtar@tarih) */
+function occOn(plans, ds){
+  return plans.filter(p=>planOn(p, ds)).map(p=>isRep(p) ? {...p, id:`${p.id}@${ds}`, date:ds, occ:true, baseId:p.id} : p);
+}
+function occById(id){
+  const [key, ds] = String(id).split('@'); if(!ds) return null;
+  const p = planList().find(x=>x.id===key);
+  return p && isRep(p) && planOn(p, ds) ? {...p, id, date:ds, occ:true, baseId:key} : null;
 }
 /* Ödev de çalışma da aynı şekilde işaretlenir (tik belgesindeki hw alanı; anahtar = kaydın kimliği) */
 async function toggleTick(hwId){
   const h = data.homeworks.find(x=>x.id===hwId);
-  const p = h ? null : planList().find(x=>x.id===hwId);
+  const p = h ? null : (planList().find(x=>x.id===hwId) || occById(hwId));
   if(!h && !p) return;
   const next = (h ? hwStatus(h) : planStatus(p))==='yapildi' ? 'bekliyor' : 'yapildi';
   const at = Date.now();
@@ -636,7 +663,7 @@ function viewHome(){
 
   /* 1. Bugün */
   const dersler = (data.lessons||[]).filter(l=>l.date===td && l.status!=='ertelendi').sort((a,b)=>(+a.start||0)-(+b.start||0));
-  const calisma = planList().filter(p=>p.date===td);
+  const calisma = occOn(planList(), td);
   const bugunHw = (data.homeworks||[]).filter(h=>hwDay(h)===td);
   const bugunRows = [
     ...dersler.map(l=>`<div class="hrow">
@@ -755,12 +782,13 @@ function lessonRow(l, td){
 }
 function planRow(p, showDate){
   const col = PLAN_COLORS[p.subject] || 'var(--accent)', done = planStatus(p)==='yapildi';
-  return `<div class="item plan-item ${done?'done':''}" onclick="openPlanForm('${esc(p.id)}')">
+  const tap = p.occ ? `toastMsg('Bu çalışma ${esc(repLabel(p))} tekrarlanır; öğretmenin düzenler. Bitirince kutuya dokun.')` : `openPlanForm('${esc(p.id)}')`;
+  return `<div class="item plan-item ${done?'done':''}" onclick="${tap}">
     <span class="plan-dot" style="background:${col}"></span>
     <div class="body"><div class="t" style="color:${col}">${esc(p.subject)}</div>
       ${p.topic?`<div class="plan-topic">${esc(p.topic)}</div>`:''}
       ${p.note?`<div class="d" style="white-space:pre-line">${esc(p.note)}</div>`:''}
-      <div class="chips"><span class="chip ${p.byStudent?'mine-chip':'badge-zero'}">${p.byStudent?'Çalışma · senin planın':'Çalışma · öğretmeninin planı'}</span>${showDate?`<span class="chip lock-chip">${relGun(p.date)} · ${fmtDate(p.date)}</span>`:''}${done?'<span class="chip hw-yapildi">Yapıldı ✓</span>':''}</div></div>
+      <div class="chips"><span class="chip ${p.byStudent?'mine-chip':'badge-zero'}">${p.byStudent?'Çalışma · senin planın':'Çalışma · öğretmeninin planı'}</span>${p.occ?`<span class="chip lock-chip">↻ ${esc(repLabel(p))}</span>`:''}${showDate?`<span class="chip lock-chip">${relGun(p.date)} · ${fmtDate(p.date)}</span>`:''}${done?'<span class="chip hw-yapildi">Yapıldı ✓</span>':''}</div></div>
     <button class="tick ${done?'on':''}" onclick="event.stopPropagation();toggleTick('${esc(p.id)}')" title="${done?'İşareti kaldır':'Tamamladım'}">✓</button></div>`;
 }
 function openTasks(){ progView = 'gorev'; setTab('program'); }
@@ -768,7 +796,9 @@ function openTasks(){ progView = 'gorev'; setTab('program'); }
 function allTasks(){
   return [
     ...(data.homeworks||[]).map(h=>({kind:'hw', h, due:h.due||'', day:hwDay(h), done:hwStatus(h)==='yapildi'})),
-    ...planList().map(p=>({kind:'plan', p, due:p.date, day:p.date, done:planStatus(p)==='yapildi'})),
+    ...planList().filter(p=>!isRep(p)).map(p=>({kind:'plan', p, due:p.date, day:p.date, done:planStatus(p)==='yapildi'})),
+    ...[...Array(15)].flatMap((_,i)=>occOn(planList().filter(isRep), localDate(new Date(Date.now() + (i-7)*864e5))))
+      .map(p=>({kind:'plan', p, due:p.date, day:p.date, done:planStatus(p)==='yapildi'})),
   ];
 }
 function viewTasks(){
@@ -826,7 +856,7 @@ function viewProgram(){
 }
 function viewWeekPlan(){
   const days = weekDates(planWeekOff), td = today();
-  const plans = planList().filter(p=>p.date>=days[0] && p.date<=days[6]);
+  const plans = days.flatMap(ds=>occOn(planList(), ds));   // bu haftanın çalışmaları (tekrarlananlar gün gün)
   const lessons = (data.lessons||[]).filter(l=>l.status!=='ertelendi' && l.date>=days[0] && l.date<=days[6]);
   const hws = (data.homeworks||[]).filter(h=>hwDay(h) && hwDay(h)>=days[0] && hwDay(h)<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');

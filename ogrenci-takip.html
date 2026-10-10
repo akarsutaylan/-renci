@@ -459,6 +459,12 @@ body.sm .main::before{
 .pw-hw{border-left-color:var(--amber);border-style:dashed;border-left-style:solid}
 .pw-hw .chip{font-size:.66rem;padding:1px 7px}
 .pw-empty{font-size:.76rem;color:var(--muted);padding:4px 2px}
+.pw-rep{font-size:.7rem;color:var(--muted);margin-top:2px;font-weight:500}
+.pw-days{display:flex;gap:5px;flex-wrap:wrap}
+.pw-days label{display:flex;align-items:center;cursor:pointer}
+.pw-days input{position:absolute;opacity:0;pointer-events:none}
+.pw-days span{padding:6px 10px;border:1px solid var(--line);border-radius:7px;font-size:.8rem;font-weight:500;color:var(--muted);background:var(--card)}
+.pw-days input:checked + span{border-color:var(--ink);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .pw-adds{display:flex;gap:6px}
 .pw-adds .pw-add{flex:1}
 .pw-done{opacity:.6}
@@ -3106,11 +3112,13 @@ function studentAlerts(sid){
   const plans = (state.plans||[]).filter(p=>p.sid===sid && p.date);
   const aktivite = [
     ...(state.studies||[]).filter(x=>x.sid===sid).map(x=>x.date),
-    ...plans.filter(p=>p.status==='yapildi').map(p=>tsDay(p.statusAt) || p.date),
-    ...plans.filter(p=>p.byStudent).map(p=>p.date),          // öğrencinin bugüne/geçmişe eklediği (yaptığını yazdığı) çalışma
+    ...plans.filter(p=>!isRep(p) && p.status==='yapildi').map(p=>tsDay(p.statusAt) || p.date),
+    ...plans.filter(isRep).flatMap(p=>Object.entries(p.done||{}).filter(([,v])=>v && v.s==='yapildi').map(([d,v])=>tsDay(v.at) || d)),
+    ...plans.filter(p=>p.byStudent && !isRep(p)).map(p=>p.date),          // öğrencinin bugüne/geçmişe eklediği (yaptığını yazdığı) çalışma
     ...state.homeworks.filter(h=>h.sid===sid && h.byStudent && h.status==='yapildi').map(h=>tsDay(h.updatedAt)),
   ].filter(d=>d && d<=t).sort();
-  const bekleyen = plans.filter(p=>p.date < t && p.date >= shiftDate(t,-7) && p.status!=='yapildi');
+  const bekleyen = [];
+  for(let i=1; i<=7; i++){ const ds = shiftDate(t,-i); plans.forEach(p=>{ if(planOn(p, ds) && occStatus(p, ds)!=='yapildi') bekleyen.push({p, ds}); }); }
   if(aktivite.length){
     const son = aktivite[aktivite.length-1], g = daysDiff(son, t);
     if(g >= 4) out.push({lvl:1, t:`${g} gündür çalışma yok`, d:`son çalışma ${fmtDate(son)} (programa ekleme ya da işaretleme)${bekleyen.length?` · son 1 haftada ${bekleyen.length} çalışma işaretlenmedi`:''}`});
@@ -3181,6 +3189,22 @@ function dashboardWarnPanel(){
    (anahtar = planKey). Kim en son değiştirdiyse onun hali geçerlidir. */
 const PLAN_SUBJECTS = ['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türkçe'];
 const planKey = p => p.srcId || p.id;
+/* Tekrarlanan çalışma (isteğe bağlı): p.rep = {k:'d', n:1|2|3} → n günde bir; {k:'w', days:[0..6]} → haftanın seçili günleri (0 = Pzt).
+   p.date başlangıç, p.until bitiş ('' = süresiz), p.skip atlanan günler. Her uygun gün ayrı işaretlenir: p.done[tarih] = {s, at}.
+   Öğrencinin işareti tik belgesinde "anahtar@tarih" olarak gelir. */
+const isRep = p => !!(p && p.rep && ((p.rep.k==='d' && +p.rep.n>=1) || (p.rep.k==='w' && (p.rep.days||[]).length)));
+function planOn(p, ds){
+  if(!isRep(p)) return p.date === ds;
+  if(ds < p.date || (p.until && ds > p.until) || (p.skip||[]).includes(ds)) return false;
+  if(p.rep.k === 'w') return p.rep.days.includes((new Date(ds+'T12:00').getDay()+6)%7);
+  return Math.round((new Date(ds+'T12:00') - new Date(p.date+'T12:00')) / 864e5) % (+p.rep.n) === 0;
+}
+function occStatus(p, ds){ if(!isRep(p)) return p.status || 'bekliyor'; const d = (p.done||{})[ds]; return d ? d.s : 'bekliyor'; }
+function repLabel(p){
+  if(!isRep(p)) return '';
+  if(p.rep.k === 'd') return +p.rep.n === 1 ? 'Her gün' : `${p.rep.n} günde bir`;
+  return 'Her ' + [...p.rep.days].sort().map(i=>CAL_DAYS[i]).join(', ');
+}
 function plansOf(sid){ return (state.plans||[]).filter(p=>p.sid===sid); }
 function subjectColor(n){ const x = SUBJECTS.find(s=>s.n===n); return x ? x.fg : 'var(--accent)'; }
 function weekDates(off){
@@ -3200,7 +3224,9 @@ function hwGivenDate(h){
 const hwDay = h => h.due || hwGivenDate(h);
 function studentProgramTab(s){
   const off = route.planWeek || 0, days = weekDates(off), td = today();
-  const plans = plansOf(s.id).filter(p=>p.date>=days[0] && p.date<=days[6]);
+  const all = plansOf(s.id);
+  const occ = days.flatMap(ds=>all.filter(p=>planOn(p, ds)).map(p=>({p, ds})));   // bu haftanın çalışma örnekleri
+  const plans = occ.map(o=>o.p);
   const lessons = state.lessons.filter(l=>l.sid===s.id && isActive(l) && l.date>=days[0] && l.date<=days[6]);
   const hws = state.homeworks.filter(h=>h.sid===s.id && hwDay(h)>=days[0] && hwDay(h)<=days[6]);
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
@@ -3209,15 +3235,16 @@ function studentProgramTab(s){
   const cols = days.map((ds,di)=>{
     const d = new Date(ds+'T12:00');
     const dayLessons = lessons.filter(l=>l.date===ds).sort((a,b)=>(+a.start||0)-(+b.start||0));
-    const dayPlans = plans.filter(p=>p.date===ds);
+    const dayPlans = all.filter(p=>planOn(p, ds));
     const dayHw = hws.filter(h=>hwDay(h)===ds);
     const items = [
       ...dayLessons.map(l=>`<div class="pw-item pw-lesson" onclick="openLessonForm('${l.id}')" title="Ders kaydını aç — öğrencinin programında kilitli">
         <div class="pw-t">🔒 ${esc(l.subject)}${l.start!=null?` <span class="pw-time">${fmtClock(+l.start)}</span>`:''}</div>
         ${l.topic?`<div class="pw-d">${esc(l.topic)}</div>`:''}</div>`),
-      ...dayPlans.map(p=>`<div class="pw-item pw-plan ${p.status==='yapildi'?'pw-done':''}" style="border-left-color:${subjectColor(p.subject)}" onclick="openPlanForm('${p.id}')">
-        <div class="pw-t" style="color:${subjectColor(p.subject)}">${esc(p.subject)}${p.byStudent?' <span title="Öğrenci ekledi ya da en son öğrenci düzenledi">👤</span>':''}${p.status==='yapildi'?' <span class="chip hw-yapildi">Yapıldı ✓</span>':''}</div>
-        ${p.topic?`<div class="pw-d pw-topic">${esc(p.topic)}</div>`:''}${p.note?`<div class="pw-d">${esc(p.note)}</div>`:''}</div>`),
+      ...dayPlans.map(p=>{ const done = occStatus(p, ds)==='yapildi'; return `<div class="pw-item pw-plan ${done?'pw-done':''}" style="border-left-color:${subjectColor(p.subject)}" onclick="openPlanForm('${p.id}',null,null,'${ds}')">
+        <div class="pw-t" style="color:${subjectColor(p.subject)}">${esc(p.subject)}${p.byStudent?' <span title="Öğrenci ekledi ya da en son öğrenci düzenledi">👤</span>':''}${done?' <span class="chip hw-yapildi">Yapıldı ✓</span>':''}</div>
+        ${isRep(p)?`<div class="pw-rep" title="Tekrarlanan çalışma">↻ ${esc(repLabel(p))}</div>`:''}
+        ${p.topic?`<div class="pw-d pw-topic">${esc(p.topic)}</div>`:''}${p.note?`<div class="pw-d">${esc(p.note)}</div>`:''}</div>`; }),
       ...dayHw.map(h=>`<div class="pw-item pw-hw" onclick="openHomeworkForm('${h.id}','${s.id}')" title="Ödevi aç">
         <div class="pw-t">📝 ${esc(h.subject||'Ödev')} <span class="chip hw-${esc(h.status)}">${HW_LABEL[h.status]||esc(h.status)}</span>${h.due?'':'<span class="chip plan-lock-chip" title="Teslim tarihi girilmemiş; verildiği günde gösteriliyor">tarihsiz</span>'}</div>
         <div class="pw-d">${esc(h.desc||'')}</div></div>`),
@@ -3240,36 +3267,58 @@ function studentProgramTab(s){
     </div>
   </div>
   <div class="plan-summary">
-    <span class="chip badge-zero">Bu hafta ${plans.filter(p=>p.status==='yapildi').length + hws.filter(h=>h.status==='yapildi').length}/${plans.length + hws.length} görev tamam</span>
-    <span class="chip">${plans.length} çalışma</span>
+    <span class="chip badge-zero">Bu hafta ${occ.filter(o=>occStatus(o.p,o.ds)==='yapildi').length + hws.filter(h=>h.status==='yapildi').length}/${occ.length + hws.length} görev tamam</span>
+    <span class="chip">${occ.length} çalışma</span>
     <span class="chip plan-lock-chip">🔒 Bu hafta seninle ${lessons.length} ders</span>
     ${hws.length?`<span class="chip hw-bekliyor">📝 Bu hafta ${hws.length} ödev teslimi</span>`:''}
     ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${v}</span>`).join('')}
   </div>
   <div class="pw-grid">${cols}</div>
-  <p class="hint-text" style="margin-top:10px">Her çalışma yalnızca eklendiği tarihte görünür, sonraki haftalara taşınmaz. Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 ödevler: teslim tarihi varsa teslim gününde, yoksa verildiği günde görünür. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür; ödevleri de çalışmaları da oradan "yaptım" diye işaretler, işareti buraya anında gelir. Ödevler ayrıca öğrencinin sayfasındaki Görevler listesinde toplanır.</p>`;
+  <p class="hint-text" style="margin-top:10px">Çalışma varsayılan olarak yalnızca eklendiği gün görünür; formdaki Tekrar alanıyla her gün, 2-3 günde bir ya da haftanın belirli günleri için tekrarlatabilirsin (↻). Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 ödevler: teslim tarihi varsa teslim gününde, yoksa verildiği günde görünür. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür; ödevleri de çalışmaları da oradan "yaptım" diye işaretler, işareti buraya anında gelir. Ödevler ayrıca öğrencinin sayfasındaki Görevler listesinde toplanır.</p>`;
 }
-function openPlanForm(id, sid, date){
+function openPlanForm(id, sid, date, occ){
   const p = id ? (state.plans||[]).find(x=>x.id===id)
                : {sid, date: date || today(), subject:PLAN_SUBJECTS[0], topic:'', note:''};
   if(!p) return;
+  const r = isRep(p) ? p.rep : null;
+  const repVal = !r ? '' : r.k==='w' ? 'w' : 'd'+r.n;
+  const wdays = r && r.k==='w' ? r.days : [(new Date((p.date||today())+'T12:00').getDay()+6)%7];
+  const occOpt = isRep(p) && occ;
   const s = student(p.sid); if(!s) return;
   openModal(`
   <h3>${id?'Çalışmayı Düzenle':'Programa Çalışma Ekle'} <span style="font-weight:500;color:var(--muted)">· ${esc(s.name)}</span></h3>
   ${p.byStudent?`<p class="hint-text" style="margin:-8px 0 12px">👤 Bunu öğrenci ekledi ya da en son öğrenci düzenledi. Senin değişikliğin geçerli olur.</p>`:''}
   <div class="form-grid">
     <div class="field"><label>Ders</label><select id="f_psub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="field"><label>Tarih</label><input id="f_pdate" type="date" value="${esc(p.date||today())}"></div>
+    <div class="field"><label id="f_pdatelbl">${r?'Başlangıç':'Tarih'}</label><input id="f_pdate" type="date" value="${esc(p.date||today())}"></div>
+    <div class="field"><label>Tekrar</label><select id="f_prep" onchange="planRepUI()">
+      ${[['','Tekrarlanmaz'],['d1','Her gün'],['d2','2 günde bir'],['d3','3 günde bir'],['w','Haftanın belirli günleri']].map(([v,l])=>`<option value="${v}" ${v===repVal?'selected':''}>${l}</option>`).join('')}
+    </select></div>
+    <div class="field" id="f_puntilbox"><label>Bitiş (isteğe bağlı)</label><input id="f_puntil" type="date" value="${esc(p.until||'')}"></div>
+    <div class="field full" id="f_pdaysbox"><label>Günler</label><div class="pw-days">${CAL_DAYS.map((d,i)=>`<label><input type="checkbox" id="f_pd${i}" ${wdays.includes(i)?'checked':''}><span>${d}</span></label>`).join('')}</div></div>
     <div class="field full"><label>Konu</label><input id="f_ptopic" list="planTopics" value="${esc(p.topic||'')}" placeholder="Müfredattan seç ya da yaz · örn. Türev – zincir kuralı"><datalist id="planTopics"></datalist></div>
     <div class="field full"><label>Ne yapılacak?</label><textarea id="f_pnote" placeholder="Örn. Derste çözdüğümüz 20 soruyu tekrar et, 3D yayınları test 4">${esc(p.note||'')}</textarea></div>
-    <div class="field"><label>Durum</label><select id="f_pstatus"><option value="bekliyor" ${p.status!=='yapildi'?'selected':''}>Bekliyor</option><option value="yapildi" ${p.status==='yapildi'?'selected':''}>Yapıldı</option></select></div>
+    <div class="field" id="f_pstatusbox"><label>${occOpt?`Durum · ${fmtDate(occ)}`:'Durum'}</label><select id="f_pstatus"><option value="bekliyor" ${occStatus(p, occ||p.date)!=='yapildi'?'selected':''}>Bekliyor</option><option value="yapildi" ${occStatus(p, occ||p.date)==='yapildi'?'selected':''}>Yapıldı</option></select></div>
   </div>
   <div class="modal-actions">
-    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="delPlan('${id}')">Sil</button>`:''}
+    ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="delPlan('${id}')">${r?'Seriyi Sil':'Sil'}</button>`:''}
+    ${occOpt?`<button class="btn btn-ghost" onclick="skipOcc('${id}','${occ}')" title="Seri devam eder, yalnızca bu gün kaldırılır">Sadece bu günü kaldır</button>`:''}
     <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
-    <button class="btn btn-primary" onclick="savePlan('${id||''}','${p.sid}')">Kaydet</button>
+    <button class="btn btn-primary" onclick="savePlan('${id||''}','${p.sid}','${occOpt?occ:''}')">Kaydet</button>
   </div>`);
-  planTopicList();
+  planTopicList(); planRepUI();
+}
+/* Tekrar seçimine göre alanları göster/gizle */
+function planRepUI(){
+  const v = fv('f_prep'), show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? '' : 'none'; };
+  show('f_pdaysbox', v==='w'); show('f_puntilbox', !!v);
+  const l = document.getElementById('f_pdatelbl'); if(l) l.textContent = v ? 'Başlangıç' : 'Tarih';
+}
+/* Tekrarlanan seriden yalnızca bir günü çıkar */
+function skipOcc(id, ds){
+  const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
+  p.skip = [...new Set([...(p.skip||[]), ds])]; p.updatedAt = Date.now();
+  save(); closeModal(); render(); toast(`${fmtDate(ds)} bu seriden kaldırıldı`);
 }
 /* Programdaki güne ödev ver: ödev formu o öğrenci ve teslim günüyle açılır */
 function addHwOn(sid, ds){
@@ -3280,19 +3329,30 @@ function planTopicList(){
   const dl = document.getElementById('planTopics'), sel = document.getElementById('f_psub');
   if(dl && sel) dl.innerHTML = (CURRICULUM[sel.value] ? currTopics(sel.value) : []).map(c=>`<option value="${esc(c.t)}">`).join('');
 }
-function savePlan(id, sid){
+function savePlan(id, sid, occ){
   const date = fv('f_pdate');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast('Tarih seç'); return; }
+  const rv = fv('f_prep'), until = rv ? fv('f_puntil') : '';
+  let repRule = null;
+  if(rv === 'w'){
+    const days = [0,1,2,3,4,5,6].filter(i=>{ const c = document.getElementById('f_pd'+i); return c && c.checked; });
+    if(!days.length){ toast('En az bir gün seç'); return; }
+    repRule = {k:'w', days};
+  } else if(rv) repRule = {k:'d', n:+rv.slice(1)};
+  if(until && until < date){ toast('Bitiş, başlangıçtan önce olamaz'); return; }
   const data = {date, subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
   state.plans = state.plans || [];
   const st = fv('f_pstatus') || 'bekliyor';
+  const applyRep = p => { if(repRule){ p.rep = repRule; p.until = until; } else { delete p.rep; delete p.until; delete p.skip; } };
   if(id){
     const p = state.plans.find(x=>x.id===id); if(!p) return;
-    if((p.status||'bekliyor') !== st){ p.status = st; p.statusAt = Date.now(); }
     Object.assign(p, data); delete p.day; delete p.start; delete p.dur;
+    applyRep(p);
+    if(isRep(p)){ if(occ && occStatus(p, occ) !== st){ p.done = {...(p.done||{}), [occ]:{s:st, at:Date.now()}}; } }
+    else if((p.status||'bekliyor') !== st){ p.status = st; p.statusAt = Date.now(); }
   }
-  else state.plans.push({id:uid(), sid, ...data, status:st, statusAt:Date.now()});
-  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : `${fmtDate(date)} · ${data.subject} eklendi`);
+  else { const p = {id:uid(), sid, ...data}; applyRep(p); if(!isRep(p)){ p.status = st; p.statusAt = Date.now(); } state.plans.push(p); }
+  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : repRule ? `${data.subject} · ${repLabel({rep:repRule})} tekrarlanacak` : `${fmtDate(date)} · ${data.subject} eklendi`);
 }
 function delPlan(id){
   const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
@@ -3954,7 +4014,8 @@ function studentPayload(s){
     lessons: state.lessons.filter(l=>l.sid===s.id).map(l=>({date:l.date, start:l.start, hours:l.hours, subject:l.subject, topic:l.topic||'', status:l.status||'', at:l.updatedAt||0})),
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, given:hwGivenDate(h), status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
-    plans: plansOf(s.id).filter(p=>p.date >= planDateFrom(Date.now() - 56*86400000, 0)).map(p=>({id:planKey(p), date:p.date, status:p.status||'bekliyor', statusAt:p.statusAt||0, subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
+    plans: plansOf(s.id).filter(p=>p.date >= planDateFrom(Date.now() - 56*86400000, 0) || (isRep(p) && (!p.until || p.until >= shiftDate(today(), -56)))).map(p=>({id:planKey(p), date:p.date, status:p.status||'bekliyor', statusAt:p.statusAt||0,
+      ...(isRep(p) ? {rep:p.rep, until:p.until||'', skip:p.skip||[], done:Object.fromEntries(Object.entries(p.done||{}).filter(([d])=>d >= shiftDate(today(), -56)))} : {}), subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
     curriculum: curriculumPayload(s),
   };
@@ -4385,6 +4446,21 @@ function applyTicks(sid, data){
   for(const [hwId, t] of Object.entries(data.hw||{})){
     const h = state.homeworks.find(x=>x.id===hwId && x.sid===sid);
     if(!h && t && t.status){
+      // Tekrarlanan çalışmanın bir günü: "anahtar@tarih"
+      if(hwId.includes('@')){
+        const [key, ds] = hwId.split('@');
+        const rp = (state.plans||[]).find(x=>x.sid===sid && planKey(x)===key);
+        if(rp && isRep(rp) && /^\d{4}-\d{2}-\d{2}$/.test(ds)){
+          const cur = (rp.done||{})[ds];
+          if((+t.at||0) > (cur ? +cur.at||0 : 0) && (cur ? cur.s : 'bekliyor') !== t.status){
+            rp.done = {...(rp.done||{}), [ds]:{s:t.status, at:+t.at}}; changed++;
+            msg = `${first} çalışmayı ${t.status==='yapildi'?'tamamladı':'yapılmadı olarak geri aldı'}: ${rp.subject} · ${fmtDate(ds)}`;
+          }
+          // İşlenmiş eski günlük işaretleri tik belgesinden temizle (belge şişmesin)
+          if(ds < shiftDate(today(), -21) && (rp.done||{})[ds] && rp.done[ds].s === t.status) removeStudentInput(sid, 'hw', hwId);
+        }
+        continue;
+      }
       // Programdaki çalışma işareti (öğrenci ödev gibi tikler)
       const p = (state.plans||[]).find(x=>x.sid===sid && planKey(x)===hwId);
       if(p && (+t.at||0) > (+p.statusAt||0) && (p.status||'bekliyor') !== t.status){
