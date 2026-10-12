@@ -375,6 +375,12 @@ button,input,select,textarea{font-family:var(--font)}
 .item.shared .date{background:var(--card);border-color:color-mix(in srgb,var(--violet) 25%,transparent)}
 .item.shared .date b{color:var(--violet)}
 .item.shared .note-acts .op{background:var(--card)}
+.shared-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--violet);margin-left:5px;vertical-align:2px}
+.section-title .shared-dot{margin:0}
+.seg-scroll{overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.seg-scroll.end{-webkit-mask-image:none;mask-image:none}
+.seg-scroll::-webkit-scrollbar{display:none}
+.seg-scroll button{flex:1 0 auto;white-space:nowrap;padding:8px 12px}
 .shared-tag{display:inline-block;font-size:.66rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--violet);background:var(--card);border-radius:5px;padding:1px 6px;vertical-align:1px}
 </style>
 <script>try{var t=localStorage.getItem('ogrenciTema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
@@ -1066,14 +1072,16 @@ function parseNote(path, prefix){
   return {ders, seviye, file, date: m ? m[1] : '', title: (m ? m[2] : base).trim(), url};
 }
 /* --- Ortak materyaller: notlar/ortak/ altındaki dosyalar; her öğrenci yalnızca öğretmenin açtıklarını görür ---
-   notlar/ortak/[klasör/]<YYYY-AA-GG Başlık>.<uzantı> → {key, folder, date, title, ext, file, url} */
+   notlar/ortak/[ders/][alt-klasör/]<YYYY-AA-GG Başlık>.<uzantı> → {key, ders, dersAd, folder, date, title, ext, file, url}
+   İlk klasör dersi belirler (fizik, kimya, Rehberlik…); doğrudan ortak/ içindekiler "Genel" sekmesine düşer. */
 const SHARED_DIR = 'notlar/ortak/';
 function parseShared(path){
   const key = path.slice(SHARED_DIR.length), parts = key.split('/'), file = parts.pop();
   const dot = file.lastIndexOf('.'), base = dot > 0 ? file.slice(0, dot) : file, ext = dot > 0 ? file.slice(dot+1).toUpperCase() : '';
   const m = base.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
   const url = new URL(path.split('/').map(encodeURIComponent).join('/'), location.href).href;
-  return {key, folder: parts.join(' / '), file, ext, date: m ? m[1] : '', title: (m ? m[2] : base).trim(), url};
+  const ders = parts.length ? (studentSlug(parts[0]) || 'genel') : 'genel', dersAd = parts.length ? parts[0] : 'Genel';
+  return {key, ders, dersAd, folder: parts.slice(1).join(' / '), file, ext, date: m ? m[1] : '', title: (m ? m[2] : base).trim(), url};
 }
 function sharedVisible(){
   const allow = new Set(data.shared || []);
@@ -1081,7 +1089,7 @@ function sharedVisible(){
 }
 function sharedSection(list){
   if(!list.length) return '';
-  return `<div class="section-title">Ortak materyaller · ${list.length}</div>
+  return `<div class="section-title"><span class="shared-dot"></span>Ortak materyaller · ${list.length}</div>
   ${list.map(f=>`<div class="item shared">
     <div class="date"><b class="sm">${esc(f.ext || 'DOSYA')}</b></div>
     <div class="body">
@@ -1099,25 +1107,29 @@ function noteSort(a,b){
   if(a.date !== b.date) return a.date ? -1 : 1; // tarihliler üstte
   return a.title.localeCompare(b.title,'tr');
 }
+const dersLabel = d => DERS_LABEL[d] || (notesState.shared.find(f=>f.ders===d)||{}).dersAd || cap(d);
 const orderBy = (list, order) => [...new Set(list)].sort((a,b)=>{ const i=order.indexOf(a), j=order.indexOf(b); return (i<0?99:i)-(j<0?99:j) || a.localeCompare(b,'tr'); });
 const cap = s => s ? s[0].toUpperCase()+s.slice(1) : s;
 function viewNotes(){
   if(notesState.status==='idle'){ loadNotes(); }
   if(notesState.status==='idle' || notesState.status==='loading') return emptyState('⏳','Notlar yükleniyor','Bir saniye…');
   if(notesState.status==='error') return emptyState('⚠️','Notlar şu an yüklenemedi, sayfayı yenile','') + `<div style="text-align:center;margin-top:-10px"><button class="link-btn" onclick="retryNotes()">Tekrar dene</button></div>`;
-  const all = notesState.files, shared = sharedSection(sharedVisible());
-  if(!all.length) return shared ? shared + `<div class="section-title">Ders notları</div><div class="hempty" style="padding:6px 4px">Henüz ders notu yok.</div>`
-    : emptyState('📂','Henüz ders notu yok','Öğretmenin not eklediğinde burada görünür.');
-  const dersList = orderBy(all.map(f=>f.ders), DERS_ORDER);
+  const all = notesState.files, sharedAll = sharedVisible();
+  if(!all.length && !sharedAll.length) return emptyState('📂','Henüz ders notu yok','Öğretmenin not eklediğinde burada görünür.');
+  // Ders sekmeleri: ders notları ve ortak materyaller birlikte; "Genel" en sonda
+  const dersList = orderBy([...all.map(f=>f.ders), ...sharedAll.map(f=>f.ders)], [...DERS_ORDER, 'genel']).sort((a,b)=>(a==='genel')-(b==='genel'));
   if(!dersList.includes(notesDers)) notesDers = dersList[0];
+  const hasShared = new Set(sharedAll.map(f=>f.ders));
+  let html = '';
+  if(dersList.length > 1) html += `<div class="seg ${dersList.length > 3 ? 'seg-scroll' : ''}" style="margin-bottom:8px" onscroll="this.classList.toggle('end', this.scrollLeft + this.clientWidth >= this.scrollWidth - 4)">${dersList.map(d=>`<button class="${notesDers===d?'on':''}" onclick="setNotesDers('${esc(d)}')">${esc(dersLabel(d))}${hasShared.has(d) ? '<span class="shared-dot" title="Ortak materyal var"></span>' : ''}</button>`).join('')}</div>`;
+  html += sharedSection(sharedAll.filter(f=>f.ders===notesDers));
   const inDers = all.filter(f=>f.ders===notesDers);
+  if(!inDers.length) return html;
   const sevList = orderBy(inDers.map(f=>f.seviye), SEVIYE_ORDER);
   if(!sevList.includes(notesSeviye)) notesSeviye = sevList[0];
   const list = inDers.filter(f=>f.seviye===notesSeviye).sort(noteSort);
-  let html = shared ? shared + `<div class="section-title" style="margin-top:22px">Ders notları</div>` : '';
-  if(dersList.length > 1) html += `<div class="seg" style="margin-bottom:8px">${dersList.map(d=>`<button class="${notesDers===d?'on':''}" onclick="setNotesDers('${esc(d)}')">${esc(DERS_LABEL[d]||cap(d))}</button>`).join('')}</div>`;
-  if(sevList.length > 1) html += `<div class="seg" style="margin-bottom:8px">${sevList.map(v=>`<button class="${notesSeviye===v?'on':''}" onclick="setNotesSeviye('${esc(v)}')">${esc(SEVIYE_LABEL[v]||v.toUpperCase())}</button>`).join('')}</div>`;
-  html += `<div class="section-title">${esc(DERS_LABEL[notesDers]||cap(notesDers))} · ${esc(SEVIYE_LABEL[notesSeviye]||notesSeviye.toUpperCase())} · ${list.length} not</div>`;
+  if(sevList.length > 1) html += `<div class="seg" style="margin:${hasShared.has(notesDers) ? '18px' : '0'} 0 8px">${sevList.map(v=>`<button class="${notesSeviye===v?'on':''}" onclick="setNotesSeviye('${esc(v)}')">${esc(SEVIYE_LABEL[v]||v.toUpperCase())}</button>`).join('')}</div>`;
+  html += `<div class="section-title">${esc(dersLabel(notesDers))} · ${esc(SEVIYE_LABEL[notesSeviye]||notesSeviye.toUpperCase())} · ${list.length} not</div>`;
   html += list.map(f=>`<div class="item">
     ${f.date ? dateBox(f.date) : '<div class="date"><b class="sm">PDF</b><span>not</span></div>'}
     <div class="body">

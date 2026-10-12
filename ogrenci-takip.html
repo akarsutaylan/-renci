@@ -904,6 +904,12 @@ body.sm .main::before{content:'Öğrenci modu';background:var(--card);color:var(
 .mat-chip i{width:8px;height:8px;border-radius:50%;background:var(--line-strong)}
 .mat-chip.on{border-color:color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--ink);font-weight:500}
 .mat-chip.on i{background:var(--c)}
+.mat-upl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 14px;font-size:.82rem;color:var(--muted)}
+.mat-upl span{margin-right:2px}
+.mat-upl a,.mat-card a.btn,.topbar a.btn{text-decoration:none}
+.mat-group{font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 2px 8px}
+.mat-group:first-of-type{margin-top:4px}
+.mat-group span{font-weight:500;opacity:.7;margin-left:4px}
 .mat-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.88rem;padding:12px 16px}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -2195,6 +2201,8 @@ function studentNotesTab(s){
    Yeni yüklenen dosya kimseye açık değildir; öğrenciler işaretlenince o öğrencilerin sayfasında
    "Notlar" sekmesinde ayrı renkte görünür. */
 const SHARED_DIR = 'notlar/ortak/';
+/* İlk klasör dersi belirler; öğrenci sayfasında o dersin sekmesinde görünür. Doğrudan ortak/ içindekiler "Genel". */
+const MAT_DERS = {fizik:'Fizik', kimya:'Kimya', matematik:'Matematik'};
 let matState = {status:'idle', files:[], err:''}; // idle | loading | ok | error
 async function loadMaterials(){
   const repo = notesRepo();
@@ -2208,7 +2216,8 @@ async function loadMaterials(){
       const key = t.path.slice(SHARED_DIR.length), parts = key.split('/'), file = parts.pop();
       const dot = file.lastIndexOf('.'), base = dot > 0 ? file.slice(0, dot) : file;
       const m = base.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
-      return {key, file, folder:parts.join(' / '), ext: dot > 0 ? file.slice(dot+1).toUpperCase() : '', date: m ? m[1] : '', title:(m ? m[2] : base).trim(),
+      const ders = parts.length ? (studentSlug(parts[0]) || 'genel') : 'genel';
+      return {key, file, ders, dersAd: parts.length ? (MAT_DERS[ders] || parts[0]) : 'Genel', folder:parts.slice(1).join(' / '), ext: dot > 0 ? file.slice(dot+1).toUpperCase() : '', date: m ? m[1] : '', title:(m ? m[2] : base).trim(),
         url:`${siteUrl()}/${t.path.split('/').map(encodeURIComponent).join('/')}`};
     }).sort((a,b)=> (b.date||'').localeCompare(a.date||'') || a.title.localeCompare(b.title,'tr'));
     matState = {status:'ok', files, err:''};
@@ -2235,14 +2244,16 @@ function viewMaterials(){
     <div><h1>Ortak Materyaller</h1><div class="sub">${matState.status==='ok' || files.length ? `${files.length} dosya · tüm öğrenciler için ders dışı paylaşımlar` : 'tüm öğrenciler için ders dışı paylaşımlar'}</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="loadMaterials()" ${matState.status==='loading'?'disabled':''}>${matState.status==='loading'?'Yükleniyor…':'Yenile'}</button>
-      ${gh ? `<a class="btn btn-primary" href="${esc(`${gh}/upload/main/notlar/ortak`)}" target="_blank" rel="noopener">${SVG_OPEN} GitHub'a Yükle</a>` : ''}
+      ${gh ? `<a class="btn btn-ghost" href="${esc(`${gh}/tree/main/notlar/ortak`)}" target="_blank" rel="noopener">${SVG_OPEN} GitHub'da Aç</a>` : ''}
     </div>
   </div>`;
-  const help = `<p class="hint-text" style="margin-top:14px">Dosyaları deponun <b>notlar/ortak/</b> klasörüne yükle (PDF, görsel, Word… her tür olur). Ad biçimi isteğe bağlı: <b>2026-10-12 Deneme Taktikleri.pdf</b>. İstersen alt klasörle grupla (örn. <b>notlar/ortak/Rehberlik/…</b>). Yeni dosya kimseye açık değildir; öğrencileri işaretleyince o öğrencilerin <b>Notlar</b> sekmesinde ayrı renkte, "Ortak" etiketiyle görünür. GitHub'a yükledikten sonra listede görünmesi bir iki dakika sürebilir; <b>Yenile</b>'ye bas.</p>`;
+  const upl = gh ? `<div class="mat-upl"><span>Klasöre yükle:</span>${[...Object.keys(MAT_DERS).map(k=>[`notlar/ortak/${k}`, MAT_DERS[k]]), ['notlar/ortak', 'Genel']].map(([path, l])=>
+    `<a class="btn btn-ghost btn-sm" href="${esc(`${gh}/upload/main/${path}`)}" target="_blank" rel="noopener" title="${esc(path)}/">${esc(l)}</a>`).join('')}</div>` : '';
+  const help = `<p class="hint-text" style="margin-top:14px">Dosyaları deponun <b>notlar/ortak/&lt;ders&gt;/</b> klasörüne yükle (PDF, görsel, Word… her tür olur): <b>notlar/ortak/fizik/</b>, <b>notlar/ortak/kimya/</b>, <b>notlar/ortak/matematik/</b>. Ders dışı başka bir başlık için klasör adını sen koy (örn. <b>notlar/ortak/Rehberlik/</b>); öğrencide ayrı sekme olur. Doğrudan <b>notlar/ortak/</b> içine koyduğun dosyalar <b>Genel</b> sekmesinde görünür. Henüz olmayan klasöre yükleme bağlantısı açılmazsa GitHub'da <b>Add file → Upload files</b> ekranında dosyaları klasörüyle birlikte sürükle. Ad biçimi isteğe bağlı: <b>2026-10-12 Deneme Taktikleri.pdf</b>. Yeni dosya kimseye açık değildir; öğrencileri işaretleyince o öğrencilerin <b>Notlar</b> sekmesinde ilgili dersin sekmesinde, ayrı renkte ve "Ortak" etiketiyle görünür. GitHub'a yükledikten sonra listede görünmesi bir iki dakika sürebilir; <b>Yenile</b>'ye bas.</p>`;
   if(!repo) return head + `<div class="card panel">${emptyState('🔗','Depo adresi yok','Bulut penceresinde öğrenci sayfası adresini <b>https://KULLANICI.github.io/DEPO</b> biçiminde gir; materyaller o depodan okunur.')}</div>`;
   if(matState.status==='error' && !files.length) return head + `<div class="card panel">${emptyState('⚠️','Liste şu an alınamadı','İnternet bağlantısını kontrol edip Yenile\'ye bas.')}</div>` + help;
-  if(!files.length) return head + `<div class="card panel">${matState.status==='ok' ? emptyState('📁','Henüz ortak materyal yok','GitHub\'a Yükle ile notlar/ortak/ klasörüne ilk dosyanı ekle.') : emptyState('⏳','Yükleniyor','Bir saniye…')}</div>` + help;
-  const cards = files.map(f=>{
+  if(!files.length) return head + upl + `<div class="card panel">${matState.status==='ok' ? emptyState('📁','Henüz ortak materyal yok','Yukarıdan bir dersin klasörüne ilk dosyanı yükle.') : emptyState('⏳','Yükleniyor','Bir saniye…')}</div>` + help;
+  const card = f=>{
     const on = new Set(matSids(f.key)), n = students.filter(s=>on.has(s.id)).length, k = jsArg(f.key);
     const status = !n ? '<span class="chip badge-zero">Kimseye açık değil</span>' : n===students.length ? '<span class="chip mat-on">Herkese açık</span>' : `<span class="chip mat-on">${n}/${students.length} öğrenci</span>`;
     return `<div class="card mat-card">
@@ -2258,8 +2269,13 @@ function viewMaterials(){
         return `<button class="mat-chip ${sel?'on':''}" style="--c:${c}" onclick="toggleMat(${k},'${s.id}')" aria-pressed="${sel}"><i></i>${esc(s.name)}</button>`;
       }).join('') : '<span class="hint-text">Önce öğrenci ekle.</span>'}</div>
     </div>`;
-  }).join('');
-  return head + (matState.status==='error' ? `<p class="hint-text" style="color:var(--amber);margin-bottom:10px">Liste yenilenemedi; son alınan liste gösteriliyor.</p>` : '') + cards + help;
+  };
+  // Derse göre gruplu: Fizik, Kimya, Matematik, diğer başlıklar, en sonda Genel
+  const order = d => { const i = Object.keys(MAT_DERS).indexOf(d); return d==='genel' ? 999 : i < 0 ? 100 : i; };
+  const groups = [...new Set(files.map(f=>f.ders))].sort((a,b)=>order(a)-order(b) || a.localeCompare(b,'tr'));
+  const cards = groups.map(d=>{ const g = files.filter(f=>f.ders===d);
+    return `<div class="mat-group">${esc(g[0].dersAd)} <span>${g.length}</span></div>` + g.map(card).join(''); }).join('');
+  return head + upl + (matState.status==='error' ? `<p class="hint-text" style="color:var(--amber);margin-bottom:10px">Liste yenilenemedi; son alınan liste gösteriliyor.</p>` : '') + cards + help;
 }
 
 /* ================= HAFTALIK TAKVİM (ders kayıtlarıyla ortak) ================= */
