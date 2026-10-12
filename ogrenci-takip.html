@@ -887,6 +887,24 @@ body.sm .main::before{content:'Öğrenci modu';background:var(--card);color:var(
   .card.pay-card{padding:4px 0}
   .stat .value{font-size:1.3rem}
 }
+/* Ortak materyaller */
+.mat-card{padding:14px 16px;margin-bottom:12px}
+.mat-top{display:flex;align-items:center;gap:12px}
+.mat-ext{flex:0 0 auto;min-width:44px;height:44px;padding:0 6px;border-radius:9px;display:grid;place-items:center;font-size:.68rem;font-weight:700;letter-spacing:.03em;background:var(--violet-soft);color:var(--violet)}
+.mat-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mat-info b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mat-info span{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mat-bar{display:flex;align-items:center;gap:6px;margin:12px 0 8px;flex-wrap:wrap}
+.mat-bar .spacer{flex:1}
+.chip.mat-on{background:var(--violet-soft);color:var(--violet)}
+.link-mini{font-size:.78rem;color:var(--muted);padding:4px 8px;border-radius:6px;background:none;border:0;cursor:pointer}
+.link-mini:hover{background:var(--field-bg, rgba(0,0,0,.04));color:var(--ink)}
+.mat-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mat-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:.82rem;cursor:pointer;font-family:inherit}
+.mat-chip i{width:8px;height:8px;border-radius:50%;background:var(--line-strong)}
+.mat-chip.on{border-color:color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--ink);font-weight:500}
+.mat-chip.on i{background:var(--c)}
+.mat-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.88rem;padding:12px 16px}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -989,7 +1007,7 @@ function load(){
     if(d && Array.isArray(d.students)){
       d.lessons = d.lessons || []; d.payments = d.payments || []; d.homeworks = d.homeworks || []; d.exams = d.exams || [];
       d.schedule = d.schedule || []; d.bills = d.bills || [];
-      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || []; d.myCourses = d.myCourses || []; d.plans = d.plans || [];
+      d.workouts = d.workouts || []; d.books = d.books || []; d.myClasses = d.myClasses || []; d.subs = d.subs || []; d.studies = d.studies || []; d.reminders = d.reminders || []; d.memos = d.memos || []; d.currHidden = d.currHidden || []; d.currExtra = d.currExtra || []; d.myCourses = d.myCourses || []; d.plans = d.plans || []; d.sharedNotes = (d.sharedNotes && typeof d.sharedNotes==='object' && !Array.isArray(d.sharedNotes)) ? d.sharedNotes : {};
       d.plans.forEach(p=>{ if(!p.date) p.date = planDateFrom(p.updatedAt, p.day); delete p.day; delete p.start; delete p.dur; });
       // Eski ders blokları: aynı koddan tek bir "ders" tanımı üret ve blokları ona bağla
       d.myClasses.forEach(b=>{
@@ -1025,7 +1043,7 @@ function load(){
       return d;
     }
   }catch(e){}
-  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[], myCourses:[], plans:[]};
+  return {students:[], lessons:[], payments:[], homeworks:[], exams:[], schedule:[], bills:[], workouts:[], books:[], myClasses:[], subs:[], studies:[], reminders:[], memos:[], currHidden:[], currExtra:[], myCourses:[], plans:[], sharedNotes:{}};
 }
 const PANEL_AT_KEY = 'ogrenciTakipPanelAt';
 let _panelAt = +localStorage.getItem(PANEL_AT_KEY) || 0;
@@ -1170,6 +1188,7 @@ const ICONS = {
   myschedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12.5V17c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.5"/></svg>',
   workout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><line x1="6.5" y1="12" x2="17.5" y2="12"/></svg>',
   notes:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>',
+  materials:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg>',
   reading:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
 };
 const VIEWS = [
@@ -1180,6 +1199,7 @@ const VIEWS = [
   {id:'payments',  label:'Ödemeler'},
   {id:'homework',  label:'Ödevler'},
   {id:'exams',     label:'Denemeler'},
+  {id:'materials', label:'Ortak Materyaller'},
   {id:'myschedule',label:'Ders Programım', personal:true},
   {id:'workout',   label:'Spor Programım', personal:true},
   {id:'reading',   label:'Okuma Listem',   personal:true},
@@ -1237,6 +1257,7 @@ function render(){
   else if(route.view==='payments')  main.innerHTML = viewPayments();
   else if(route.view==='homework')  main.innerHTML = viewHomework();
   else if(route.view==='exams')     main.innerHTML = viewExams();
+  else if(route.view==='materials') main.innerHTML = viewMaterials();
   else if(route.view==='schedule')  main.innerHTML = viewSchedule();
   else if(route.view==='bills')     main.innerHTML = viewBills();
   else if(route.view==='myschedule')main.innerHTML = viewMySchedule();
@@ -1754,6 +1775,7 @@ function deleteStudent(id){
   state.homeworks = state.homeworks.filter(x=>x.sid!==id);
   state.exams = state.exams.filter(x=>x.sid!==id);
   state.studies = (state.studies||[]).filter(x=>x.sid!==id);
+  Object.keys(state.sharedNotes||{}).forEach(k=>{ state.sharedNotes[k] = state.sharedNotes[k].filter(x=>x!==id); });
   state.plans = (state.plans||[]).filter(x=>x.sid!==id);
   save(); toast('Öğrenci silindi'); go('students');
 }
@@ -2159,9 +2181,85 @@ function studentNotesTab(s){
       <div class="hint-text">Örn. <b>2026-03-12 Vektörler.pdf</b>. Tarih isteğe bağlıdır; tarihsiz dosya (örn. <b>Formül Kartı.pdf</b>) yalnızca başlığıyla, listenin altında görünür. Yalnızca .pdf dosyaları listelenir.</div></div>
     ${gh ? '' : `<div class="hint-text" style="color:var(--amber)">Öğrenci sayfası adresi bir github.io adresi değil; GitHub bağlantıları bu yüzden gösterilmiyor. Bulut penceresinden adresi <b>https://KULLANICI.github.io/DEPO</b> biçiminde gir.</div>`}
   </div>
+  ${(()=>{ const n = Object.values(state.sharedNotes||{}).filter(a=>a.includes(s.id)).length;
+    return `<div class="card panel mat-hint" style="margin-bottom:16px"><span><b>Ortak materyaller:</b> ${n ? `${n} materyal bu öğrencide açık` : 'bu öğrenciye açılmış ortak materyal yok'}.</span>
+      <button class="btn btn-ghost btn-sm" onclick="go('materials')">Yönet</button></div>`; })()}
   <div class="card"><div class="table-wrap"><table>
     <thead><tr><th>Beklenen klasör yolları</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table></div></div>`;
+}
+
+/* ================= ORTAK MATERYALLER =================
+   Tüm öğrenciler için ders dışı dosyalar deponun notlar/ortak/ klasörüne yüklenir.
+   Panel yalnızca kimin göreceğini tutar: state.sharedNotes = { "<ortak/ altındaki yol>": [öğrenci id'leri] }.
+   Yeni yüklenen dosya kimseye açık değildir; öğrenciler işaretlenince o öğrencilerin sayfasında
+   "Notlar" sekmesinde ayrı renkte görünür. */
+const SHARED_DIR = 'notlar/ortak/';
+let matState = {status:'idle', files:[], err:''}; // idle | loading | ok | error
+async function loadMaterials(){
+  const repo = notesRepo();
+  if(!repo){ matState = {status:'error', files:[], err:'norepo'}; if(route.view==='materials') render(); return; }
+  matState = {status:'loading', files:matState.files, err:''};
+  try{
+    const r = await fetch(`https://api.github.com/repos/${repo.user}/${repo.repo}/git/trees/main?recursive=1`, {headers:{Accept:'application/vnd.github+json'}, cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const files = (j.tree||[]).filter(t=>t.type==='blob' && t.path.startsWith(SHARED_DIR) && !/(^|\/)\./.test(t.path)).map(t=>{
+      const key = t.path.slice(SHARED_DIR.length), parts = key.split('/'), file = parts.pop();
+      const dot = file.lastIndexOf('.'), base = dot > 0 ? file.slice(0, dot) : file;
+      const m = base.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
+      return {key, file, folder:parts.join(' / '), ext: dot > 0 ? file.slice(dot+1).toUpperCase() : '', date: m ? m[1] : '', title:(m ? m[2] : base).trim(),
+        url:`${siteUrl()}/${t.path.split('/').map(encodeURIComponent).join('/')}`};
+    }).sort((a,b)=> (b.date||'').localeCompare(a.date||'') || a.title.localeCompare(b.title,'tr'));
+    matState = {status:'ok', files, err:''};
+  }catch(e){ matState = {status:'error', files:matState.files, err:e.message}; }
+  if(route.view==='materials') render();
+}
+function matSids(key){ return (state.sharedNotes||{})[key] || []; }
+function setMatSids(key, sids){
+  state.sharedNotes = state.sharedNotes || {};
+  state.sharedNotes[key] = [...new Set(sids)].filter(id=>student(id));
+  save(); render();
+}
+function toggleMat(key, sid){
+  const cur = matSids(key);
+  setMatSids(key, cur.includes(sid) ? cur.filter(x=>x!==sid) : [...cur, sid]);
+}
+function matAll(key, on){ setMatSids(key, on ? state.students.map(s=>s.id) : []); toast(on ? 'Tüm öğrencilere açıldı' : 'Tüm öğrencilerden gizlendi'); }
+function viewMaterials(){
+  if(matState.status==='idle') loadMaterials();
+  const repo = notesRepo(), gh = repo ? `https://github.com/${repo.user}/${repo.repo}` : '';
+  const files = matState.files, students = [...state.students].sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+  const head = `
+  <div class="topbar">
+    <div><h1>Ortak Materyaller</h1><div class="sub">${matState.status==='ok' || files.length ? `${files.length} dosya · tüm öğrenciler için ders dışı paylaşımlar` : 'tüm öğrenciler için ders dışı paylaşımlar'}</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="loadMaterials()" ${matState.status==='loading'?'disabled':''}>${matState.status==='loading'?'Yükleniyor…':'Yenile'}</button>
+      ${gh ? `<a class="btn btn-primary" href="${esc(`${gh}/upload/main/notlar/ortak`)}" target="_blank" rel="noopener">${SVG_OPEN} GitHub'a Yükle</a>` : ''}
+    </div>
+  </div>`;
+  const help = `<p class="hint-text" style="margin-top:14px">Dosyaları deponun <b>notlar/ortak/</b> klasörüne yükle (PDF, görsel, Word… her tür olur). Ad biçimi isteğe bağlı: <b>2026-10-12 Deneme Taktikleri.pdf</b>. İstersen alt klasörle grupla (örn. <b>notlar/ortak/Rehberlik/…</b>). Yeni dosya kimseye açık değildir; öğrencileri işaretleyince o öğrencilerin <b>Notlar</b> sekmesinde ayrı renkte, "Ortak" etiketiyle görünür. GitHub'a yükledikten sonra listede görünmesi bir iki dakika sürebilir; <b>Yenile</b>'ye bas.</p>`;
+  if(!repo) return head + `<div class="card panel">${emptyState('🔗','Depo adresi yok','Bulut penceresinde öğrenci sayfası adresini <b>https://KULLANICI.github.io/DEPO</b> biçiminde gir; materyaller o depodan okunur.')}</div>`;
+  if(matState.status==='error' && !files.length) return head + `<div class="card panel">${emptyState('⚠️','Liste şu an alınamadı','İnternet bağlantısını kontrol edip Yenile\'ye bas.')}</div>` + help;
+  if(!files.length) return head + `<div class="card panel">${matState.status==='ok' ? emptyState('📁','Henüz ortak materyal yok','GitHub\'a Yükle ile notlar/ortak/ klasörüne ilk dosyanı ekle.') : emptyState('⏳','Yükleniyor','Bir saniye…')}</div>` + help;
+  const cards = files.map(f=>{
+    const on = new Set(matSids(f.key)), n = students.filter(s=>on.has(s.id)).length, k = jsArg(f.key);
+    const status = !n ? '<span class="chip badge-zero">Kimseye açık değil</span>' : n===students.length ? '<span class="chip mat-on">Herkese açık</span>' : `<span class="chip mat-on">${n}/${students.length} öğrenci</span>`;
+    return `<div class="card mat-card">
+      <div class="mat-top">
+        <div class="mat-ext">${esc(f.ext || 'DOSYA')}</div>
+        <div class="mat-info"><b>${esc(f.title)}</b><span>${[f.folder, f.date ? fmtDate(f.date) : ''].filter(Boolean).map(esc).join(' · ') || esc(f.file)}</span></div>
+        <a class="btn btn-ghost btn-sm" href="${esc(f.url)}" target="_blank" rel="noopener">Aç</a>
+      </div>
+      <div class="mat-bar">${status}<span class="spacer"></span>
+        <button class="link-mini" onclick="matAll(${k},true)">Herkes</button><button class="link-mini" onclick="matAll(${k},false)">Hiç kimse</button></div>
+      <div class="mat-chips">${students.length ? students.map(s=>{
+        const c = avatarColor(s.id), sel = on.has(s.id);
+        return `<button class="mat-chip ${sel?'on':''}" style="--c:${c}" onclick="toggleMat(${k},'${s.id}')" aria-pressed="${sel}"><i></i>${esc(s.name)}</button>`;
+      }).join('') : '<span class="hint-text">Önce öğrenci ekle.</span>'}</div>
+    </div>`;
+  }).join('');
+  return head + (matState.status==='error' ? `<p class="hint-text" style="color:var(--amber);margin-bottom:10px">Liste yenilenemedi; son alınan liste gösteriliyor.</p>` : '') + cards + help;
 }
 
 /* ================= HAFTALIK TAKVİM (ders kayıtlarıyla ortak) ================= */
@@ -4023,6 +4121,7 @@ function studentPayload(s){
       ...(isRep(p) ? {rep:p.rep, until:p.until||'', skip:p.skip||[], done:Object.fromEntries(Object.entries(p.done||{}).filter(([d])=>d >= shiftDate(today(), -56)))} : {}), subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
     curriculum: curriculumPayload(s),
+    shared: Object.keys(state.sharedNotes||{}).filter(k=>(state.sharedNotes[k]||[]).includes(s.id)),
   };
 }
 /* Öğrenciye salt okunur müfredat: [{sub, t:[[konu, düzey(1 TYT/2 AYT/3 ikisi), tarih, kaynak('d' derste / 'm' elle)]]}]

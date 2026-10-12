@@ -370,6 +370,12 @@ button,input,select,textarea{font-family:var(--font)}
 .hm span{font-size:.82rem;color:var(--muted);flex-shrink:0}
 /* Telefonda altı sekme: yana kaydırılabilir satır */
 @media(max-width:560px){.tabs{display:flex;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{flex:0 0 auto;padding:10px 10px}}
+/* Ortak materyaller: ders notlarından ayrı renkte */
+.item.shared{background:var(--violet-soft);border-color:color-mix(in srgb,var(--violet) 28%,transparent);box-shadow:inset 3px 0 0 var(--violet)}
+.item.shared .date{background:var(--card);border-color:color-mix(in srgb,var(--violet) 25%,transparent)}
+.item.shared .date b{color:var(--violet)}
+.item.shared .note-acts .op{background:var(--card)}
+.shared-tag{display:inline-block;font-size:.66rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--violet);background:var(--card);border-radius:5px;padding:1px 6px;vertical-align:1px}
 </style>
 <script>try{var t=localStorage.getItem('ogrenciTema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -1027,23 +1033,25 @@ function notesRepo(){
   const seg = location.pathname.split('/').filter(Boolean); // /DEPO/ogrenci.html → DEPO ; /ogrenci.html → kullanıcı sitesi
   return {user:m[1], repo: seg.length >= 2 ? seg[0] : `${m[1]}.github.io`};
 }
-let notesState = {status:'idle', files:[]}; // idle | loading | ok | error
+let notesState = {status:'idle', files:[], shared:[]}; // idle | loading | ok | error
 let notesDers = '', notesSeviye = '';
 function setNotesDers(v){ notesDers = v; notesSeviye = ''; render(); }
 function setNotesSeviye(v){ notesSeviye = v; render(); }
-function retryNotes(){ notesState = {status:'idle', files:[]}; render(); }
+function retryNotes(){ notesState = {status:'idle', files:[], shared:[]}; render(); }
 async function loadNotes(){
   const repo = notesRepo();
-  if(!repo){ notesState = {status:'error', files:[]}; return; }
-  notesState = {status:'loading', files:[]};
+  if(!repo){ notesState = {status:'error', files:[], shared:[]}; return; }
+  notesState = {status:'loading', files:[], shared:[]};
   try{
     const r = await fetch(`https://api.github.com/repos/${repo.user}/${repo.repo}/git/trees/main?recursive=1`, {headers:{Accept:'application/vnd.github+json'}});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const j = await r.json();
     const prefix = `notlar/${studentSlug(data.student.name)}/`;
     const files = (j.tree||[]).filter(t=>t.type==='blob' && t.path.startsWith(prefix) && /\.pdf$/i.test(t.path)).map(t=>parseNote(t.path, prefix)).filter(Boolean);
-    notesState = {status:'ok', files};
-  }catch(e){ notesState = {status:'error', files:[]}; }
+    // Ortak materyaller: hepsi alınır, hangisinin görüneceği öğretmenin listesine (data.shared) göre gösterirken seçilir
+    const shared = (j.tree||[]).filter(t=>t.type==='blob' && t.path.startsWith(SHARED_DIR) && !/(^|\/)\./.test(t.path)).map(t=>parseShared(t.path)).filter(Boolean);
+    notesState = {status:'ok', files, shared};
+  }catch(e){ notesState = {status:'error', files:[], shared:[]}; }
   if(tab==='notlar' && document.querySelector('.hero')) render();
 }
 /* notlar/<slug>/<ders>/<seviye>/<YYYY-AA-GG Başlık>.pdf → {ders, seviye, date, title, file, url} */
@@ -1057,6 +1065,35 @@ function parseNote(path, prefix){
   const url = new URL(path.split('/').map(encodeURIComponent).join('/'), location.href).href;
   return {ders, seviye, file, date: m ? m[1] : '', title: (m ? m[2] : base).trim(), url};
 }
+/* --- Ortak materyaller: notlar/ortak/ altındaki dosyalar; her öğrenci yalnızca öğretmenin açtıklarını görür ---
+   notlar/ortak/[klasör/]<YYYY-AA-GG Başlık>.<uzantı> → {key, folder, date, title, ext, file, url} */
+const SHARED_DIR = 'notlar/ortak/';
+function parseShared(path){
+  const key = path.slice(SHARED_DIR.length), parts = key.split('/'), file = parts.pop();
+  const dot = file.lastIndexOf('.'), base = dot > 0 ? file.slice(0, dot) : file, ext = dot > 0 ? file.slice(dot+1).toUpperCase() : '';
+  const m = base.match(/^(\d{4}-\d{2}-\d{2})\s+(.+)$/);
+  const url = new URL(path.split('/').map(encodeURIComponent).join('/'), location.href).href;
+  return {key, folder: parts.join(' / '), file, ext, date: m ? m[1] : '', title: (m ? m[2] : base).trim(), url};
+}
+function sharedVisible(){
+  const allow = new Set(data.shared || []);
+  return notesState.shared.filter(f=>allow.has(f.key)).sort(noteSort);
+}
+function sharedSection(list){
+  if(!list.length) return '';
+  return `<div class="section-title">Ortak materyaller · ${list.length}</div>
+  ${list.map(f=>`<div class="item shared">
+    <div class="date"><b class="sm">${esc(f.ext || 'DOSYA')}</b></div>
+    <div class="body">
+      <div class="t">${esc(f.title)}</div>
+      <div class="d"><span class="shared-tag">Ortak</span>${[f.folder, f.date ? fmtDate(f.date) : ''].filter(Boolean).map(x=>' · '+esc(x)).join('')}</div>
+    </div>
+    <div class="note-acts">
+      <a class="op" href="${esc(f.url)}" target="_blank" rel="noopener">Aç ↗</a>
+      <a class="dl" href="${esc(f.url)}" download="${esc(f.file)}">⬇ İndir</a>
+    </div>
+  </div>`).join('')}`;
+}
 function noteSort(a,b){
   if(a.date && b.date) return b.date.localeCompare(a.date) || a.title.localeCompare(b.title,'tr');
   if(a.date !== b.date) return a.date ? -1 : 1; // tarihliler üstte
@@ -1068,15 +1105,16 @@ function viewNotes(){
   if(notesState.status==='idle'){ loadNotes(); }
   if(notesState.status==='idle' || notesState.status==='loading') return emptyState('⏳','Notlar yükleniyor','Bir saniye…');
   if(notesState.status==='error') return emptyState('⚠️','Notlar şu an yüklenemedi, sayfayı yenile','') + `<div style="text-align:center;margin-top:-10px"><button class="link-btn" onclick="retryNotes()">Tekrar dene</button></div>`;
-  const all = notesState.files;
-  if(!all.length) return emptyState('📂','Henüz ders notu yok','Öğretmenin not eklediğinde burada görünür.');
+  const all = notesState.files, shared = sharedSection(sharedVisible());
+  if(!all.length) return shared ? shared + `<div class="section-title">Ders notları</div><div class="hempty" style="padding:6px 4px">Henüz ders notu yok.</div>`
+    : emptyState('📂','Henüz ders notu yok','Öğretmenin not eklediğinde burada görünür.');
   const dersList = orderBy(all.map(f=>f.ders), DERS_ORDER);
   if(!dersList.includes(notesDers)) notesDers = dersList[0];
   const inDers = all.filter(f=>f.ders===notesDers);
   const sevList = orderBy(inDers.map(f=>f.seviye), SEVIYE_ORDER);
   if(!sevList.includes(notesSeviye)) notesSeviye = sevList[0];
   const list = inDers.filter(f=>f.seviye===notesSeviye).sort(noteSort);
-  let html = '';
+  let html = shared ? shared + `<div class="section-title" style="margin-top:22px">Ders notları</div>` : '';
   if(dersList.length > 1) html += `<div class="seg" style="margin-bottom:8px">${dersList.map(d=>`<button class="${notesDers===d?'on':''}" onclick="setNotesDers('${esc(d)}')">${esc(DERS_LABEL[d]||cap(d))}</button>`).join('')}</div>`;
   if(sevList.length > 1) html += `<div class="seg" style="margin-bottom:8px">${sevList.map(v=>`<button class="${notesSeviye===v?'on':''}" onclick="setNotesSeviye('${esc(v)}')">${esc(SEVIYE_LABEL[v]||v.toUpperCase())}</button>`).join('')}</div>`;
   html += `<div class="section-title">${esc(DERS_LABEL[notesDers]||cap(notesDers))} · ${esc(SEVIYE_LABEL[notesSeviye]||notesSeviye.toUpperCase())} · ${list.length} not</div>`;
