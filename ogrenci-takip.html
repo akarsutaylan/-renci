@@ -904,6 +904,10 @@ body.sm .main::before{content:'Öğrenci modu';background:var(--card);color:var(
 .mat-chip i{width:8px;height:8px;border-radius:50%;background:var(--line-strong)}
 .mat-chip.on{border-color:color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--ink);font-weight:500}
 .mat-chip.on i{background:var(--c)}
+.cal-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.cal-grp{display:flex;gap:8px;flex-wrap:wrap}
+.cal-grp.pw-nav{flex-wrap:nowrap}
+@media(max-width:760px){ .cal-actions{justify-content:flex-start;width:100%} .cal-grp{width:100%} .cal-grp .btn{flex:1 1 auto;width:auto} }
 .mat-upl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 14px;font-size:.82rem;color:var(--muted)}
 .mat-upl span{margin-right:2px}
 .mat-upl a,.mat-card a.btn,.topbar a.btn{text-decoration:none}
@@ -2017,24 +2021,63 @@ function shiftDate(ds, days){
   const d = new Date(ds + 'T12:00'); d.setDate(d.getDate() + days);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-/* Geçen haftanın derslerini görüntülenen haftaya kopyala */
+/* Haftayı temizle / geçen haftayı kopyala
+   Korunan dersler silinmez: ödemesi alınmış, konusu girilmiş ya da ertelenip yeni tarih bekleyen dersler.
+   Kopyalama haftadaki diğer dersleri geçen haftanınkilerle DEĞİŞTİRİR (üstüne eklemez); korunan bir dersle
+   saati çakışan ders kopyalanmaz. Son işlem birkaç dakika "Geri Al" ile geri alınabilir. */
+const lessonKept = l => !!l.paid || !!String(l.topic||'').trim() || l.status==='ertelendi';
+const lessonEnd = l => (+l.start||0) + Math.round((+l.hours||1)*60);
+let _calUndo = null; // {week, lessons:[o haftanın silinen dersleri], added:[eklenen id'ler], label, at}
+function calUndoable(){ const dates = calWeekDates(); return _calUndo && _calUndo.week===dates[0] && Date.now()-_calUndo.at < 10*60000; }
+function calRemember(dates, label, removed){
+  _calUndo = {week:dates[0], label, at:Date.now(), lessons:_clone(removed), added:[]};
+}
+function undoCalWeek(){
+  if(!calUndoable()) return;
+  const drop = new Set([..._calUndo.added, ..._calUndo.lessons.map(l=>l.id)]);
+  state.lessons = state.lessons.filter(l=>!drop.has(l.id));
+  state.lessons.push(..._calUndo.lessons);
+  const label = _calUndo.label; _calUndo = null;
+  save(); render(); toast(`${label} geri alındı`);
+}
+function keptNote(n){ return n ? ` ${n} ders korundu (ödemesi alınmış, konusu girilmiş ya da ertelenmiş).` : ''; }
+function clearWeek(){
+  const dates = calWeekDates();
+  const inWeek = state.lessons.filter(l=>dates.includes(l.date));
+  const del = inWeek.filter(l=>!lessonKept(l)), kept = inWeek.length - del.length;
+  if(!inWeek.length){ toast('Bu haftada ders yok'); return; }
+  if(!del.length){ toast('Silinecek ders yok —' + keptNote(kept)); return; }
+  if(!confirm(`${fmtDate(dates[0])} – ${fmtDate(dates[6])} haftasındaki ${del.length} ders silinsin mi?${kept ? `\n\n${kept} ders korunacak (ödemesi alınmış, konusu girilmiş ya da ertelenmiş).` : ''}`)) return;
+  calRemember(dates, 'Temizleme', del);
+  const ids = new Set(del.map(l=>l.id));
+  state.lessons = state.lessons.filter(l=>!ids.has(l.id));
+  save(); render();
+  toast(`${del.length} ders silindi.` + keptNote(kept));
+}
+/* Geçen haftanın derslerini görüntülenen haftaya kopyala (bu haftadakilerin yerine) */
 function copyPrevWeek(){
   const cur = calWeekDates();
-  const prevLessons = state.lessons.filter(l=>l.date && cur.includes(shiftDate(l.date, 7)));
+  const prevLessons = state.lessons.filter(l=>l.date && cur.includes(shiftDate(l.date, 7)) && student(l.sid));
   if(!prevLessons.length){ toast('Geçen haftada kopyalanacak ders yok'); return; }
-  let added = 0;
-  prevLessons.forEach(l=>{
-    const nd = shiftDate(l.date, 7);
-    if(state.lessons.some(x=>x.sid===l.sid && x.date===nd && x.start===l.start)) return; // zaten var
-    const s = student(l.sid); if(!s) return;
-    state.lessons.push({
-      id: uid(), sid: l.sid, date: nd, subject: l.subject, hours: l.hours,
-      fee: Math.round((+l.hours||0) * (+s.rate||0)), topic: '', start: l.start
-    });
-    added++;
+  const inWeek = state.lessons.filter(l=>cur.includes(l.date));
+  const del = inWeek.filter(l=>!lessonKept(l)), kept = inWeek.filter(lessonKept);
+  if(inWeek.length && !confirm(`Bu haftadaki ${del.length} ders silinip yerine geçen haftanın ${prevLessons.length} dersi konacak.${kept.length ? `\n\n${kept.length} ders korunacak (ödemesi alınmış, konusu girilmiş ya da ertelenmiş); onlarla saati çakışan dersler kopyalanmaz.` : ''}\n\nDevam edilsin mi?`)) return;
+  calRemember(cur, 'Kopyalama', del);
+  const ids = new Set(del.map(l=>l.id));
+  state.lessons = state.lessons.filter(l=>!ids.has(l.id));
+  // Korunan derslerle (ertelenmiş olanlar takvimde yer tutmaz) saati çakışanları atla
+  const busy = kept.filter(l=>l.status!=='ertelendi');
+  let added = 0, skipped = 0;
+  prevLessons.sort((a,b)=>a.date.localeCompare(b.date) || (a.start||0)-(b.start||0)).forEach(l=>{
+    const nd = shiftDate(l.date, 7), st = +l.start||0, en = lessonEnd(l);
+    if(busy.some(x=>x.date===nd && st < lessonEnd(x) && (+x.start||0) < en)){ skipped++; return; }
+    const s = student(l.sid);
+    const n = {id: uid(), sid: l.sid, date: nd, subject: l.subject, hours: l.hours,
+      fee: Math.round((+l.hours||0) * (+s.rate||0)), topic: '', start: l.start};
+    state.lessons.push(n); busy.push(n); _calUndo.added.push(n.id); added++;
   });
   save(); render();
-  toast(added ? added + ' ders bu haftaya kopyalandı' : 'Bu haftadaki dersler zaten mevcut');
+  toast(`${added} ders kopyalandı` + (del.length ? `, eski ${del.length} ders kaldırıldı` : '') + (skipped ? `; ${skipped} ders korunan bir dersle çakıştığı için atlandı` : '') + '.');
 }
 /* Ders satırından tek tıkla ödeme al / geri al */
 function toggleLessonPaid(id){
@@ -2370,12 +2413,18 @@ function viewSchedule(){
   <div class="topbar">
     <div><h1>${wn!=null ? `${wn}. Hafta` : 'Haftalık Takvim'}${dates[0]===mondayOf(todayStr)?' <span class="chip badge-zero" style="vertical-align:middle">bu hafta</span>':''}</h1>
       <div class="sub">${wn==null?'Numarasız hafta · ':''}${rangeLabel} · ${wl.length} ders · ${(Math.round(totH*10)/10).toLocaleString('tr-TR')} saat</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="cal-actions">
+      <div class="cal-grp">
       <button class="btn btn-ghost btn-sm" onclick="openColorsModal()" title="Öğrenci ve ders renklerini değiştir">Renkler</button>
-      <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Önceki haftanın tüm derslerini bu haftaya aynı gün ve saatlerle kopyalar">Geçen Haftayı Kopyala</button>
+      ${calUndoable() ? `<button class="btn btn-ghost btn-sm" onclick="undoCalWeek()" title="Son işlemden önceki haline döndür">↶ ${esc(_calUndo.label)} Geri Al</button>` : ''}
+      <button class="btn btn-ghost btn-sm" onclick="copyPrevWeek()" title="Bu haftadaki dersleri geçen haftanınkilerle değiştirir (aynı gün ve saatler)">Geçen Haftayı Kopyala</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearWeek()" title="Bu haftadaki dersleri siler; ödemesi alınmış, konusu girilmiş ya da ertelenmiş dersler kalır">Haftayı Temizle</button>
+      </div>
+      <div class="cal-grp pw-nav">
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(-1)">‹ Önceki</button>
       <button class="btn ${calWeekOff===0?'btn-primary':'btn-ghost'} btn-sm" onclick="calShiftWeek(0)">Bu Hafta${cwn!=null?` · ${cwn}`:''}</button>
       <button class="btn btn-ghost btn-sm" onclick="calShiftWeek(1)">Sonraki ›</button>
+      </div>
     </div>
   </div>
   <div class="cal-layout">
