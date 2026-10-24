@@ -908,6 +908,13 @@ body.sm .main::before{content:'Öğrenci modu';background:var(--card);color:var(
 .cal-grp{display:flex;gap:8px;flex-wrap:wrap}
 .cal-grp.pw-nav{flex-wrap:nowrap}
 @media(max-width:760px){ .cal-actions{justify-content:flex-start;width:100%} .cal-grp{width:100%} .cal-grp .btn{flex:1 1 auto;width:auto} }
+.pw-weekly{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.pw-wk-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pw-wk-head b{font-size:.92rem}
+.pw-wk-head > span:not(.chip){font-size:.8rem;color:var(--muted)}
+.pw-wk-head .pw-add{margin-left:auto;width:auto;flex:0 0 auto}
+.pw-wk-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.pw-weekly .pw-empty{text-align:left}
 .mat-upl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 14px;font-size:.82rem;color:var(--muted)}
 .mat-upl span{margin-right:2px}
 .mat-upl a,.mat-card a.btn,.topbar a.btn{text-decoration:none}
@@ -3360,8 +3367,17 @@ const planKey = p => p.srcId || p.id;
 /* Tekrarlanan çalışma (isteğe bağlı): p.rep = {k:'d', n:1|2|3} → n günde bir; {k:'w', days:[0..6]} → haftanın seçili günleri (0 = Pzt).
    p.date başlangıç, p.until bitiş ('' = süresiz), p.skip atlanan günler. Her uygun gün ayrı işaretlenir: p.done[tarih] = {s, at}.
    Öğrencinin işareti tik belgesinde "anahtar@tarih" olarak gelir. */
-const isRep = p => !!(p && p.rep && ((p.rep.k==='d' && +p.rep.n>=1) || (p.rep.k==='w' && (p.rep.days||[]).length)));
+const isRep = p => !!(p && p.rep && ((p.rep.k==='d' && +p.rep.n>=1) || (p.rep.k==='w' && (p.rep.days||[]).length) || (p.rep.k==='h' && p.week)));
+/* Haftalık görev (p.week): belirli bir güne bağlı değildir; öğrenci hafta içinde istediği gün yapar.
+   p.date o haftanın pazartesisi. Tekrar yalnızca {k:'h'} = her hafta; her haftanın işareti p.done[pazartesi]. */
+const isWeekly = p => !!(p && p.week);
+function weekOn(p, mon){
+  if(!isWeekly(p)) return false;
+  if(!isRep(p)) return p.date === mon;
+  return mon >= p.date && !(p.until && mon > p.until) && !(p.skip||[]).includes(mon);
+}
 function planOn(p, ds){
+  if(isWeekly(p)) return false;
   if(!isRep(p)) return p.date === ds;
   if(ds < p.date || (p.until && ds > p.until) || (p.skip||[]).includes(ds)) return false;
   if(p.rep.k === 'w') return p.rep.days.includes((new Date(ds+'T12:00').getDay()+6)%7);
@@ -3370,6 +3386,7 @@ function planOn(p, ds){
 function occStatus(p, ds){ if(!isRep(p)) return p.status || 'bekliyor'; const d = (p.done||{})[ds]; return d ? d.s : 'bekliyor'; }
 function repLabel(p){
   if(!isRep(p)) return '';
+  if(p.rep.k === 'h') return 'Her hafta';
   if(p.rep.k === 'd') return +p.rep.n === 1 ? 'Her gün' : `${p.rep.n} günde bir`;
   return 'Her ' + [...p.rep.days].sort().map(i=>CAL_DAYS[i]).join(', ');
 }
@@ -3394,6 +3411,19 @@ function studentProgramTab(s){
   const off = route.planWeek || 0, days = weekDates(off), td = today();
   const all = plansOf(s.id);
   const occ = days.flatMap(ds=>all.filter(p=>planOn(p, ds)).map(p=>({p, ds})));   // bu haftanın çalışma örnekleri
+  const wk = all.filter(p=>weekOn(p, days[0]));                                   // bu haftanın haftalık görevleri
+  const wkDone = wk.filter(p=>occStatus(p, days[0])==='yapildi').length;
+  const doneDay = p => { const at = isRep(p) ? ((p.done||{})[days[0]]||{}).at : p.statusAt; return +at > 1.6e12 ? WD_LONG[(new Date(+at).getDay()+6)%7] : ''; };
+  const weekly = `<div class="pw-weekly">
+    <div class="pw-wk-head"><b>${off===0?'Bu haftanın görevleri':'Haftalık görevler'}</b><span>hafta içinde istediği gün yapar</span>${wk.length?`<span class="chip ${wkDone===wk.length?'hw-yapildi':'badge-zero'}">${wkDone}/${wk.length}</span>`:''}
+      <button class="pw-add" onclick="openPlanForm(null,'${s.id}','${days[0]}',null,true)">＋ Haftalık Görev</button></div>
+    ${wk.length ? `<div class="pw-wk-list">${wk.map(p=>{ const done = occStatus(p, days[0])==='yapildi', dd = done ? doneDay(p) : '';
+      return `<div class="pw-item pw-plan ${done?'pw-done':''}" style="border-left-color:${subjectColor(p.subject)}" onclick="openPlanForm('${p.id}',null,null,'${days[0]}')">
+        <div class="pw-t" style="color:${subjectColor(p.subject)}">${esc(p.subject)}${done?` <span class="chip hw-yapildi">Yapıldı ✓${dd?` · ${dd}`:''}</span>`:''}</div>
+        ${isRep(p)?`<div class="pw-rep" title="Her hafta tekrarlanır">↻ ${esc(repLabel(p))}</div>`:''}
+        ${p.topic?`<div class="pw-d pw-topic">${esc(p.topic)}</div>`:''}${p.note?`<div class="pw-d">${esc(p.note)}</div>`:''}</div>`; }).join('')}</div>`
+      : '<div class="pw-empty">Bu hafta için haftalık görev yok. Güne bağlı olmayan, öğrencinin hafta içinde istediği gün yapacağı görevler buraya.</div>'}
+  </div>`;
   const plans = occ.map(o=>o.p);
   const lessons = state.lessons.filter(l=>l.sid===s.id && isActive(l) && l.date>=days[0] && l.date<=days[6]);
   const hws = state.homeworks.filter(h=>h.sid===s.id && hwDay(h)>=days[0] && hwDay(h)<=days[6]);
@@ -3426,6 +3456,7 @@ function studentProgramTab(s){
   return `
   <div class="toolbar">
     <button class="btn btn-primary btn-sm" onclick="openPlanForm(null,'${s.id}','${td>=days[0] && td<=days[6] ? td : days[0]}')">＋ Çalışma Ekle</button>
+    <button class="btn btn-ghost btn-sm" onclick="openPlanForm(null,'${s.id}','${days[0]}',null,true)">＋ Haftalık Görev</button>
     <button class="btn btn-ghost btn-sm" onclick="addHwOn('${s.id}','${td>=days[0] && td<=days[6] ? td : days[0]}')">＋ Ödev Ver</button>
     <div class="pw-nav">
       <button class="btn btn-ghost btn-sm" onclick="setPlanWeek(-1)" aria-label="Önceki hafta">‹</button>
@@ -3435,42 +3466,47 @@ function studentProgramTab(s){
     </div>
   </div>
   <div class="plan-summary">
-    <span class="chip badge-zero">Bu hafta ${occ.filter(o=>occStatus(o.p,o.ds)==='yapildi').length + hws.filter(h=>h.status==='yapildi').length}/${occ.length + hws.length} görev tamam</span>
-    <span class="chip">${occ.length} çalışma</span>
+    <span class="chip badge-zero">Bu hafta ${occ.filter(o=>occStatus(o.p,o.ds)==='yapildi').length + wkDone + hws.filter(h=>h.status==='yapildi').length}/${occ.length + wk.length + hws.length} görev tamam</span>
+    <span class="chip">${occ.length} günlük çalışma</span>${wk.length?`<span class="chip">${wk.length} haftalık görev</span>`:''}
     <span class="chip plan-lock-chip">🔒 Bu hafta seninle ${lessons.length} ders</span>
     ${hws.length?`<span class="chip hw-bekliyor">📝 Bu hafta ${hws.length} ödev teslimi</span>`:''}
     ${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip" style="background:${(SUBJECTS.find(x=>x.n===k)||{}).bg||'var(--accent-soft)'};color:${subjectColor(k)}">${esc(k)} · ${v}</span>`).join('')}
   </div>
+  ${weekly}
   <div class="pw-grid">${cols}</div>
-  <p class="hint-text" style="margin-top:10px">Çalışma varsayılan olarak yalnızca eklendiği gün görünür; formdaki Tekrar alanıyla her gün, 2-3 günde bir ya da haftanın belirli günleri için tekrarlatabilirsin (↻). Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 ödevler: teslim tarihi varsa teslim gününde, yoksa verildiği günde görünür. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür; ödevleri de çalışmaları da oradan "yaptım" diye işaretler, işareti buraya anında gelir. Ödevler ayrıca öğrencinin sayfasındaki Görevler listesinde toplanır.</p>`;
+  <p class="hint-text" style="margin-top:10px"><b>Haftalık görev</b> güne bağlı değildir: öğrenci o hafta içinde istediği gün yapar ve işaretler; hangi gün bitirdiği burada yazar. Formdaki "Ne zaman?" alanından seçilir, istersen her hafta tekrarlanır. Günlük çalışma varsayılan olarak yalnızca eklendiği gün görünür; formdaki Tekrar alanıyla her gün, 2-3 günde bir ya da haftanın belirli günleri için tekrarlatabilirsin (↻). Saat yoktur; öğrenci o gün hangi dersi hangi konuda çalışacağını görür. 🔒 senin ders kayıtların (öğrencide kilitli), 📝 ödevler: teslim tarihi varsa teslim gününde, yoksa verildiği günde görünür. 👤 işaretli çalışmaları öğrenci ekledi ya da en son öğrenci düzenledi. Öğrenci aynı programı kendi sayfasında görür; ödevleri de çalışmaları da oradan "yaptım" diye işaretler, işareti buraya anında gelir. Ödevler ayrıca öğrencinin sayfasındaki Görevler listesinde toplanır.</p>`;
 }
-function openPlanForm(id, sid, date, occ){
+function openPlanForm(id, sid, date, occ, weekly){
   const p = id ? (state.plans||[]).find(x=>x.id===id)
-               : {sid, date: date || today(), subject:PLAN_SUBJECTS[0], topic:'', note:''};
+               : {sid, date: date || today(), subject:PLAN_SUBJECTS[0], topic:'', note:'', week:!!weekly};
   if(!p) return;
-  const r = isRep(p) ? p.rep : null;
-  const repVal = !r ? '' : r.k==='w' ? 'w' : 'd'+r.n;
+  const r = isRep(p) ? p.rep : null, wkly = isWeekly(p);
+  const repVal = !r || wkly ? '' : r.k==='w' ? 'w' : 'd'+r.n;
   const wdays = r && r.k==='w' ? r.days : [(new Date((p.date||today())+'T12:00').getDay()+6)%7];
   const occOpt = isRep(p) && occ;
   const s = student(p.sid); if(!s) return;
   openModal(`
-  <h3>${id?'Çalışmayı Düzenle':'Programa Çalışma Ekle'} <span style="font-weight:500;color:var(--muted)">· ${esc(s.name)}</span></h3>
+  <h3>${id ? (wkly?'Haftalık Görevi Düzenle':'Çalışmayı Düzenle') : (wkly?'Haftalık Görev Ver':'Programa Çalışma Ekle')} <span style="font-weight:500;color:var(--muted)">· ${esc(s.name)}</span></h3>
   ${p.byStudent?`<p class="hint-text" style="margin:-8px 0 12px">👤 Bunu öğrenci ekledi ya da en son öğrenci düzenledi. Senin değişikliğin geçerli olur.</p>`:''}
   <div class="form-grid">
     <div class="field"><label>Ders</label><select id="f_psub" onchange="planTopicList()">${PLAN_SUBJECTS.map(n=>`<option ${n===p.subject?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="field"><label id="f_pdatelbl">${r?'Başlangıç':'Tarih'}</label><input id="f_pdate" type="date" value="${esc(p.date||today())}"></div>
-    <div class="field"><label>Tekrar</label><select id="f_prep" onchange="planRepUI()">
+    <div class="field"><label>Ne zaman?</label><select id="f_pscope" onchange="planRepUI()">
+      <option value="gun" ${wkly?'':'selected'}>Belirli bir gün</option><option value="hafta" ${wkly?'selected':''}>Hafta boyunca · istediği gün</option></select></div>
+    <div class="field"><label id="f_pdatelbl">${r?'Başlangıç':'Tarih'}</label><input id="f_pdate" type="date" value="${esc(p.date||today())}" oninput="planRepUI()"><div class="hint-text" id="f_pwkhint" style="margin-top:4px"></div></div>
+    <div class="field" id="f_prepwbox"><label>Tekrar</label><select id="f_prepw" onchange="planRepUI()">
+      <option value="" ${wkly && r?'':'selected'}>Yalnızca bu hafta</option><option value="h" ${wkly && r?'selected':''}>Her hafta</option></select></div>
+    <div class="field" id="f_prepbox"><label>Tekrar</label><select id="f_prep" onchange="planRepUI()">
       ${[['','Tekrarlanmaz'],['d1','Her gün'],['d2','2 günde bir'],['d3','3 günde bir'],['w','Haftanın belirli günleri']].map(([v,l])=>`<option value="${v}" ${v===repVal?'selected':''}>${l}</option>`).join('')}
     </select></div>
     <div class="field" id="f_puntilbox"><label>Bitiş (isteğe bağlı)</label><input id="f_puntil" type="date" value="${esc(p.until||'')}"></div>
     <div class="field full" id="f_pdaysbox"><label>Günler</label><div class="pw-days">${CAL_DAYS.map((d,i)=>`<label><input type="checkbox" id="f_pd${i}" ${wdays.includes(i)?'checked':''}><span>${d}</span></label>`).join('')}</div></div>
     <div class="field full"><label>Konu</label><input id="f_ptopic" list="planTopics" value="${esc(p.topic||'')}" placeholder="Müfredattan seç ya da yaz · örn. Türev – zincir kuralı"><datalist id="planTopics"></datalist></div>
     <div class="field full"><label>Ne yapılacak?</label><textarea id="f_pnote" placeholder="Örn. Derste çözdüğümüz 20 soruyu tekrar et, 3D yayınları test 4">${esc(p.note||'')}</textarea></div>
-    <div class="field" id="f_pstatusbox"><label>${occOpt?`Durum · ${fmtDate(occ)}`:'Durum'}</label><select id="f_pstatus"><option value="bekliyor" ${occStatus(p, occ||p.date)!=='yapildi'?'selected':''}>Bekliyor</option><option value="yapildi" ${occStatus(p, occ||p.date)==='yapildi'?'selected':''}>Yapıldı</option></select></div>
+    <div class="field" id="f_pstatusbox"><label>${occOpt?`Durum · ${fmtDate(occ)}${wkly?' haftası':''}`:'Durum'}</label><select id="f_pstatus"><option value="bekliyor" ${occStatus(p, occ||p.date)!=='yapildi'?'selected':''}>Bekliyor</option><option value="yapildi" ${occStatus(p, occ||p.date)==='yapildi'?'selected':''}>Yapıldı</option></select></div>
   </div>
   <div class="modal-actions">
     ${id?`<button class="btn btn-danger" style="margin-right:auto" onclick="delPlan('${id}')">${r?'Seriyi Sil':'Sil'}</button>`:''}
-    ${occOpt?`<button class="btn btn-ghost" onclick="skipOcc('${id}','${occ}')" title="Seri devam eder, yalnızca bu gün kaldırılır">Sadece bu günü kaldır</button>`:''}
+    ${occOpt?`<button class="btn btn-ghost" onclick="skipOcc('${id}','${occ}')" title="Seri devam eder, yalnızca bu ${wkly?'hafta':'gün'} kaldırılır">Sadece bu ${wkly?'haftayı':'günü'} kaldır</button>`:''}
     <button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button>
     <button class="btn btn-primary" onclick="savePlan('${id||''}','${p.sid}','${occOpt?occ:''}')">Kaydet</button>
   </div>`);
@@ -3478,15 +3514,19 @@ function openPlanForm(id, sid, date, occ){
 }
 /* Tekrar seçimine göre alanları göster/gizle */
 function planRepUI(){
-  const v = fv('f_prep'), show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? '' : 'none'; };
-  show('f_pdaysbox', v==='w'); show('f_puntilbox', !!v);
-  const l = document.getElementById('f_pdatelbl'); if(l) l.textContent = v ? 'Başlangıç' : 'Tarih';
+  const show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? '' : 'none'; };
+  const wk = fv('f_pscope') === 'hafta', v = wk ? fv('f_prepw') : fv('f_prep');
+  show('f_prepbox', !wk); show('f_prepwbox', wk);
+  show('f_pdaysbox', !wk && v==='w'); show('f_puntilbox', !!v);
+  const l = document.getElementById('f_pdatelbl'); if(l) l.textContent = wk ? (v ? 'İlk hafta' : 'Hafta') : v ? 'Başlangıç' : 'Tarih';
+  const h = document.getElementById('f_pwkhint'), d = fv('f_pdate');
+  if(h) h.textContent = wk && /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${fmtDate(mondayOf(d))} – ${fmtDate(shiftDate(mondayOf(d), 6))} haftası` : '';
 }
 /* Tekrarlanan seriden yalnızca bir günü çıkar */
 function skipOcc(id, ds){
   const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
   p.skip = [...new Set([...(p.skip||[]), ds])]; p.updatedAt = Date.now();
-  save(); closeModal(); render(); toast(`${fmtDate(ds)} bu seriden kaldırıldı`);
+  save(); closeModal(); render(); toast(`${fmtDate(ds)}${isWeekly(p)?' haftası':''} bu seriden kaldırıldı`);
 }
 /* Programdaki güne ödev ver: ödev formu o öğrenci ve teslim günüyle açılır */
 function addHwOn(sid, ds){
@@ -3498,11 +3538,14 @@ function planTopicList(){
   if(dl && sel) dl.innerHTML = (CURRICULUM[sel.value] ? currTopics(sel.value) : []).map(c=>`<option value="${esc(c.t)}">`).join('');
 }
 function savePlan(id, sid, occ){
-  const date = fv('f_pdate');
+  const wk = fv('f_pscope') === 'hafta';
+  let date = fv('f_pdate');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast('Tarih seç'); return; }
-  const rv = fv('f_prep'), until = rv ? fv('f_puntil') : '';
+  if(wk) date = mondayOf(date);                       // haftalık görev haftanın pazartesisine bağlanır
+  const rv = wk ? fv('f_prepw') : fv('f_prep'), until = rv ? fv('f_puntil') : '';
   let repRule = null;
-  if(rv === 'w'){
+  if(wk){ if(rv === 'h') repRule = {k:'h'}; }
+  else if(rv === 'w'){
     const days = [0,1,2,3,4,5,6].filter(i=>{ const c = document.getElementById('f_pd'+i); return c && c.checked; });
     if(!days.length){ toast('En az bir gün seç'); return; }
     repRule = {k:'w', days};
@@ -3511,7 +3554,8 @@ function savePlan(id, sid, occ){
   const data = {date, subject:fv('f_psub'), topic:fv('f_ptopic').slice(0,120), note:fv('f_pnote').slice(0,300), updatedAt:Date.now(), byStudent:false};
   state.plans = state.plans || [];
   const st = fv('f_pstatus') || 'bekliyor';
-  const applyRep = p => { if(repRule){ p.rep = repRule; p.until = until; } else { delete p.rep; delete p.until; delete p.skip; } };
+  const applyRep = p => { if(wk) p.week = true; else delete p.week;
+    if(repRule){ p.rep = repRule; p.until = until; } else { delete p.rep; delete p.until; delete p.skip; } };
   if(id){
     const p = state.plans.find(x=>x.id===id); if(!p) return;
     Object.assign(p, data); delete p.day; delete p.start; delete p.dur;
@@ -3520,7 +3564,9 @@ function savePlan(id, sid, occ){
     else if((p.status||'bekliyor') !== st){ p.status = st; p.statusAt = Date.now(); }
   }
   else { const p = {id:uid(), sid, ...data}; applyRep(p); if(!isRep(p)){ p.status = st; p.statusAt = Date.now(); } state.plans.push(p); }
-  save(); closeModal(); render(); toast(id ? 'Program güncellendi' : repRule ? `${data.subject} · ${repLabel({rep:repRule})} tekrarlanacak` : `${fmtDate(date)} · ${data.subject} eklendi`);
+  save(); closeModal(); render();
+  toast(id ? 'Program güncellendi' : wk ? `Haftalık görev verildi · ${data.subject}${repRule ? ' · her hafta' : ` · ${fmtDate(date)} haftası`}`
+    : repRule ? `${data.subject} · ${repLabel({rep:repRule})} tekrarlanacak` : `${fmtDate(date)} · ${data.subject} eklendi`);
 }
 function delPlan(id){
   const p = (state.plans||[]).find(x=>x.id===id); if(!p) return;
@@ -4183,7 +4229,7 @@ function studentPayload(s){
     homeworks: state.homeworks.filter(h=>h.sid===s.id).map(h=>({id:h.id, subject:h.subject, desc:h.desc, due:h.due, given:hwGivenDate(h), status:h.status, updatedAt:h.updatedAt||0})),
     exams: state.exams.filter(e=>e.sid===s.id).map(e=>({date:e.date, name:e.name||'', note:e.note||'', kind:e.kind, type:e.type, bransSubject:e.bransSubject, net:e.net, sure:e.sure, nets:e.nets, srcId:e.srcId||null, byStudent:!!e.byStudent, at:e.updatedAt||0})),
     plans: plansOf(s.id).filter(p=>p.date >= planDateFrom(Date.now() - 56*86400000, 0) || (isRep(p) && (!p.until || p.until >= shiftDate(today(), -56)))).map(p=>({id:planKey(p), date:p.date, status:p.status||'bekliyor', statusAt:p.statusAt||0,
-      ...(isRep(p) ? {rep:p.rep, until:p.until||'', skip:p.skip||[], done:Object.fromEntries(Object.entries(p.done||{}).filter(([d])=>d >= shiftDate(today(), -56)))} : {}), subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
+      ...(isRep(p) ? {rep:p.rep, until:p.until||'', skip:p.skip||[], done:Object.fromEntries(Object.entries(p.done||{}).filter(([d])=>d >= shiftDate(today(), -56)))} : {}), ...(isWeekly(p) ? {week:true} : {}), subject:p.subject, topic:p.topic||'', note:p.note||'', byStudent:!!p.byStudent, updatedAt:p.updatedAt||0})),
     topics: Object.fromEntries(PLAN_SUBJECTS.filter(n=>CURRICULUM[n]).map(n=>[n, currTopics(n).map(c=>c.t)])),
     curriculum: curriculumPayload(s),
     shared: Object.keys(state.sharedNotes||{}).filter(k=>(state.sharedNotes[k]||[]).includes(s.id)),
@@ -4681,6 +4727,7 @@ function applyTicks(sid, data){
       if(at < Date.now() - 7*86400000) removeStudentInput(sid, 'plan', key);   // eski silme işaretlerini temizle
       continue;
     }
+    if(cur && isWeekly(cur)) continue;   // haftalık görevi yalnızca öğretmen düzenler (öğrenci yalnızca işaretler)
     const clean = sanitizePlan(x); if(!clean) continue;
     if(!cur){ state.plans.push({id:uid(), sid, srcId:key, byStudent:true, updatedAt:at, ...clean}); changed++; msg = `${first} programına çalışma ekledi: ${clean.subject}`; }
     else if(at > (+cur.updatedAt||0)){ Object.assign(cur, clean, {updatedAt:at, byStudent:true}); delete cur.day; changed++; msg = `${first} programını güncelledi: ${clean.subject}`; }

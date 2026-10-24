@@ -382,6 +382,11 @@ button,input,select,textarea{font-family:var(--font)}
 .seg-scroll::-webkit-scrollbar{display:none}
 .seg-scroll button{flex:1 0 auto;white-space:nowrap;padding:8px 12px}
 .shared-tag{display:inline-block;font-size:.66rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--violet);background:var(--card);border-radius:5px;padding:1px 6px;vertical-align:1px}
+.wk-tasks{padding:4px 14px 8px;margin-bottom:10px;border-left:3px solid var(--accent)}
+.wk-sub{font-size:.76rem;color:var(--muted)}
+.hc-head .hcount.ok{background:var(--green-soft);color:var(--green)}
+.wk-tasks .hc-head .hcount{margin-left:auto}
+.chip.wk-chip{background:var(--accent-soft);color:var(--accent)}
 </style>
 <script>try{var t=localStorage.getItem('ogrenciTema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -542,8 +547,26 @@ function planStatus(p){
   return p.status || 'bekliyor';
 }
 /* Tekrarlanan çalışmalar (öğretmen ayarlar): {k:'d', n} n günde bir · {k:'w', days} haftanın günleri (0 = Pzt) */
-const isRep = p => !!(p && p.rep && ((p.rep.k==='d' && +p.rep.n>=1) || (p.rep.k==='w' && (p.rep.days||[]).length)));
+const isRep = p => !!(p && p.rep && ((p.rep.k==='d' && +p.rep.n>=1) || (p.rep.k==='w' && (p.rep.days||[]).length) || (p.rep.k==='h' && p.week)));
+/* Haftalık görev (p.week): güne bağlı değil, hafta içinde istediğin gün yaparsın. p.date = haftanın pazartesisi;
+   her hafta tekrarlananın her haftası ayrı işaretlenir (kimlik: anahtar@pazartesi). */
+const isWeekly = p => !!(p && p.week);
+const addDays = (ds, n) => { const d = new Date(ds+'T12:00'); d.setDate(d.getDate()+n); return localDate(d); };
+const mondayOf = ds => addDays(ds, -dayIdx(ds));
+function weekOn(p, mon){
+  if(!isWeekly(p)) return false;
+  if(!isRep(p)) return p.date === mon;
+  return mon >= p.date && !(p.until && mon > p.until) && !(p.skip||[]).includes(mon);
+}
+function weekOcc(plans, mon){
+  return plans.filter(p=>weekOn(p, mon)).map(p=>isRep(p) ? {...p, id:`${p.id}@${mon}`, date:mon, occ:true, baseId:p.id} : p);
+}
+function weekRange(mon){
+  const a = new Date(mon+'T12:00'), b = new Date(addDays(mon,6)+'T12:00');
+  return `${a.getDate()}${a.getMonth()!==b.getMonth()?' '+a.toLocaleDateString('tr-TR',{month:'short'}):''} – ${b.getDate()} ${b.toLocaleDateString('tr-TR',{month:'short'})}`;
+}
 function planOn(p, ds){
+  if(isWeekly(p)) return false;
   if(!isRep(p)) return p.date === ds;
   if(ds < p.date || (p.until && ds > p.until) || (p.skip||[]).includes(ds)) return false;
   if(p.rep.k === 'w') return p.rep.days.includes(dayIdx(ds));
@@ -551,6 +574,7 @@ function planOn(p, ds){
 }
 function repLabel(p){
   if(!isRep(p)) return '';
+  if(p.rep.k === 'h') return 'Her hafta';
   if(p.rep.k === 'd') return +p.rep.n === 1 ? 'Her gün' : `${p.rep.n} günde bir`;
   return 'Her ' + [...p.rep.days].sort().map(i=>WD_SHORT[i]).join(', ');
 }
@@ -561,7 +585,7 @@ function occOn(plans, ds){
 function occById(id){
   const [key, ds] = String(id).split('@'); if(!ds) return null;
   const p = planList().find(x=>x.id===key);
-  return p && isRep(p) && planOn(p, ds) ? {...p, id, date:ds, occ:true, baseId:key} : null;
+  return p && isRep(p) && (planOn(p, ds) || weekOn(p, ds)) ? {...p, id, date:ds, occ:true, baseId:key} : null;
 }
 /* Ödev de çalışma da aynı şekilde işaretlenir (tik belgesindeki hw alanı; anahtar = kaydın kimliği) */
 async function toggleTick(hwId){
@@ -663,6 +687,15 @@ function hwWhen(h, td){
   if(h.due === td) return {t:'Teslim bugün', c:'soon'};
   return {t:`Teslim ${relGun(h.due).toLowerCase()}`, c: gunFarki(td, h.due) <= 2 ? 'soon' : ''};
 }
+/* Haftalık görev satırı (sade): ders · konu, not; sağda işaret kutusu */
+function wkRow(p){
+  const done = planStatus(p)==='yapildi';
+  return `<div class="hrow tap ${done?'done':''}" onclick="toastMsg('Haftalık görev: bu hafta istediğin gün yap. Bitirince kutuya dokun.')">
+    <span class="hdot" style="background:${PLAN_COLORS[p.subject]||'var(--accent)'}"></span>
+    <div class="hb"><div class="ht">${esc(p.subject)}${p.topic?` · ${esc(p.topic)}`:''}</div>${p.note||isRep(p)?`<div class="hs">${[p.note?esc(p.note):'', isRep(p)?'↻ Her hafta':''].filter(Boolean).join(' · ')}</div>`:''}</div>
+    <button class="tick sm ${done?'on':''}" onclick="event.stopPropagation();toggleTick('${esc(p.id)}')" aria-label="${done?'İşareti kaldır':'Tamamladım'}">✓</button>
+  </div>`;
+}
 function homeHwRow(h, td){
   const w = hwWhen(h, td), done = hwStatus(h) === 'yapildi';
   return `<div class="hrow ${done?'done':''}">
@@ -696,6 +729,17 @@ function viewHome(){
     <div class="hc-head"><b>Bugün</b><button class="link-btn" onclick="progView='hafta';planWeekOff=0;planSelDay=null;setTab('program')">Haftalık program ›</button></div>
     ${bugunRows.length ? bugunRows.join('') : `<div class="hempty">Bugün için planlanmış bir şey yok.</div>`}
   </div>`;
+
+  /* 1b. Bu haftanın görevleri (güne bağlı olmayanlar) */
+  const wkTasks = weekOcc(planList(), mondayOf(td));
+  if(wkTasks.length){
+    const ok = wkTasks.filter(p=>planStatus(p)==='yapildi').length;
+    const kalan = 6 - dayIdx(td);
+    html += `<div class="card home-card">
+      <div class="hc-head"><b>Bu hafta</b><span class="hcount ${ok===wkTasks.length?'ok':''}">${ok}/${wkTasks.length}</span><span class="wk-sub" style="margin-left:auto">${kalan ? `istediğin gün · ${kalan+1} gün kaldı` : 'bugün son gün'}</span></div>
+      ${wkTasks.map(p=>wkRow(p)).join('')}
+    </div>`;
+  }
 
   /* 2. Ödevlerin: bugünküler hariç, önce gecikenler, sonra en yakın teslim */
   const acik = (data.homeworks||[]).filter(h=>hwStatus(h)!=='yapildi' && hwDay(h)!==td)
@@ -797,13 +841,15 @@ function lessonRow(l, td){
 }
 function planRow(p, showDate){
   const col = PLAN_COLORS[p.subject] || 'var(--accent)', done = planStatus(p)==='yapildi';
-  const tap = p.occ ? `toastMsg('Bu çalışma ${esc(repLabel(p))} tekrarlanır; öğretmenin düzenler. Bitirince kutuya dokun.')` : `openPlanForm('${esc(p.id)}')`;
+  const wk = isWeekly(p);
+  const tap = wk ? `toastMsg('Haftalık görev: bu hafta istediğin gün yap. Bitirince kutuya dokun.')`
+    : p.occ ? `toastMsg('Bu çalışma ${esc(repLabel(p))} tekrarlanır; öğretmenin düzenler. Bitirince kutuya dokun.')` : `openPlanForm('${esc(p.id)}')`;
   return `<div class="item plan-item ${done?'done':''}" onclick="${tap}">
     <span class="plan-dot" style="background:${col}"></span>
     <div class="body"><div class="t" style="color:${col}">${esc(p.subject)}</div>
       ${p.topic?`<div class="plan-topic">${esc(p.topic)}</div>`:''}
       ${p.note?`<div class="d" style="white-space:pre-line">${esc(p.note)}</div>`:''}
-      <div class="chips"><span class="chip ${p.byStudent?'mine-chip':'badge-zero'}">${p.byStudent?'Çalışma · senin planın':'Çalışma · öğretmeninin planı'}</span>${p.occ?`<span class="chip lock-chip">↻ ${esc(repLabel(p))}</span>`:''}${showDate?`<span class="chip lock-chip">${relGun(p.date)} · ${fmtDate(p.date)}</span>`:''}${done?'<span class="chip hw-yapildi">Yapıldı ✓</span>':''}</div></div>
+      <div class="chips">${wk ? `<span class="chip wk-chip">Haftalık görev</span>` : `<span class="chip ${p.byStudent?'mine-chip':'badge-zero'}">${p.byStudent?'Çalışma · senin planın':'Çalışma · öğretmeninin planı'}</span>`}${p.occ?`<span class="chip lock-chip">↻ ${esc(repLabel(p))}</span>`:''}${showDate?`<span class="chip lock-chip">${wk ? `${weekRange(p.date)} haftası` : `${relGun(p.date)} · ${fmtDate(p.date)}`}</span>`:''}${done?'<span class="chip hw-yapildi">Yapıldı ✓</span>':''}</div></div>
     <button class="tick ${done?'on':''}" onclick="event.stopPropagation();toggleTick('${esc(p.id)}')" title="${done?'İşareti kaldır':'Tamamladım'}">✓</button></div>`;
 }
 function openTasks(){ progView = 'gorev'; setTab('program'); }
@@ -811,9 +857,12 @@ function openTasks(){ progView = 'gorev'; setTab('program'); }
 function allTasks(){
   return [
     ...(data.homeworks||[]).map(h=>({kind:'hw', h, due:h.due||'', day:hwDay(h), done:hwStatus(h)==='yapildi'})),
-    ...planList().filter(p=>!isRep(p)).map(p=>({kind:'plan', p, due:p.date, day:p.date, done:planStatus(p)==='yapildi'})),
+    ...planList().filter(p=>!isRep(p) && !isWeekly(p)).map(p=>({kind:'plan', p, due:p.date, day:p.date, done:planStatus(p)==='yapildi'})),
     ...[...Array(15)].flatMap((_,i)=>occOn(planList().filter(isRep), localDate(new Date(Date.now() + (i-7)*864e5))))
       .map(p=>({kind:'plan', p, due:p.date, day:p.date, done:planStatus(p)==='yapildi'})),
+    // Haftalık görevler: geçen, bu ve gelecek hafta; "son gün" o haftanın pazarı
+    ...[-1,0,1].flatMap(w=>weekOcc(planList(), addDays(mondayOf(today()), w*7)))
+      .map(p=>({kind:'plan', p, due:addDays(p.date, 6), day:addDays(p.date, 6), done:planStatus(p)==='yapildi'})),
   ];
 }
 function viewTasks(){
@@ -877,10 +926,19 @@ function viewWeekPlan(){
   const mon = new Date(days[0]+'T12:00'), sun = new Date(days[6]+'T12:00');
   const range = `${mon.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}`;
   const label = {0:'Bu hafta', 1:'Gelecek hafta', '-1':'Geçen hafta'}[planWeekOff];
+  const wkTasks = weekOcc(planList(), days[0]);
   let html = `<div class="card wk-nav">
     <button onclick="shiftPlanWeek(-1)" aria-label="Önceki hafta">‹</button>
     <div><b>${label || range}</b>${label?`<span>${range}</span>`:''}</div>
     <button onclick="shiftPlanWeek(1)" aria-label="Sonraki hafta">›</button></div>`;
+  // Haftalık görevler: güne bağlı değil, hafta içinde istediğin gün
+  if(wkTasks.length){
+    const ok = wkTasks.filter(p=>planStatus(p)==='yapildi').length;
+    html += `<div class="card wk-tasks">
+      <div class="hc-head"><b>${planWeekOff===0?'Bu haftanın görevleri':'Haftanın görevleri'}</b><span class="wk-sub">istediğin gün yap</span><span class="hcount ${ok===wkTasks.length?'ok':''}">${ok}/${wkTasks.length}</span></div>
+      ${wkTasks.map(p=>wkRow(p)).join('')}
+    </div>`;
+  }
   // Hafta özeti: her gün için renkli noktalar; güne dokununca o güne iner
   html += `<div class="card wk-mini">${days.map((ds,di)=>{
     const dots = [
@@ -906,8 +964,8 @@ function viewWeekPlan(){
   <div class="strip-hint">‹ Günler arasında geçmek için yana kaydır ›</div>`;
   html += `<div class="toolbar"><button class="btn btn-sm" onclick="openPlanForm(null,'${td>=days[0] && td<=days[6] ? td : days[0]}')">＋ Çalışma Ekle</button>
     ${planWeekOff?'<button class="btn-ghost" onclick="shiftPlanWeek(0)">Bu haftaya dön</button>':''}</div>`;
-  const gorev = plans.length + hws.length, biten = plans.filter(p=>planStatus(p)==='yapildi').length + hws.filter(h=>hwStatus(h)==='yapildi').length;
-  if(gorev) html += `<div class="week-chips"><span class="chip ${biten===gorev?'hw-yapildi':'badge-zero'}">Bu hafta ${biten}/${gorev} görev tamam</span>${plans.length?`<span class="chip">${plans.length} çalışma</span>`:''}${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}${hws.length?`<span class="chip hw-bekliyor">📝 ${hws.length} ödev</span>`:''}</div>`;
+  const gorev = plans.length + wkTasks.length + hws.length, biten = plans.filter(p=>planStatus(p)==='yapildi').length + wkTasks.filter(p=>planStatus(p)==='yapildi').length + hws.filter(h=>hwStatus(h)==='yapildi').length;
+  if(gorev) html += `<div class="week-chips"><span class="chip ${biten===gorev?'hw-yapildi':'badge-zero'}">Bu hafta ${biten}/${gorev} görev tamam</span>${plans.length?`<span class="chip">${plans.length} çalışma</span>`:''}${wkTasks.length?`<span class="chip">${wkTasks.length} haftalık görev</span>`:''}${Object.entries(bySub).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}${hws.length?`<span class="chip hw-bekliyor">📝 ${hws.length} ödev</span>`:''}</div>`;
   html += `<div class="tick-hint" style="margin-top:14px">Bitirdiğin ödevin ya da çalışmanın kutusuna dokun. Çalışmayı düzenlemek için yazısına dokun. 🔒 dersler değiştirilemez.</div>`;
   return html;
 }
